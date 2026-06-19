@@ -18,6 +18,7 @@ import (
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/resolver"
+	"dgsbot/internal/session"
 	"dgsbot/internal/tenantctx"
 	httpx "dgsbot/internal/transport/http"
 )
@@ -51,7 +52,7 @@ func main() {
 	// Справочники для резолва имён в uuid.
 	res := resolver.Load(cfg.FixturesPath)
 
-	a := app.New(pl, tenants, client, res, nar)
+	a := app.New(pl, tenants, client, res, nar, session.NewStore())
 	srv := httpx.New(cfg, a)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

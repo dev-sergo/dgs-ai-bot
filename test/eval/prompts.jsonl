@@ -10,3 +10,6 @@
 {"query": "покажи выручку по точке Выкса за неделю", "expect": {"report": "payment", "filters": ["sale_point"], "period_token": "last_7_days"}}
 {"query": "выручка оплаченная картой за вчера", "expect": {"report": "payment", "period_token": "yesterday"}}
 {"query": "сколько чеков пробили сегодня", "expect": {"report": "payment|paycheck", "period_token": "today"}}
+{"query": "какие у тебя функции", "expect": {"intent": "help"}}
+{"query": "привет, что умеешь?", "expect": {"intent": "help|smalltalk"}}
+{"query": "расскажи анекдот про повара", "expect": {"intent": "off_topic"}}

@@ -62,3 +62,7 @@ venv/
 # === Docker ===
 # (compose-файлы коммитим; volume-данные — нет)
 docker-data/
+
+# === Frontend (web/) ===
+node_modules/
+web/dist/

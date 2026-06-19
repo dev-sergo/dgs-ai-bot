@@ -5,12 +5,15 @@ import (
 	"testing"
 
 	"dgsbot/internal/plan"
+	"dgsbot/internal/session"
 )
 
 // fakePlanner отдаёт заранее заданный план (для проверки фильтров/PII независимо от LLM).
 type fakePlanner struct{ p plan.AnalysisPlan }
 
-func (f fakePlanner) Plan(_ context.Context, _ string) (plan.AnalysisPlan, error) { return f.p, nil }
+func (f fakePlanner) Plan(_ context.Context, _ []session.Message, _ string) (plan.AnalysisPlan, error) {
+	return f.p, nil
+}
 
 func ordersPlan(filters ...plan.Filter) plan.AnalysisPlan {
 	return plan.AnalysisPlan{
@@ -25,7 +28,7 @@ func TestOrdersFilteredBySalePoint(t *testing.T) {
 	a := newAppWith(t, fakePlanner{ordersPlan(
 		plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Выкса"}},
 	)})
-	ans, err := a.Ask(context.Background(), "mock_single", "заказы по точке Выкса")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "заказы по точке Выкса")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +50,7 @@ func TestOrdersFilteredBySalePoint(t *testing.T) {
 
 func TestPIINotExposed(t *testing.T) {
 	a := newAppWith(t, fakePlanner{ordersPlan()})
-	ans, err := a.Ask(context.Background(), "mock_single", "заказы")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "заказы")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +73,7 @@ func TestUnresolvedFilterAsksClarify(t *testing.T) {
 	a := newAppWith(t, fakePlanner{ordersPlan(
 		plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Несуществующая Точка"}},
 	)})
-	ans, err := a.Ask(context.Background(), "mock_single", "заказы по точке X")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "заказы по точке X")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +94,7 @@ func TestDefaultDimensionInjected(t *testing.T) {
 		Method: "plain", Output: plan.Output{Format: "text"},
 	}
 	a := newAppWith(t, fakePlanner{p})
-	ans, err := a.Ask(context.Background(), "mock_single", "выручка за неделю")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка за неделю")
 	if err != nil {
 		t.Fatal(err)
 	}

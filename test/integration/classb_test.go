@@ -8,7 +8,7 @@ import (
 
 func TestRevenueContribution(t *testing.T) {
 	a := newApp(t) // StubPlanner: «почему» → contribution
-	ans, err := a.Ask(context.Background(), "mock_single", "почему упала выручка за месяц")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "почему упала выручка за месяц")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestRevenueContribution(t *testing.T) {
 
 func TestRevenueCompare(t *testing.T) {
 	a := newApp(t) // StubPlanner: «сравни» → compare
-	ans, err := a.Ask(context.Background(), "mock_single", "сравни выручку за неделю")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "сравни выручку за неделю")
 	if err != nil {
 		t.Fatal(err)
 	}

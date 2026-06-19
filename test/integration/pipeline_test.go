@@ -12,20 +12,27 @@ import (
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/resolver"
+	"dgsbot/internal/session"
 	"dgsbot/internal/tenantctx"
 )
 
 const fixturesDir = "../../docs/contracts/fixtures"
 
-func newAppWith(t *testing.T, pl planner.Planner) *app.App {
+func newAppStore(t *testing.T, pl planner.Planner) (*app.App, *session.Store) {
 	t.Helper()
 	tenants, err := tenantctx.Load(fixturesDir + "/tenants.example.json")
 	if err != nil {
 		t.Fatalf("load tenants: %v", err)
 	}
-	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate())
+	store := session.NewStore()
+	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate(), store)
 	// Фиксированное «сейчас» для детерминизма дат: 2026-06-19 10:00 UTC.
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
+	return a, store
+}
+
+func newAppWith(t *testing.T, pl planner.Planner) *app.App {
+	a, _ := newAppStore(t, pl)
 	return a
 }
 
@@ -33,7 +40,7 @@ func newApp(t *testing.T) *app.App { return newAppWith(t, planner.NewStub()) }
 
 func TestRevenueLastWeek(t *testing.T) {
 	a := newApp(t)
-	ans, err := a.Ask(context.Background(), "mock_single", "покажи выручку за последнюю неделю")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "покажи выручку за последнюю неделю")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +65,7 @@ func TestRevenueLastWeek(t *testing.T) {
 
 func TestProductsThisMonth(t *testing.T) {
 	a := newApp(t)
-	ans, err := a.Ask(context.Background(), "mock_single", "какие товары продавались за месяц")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "какие товары продавались за месяц")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +79,7 @@ func TestProductsThisMonth(t *testing.T) {
 
 func TestClarifyWhenNoPeriod(t *testing.T) {
 	a := newApp(t)
-	ans, err := a.Ask(context.Background(), "mock_single", "покажи выручку")
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "покажи выручку")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +96,7 @@ func TestClarifyWhenNoPeriod(t *testing.T) {
 
 func TestTenantTimezoneInPeriod(t *testing.T) {
 	a := newApp(t)
-	ans, err := a.Ask(context.Background(), "mock_tz", "выручка сегодня")
+	ans, err := a.Ask(context.Background(), "mock_tz", "s", "выручка сегодня")
 	if err != nil {
 		t.Fatal(err)
 	}

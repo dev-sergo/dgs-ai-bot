@@ -9,6 +9,7 @@ import (
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/llm"
 	"dgsbot/internal/plan"
+	"dgsbot/internal/session"
 )
 
 // LLMPlanner строит AnalysisPlan через модель с guided-JSON.
@@ -24,11 +25,12 @@ func NewLLM(cli *llm.Client, model string, forceJSON bool) *LLMPlanner {
 	return &LLMPlanner{cli: cli, model: model, cat: defaultCatalog(), forceJSON: forceJSON}
 }
 
-func (p *LLMPlanner) Plan(ctx context.Context, query string) (plan.AnalysisPlan, error) {
-	msgs := []llm.Message{
-		{Role: "system", Content: p.systemPrompt()},
-		{Role: "user", Content: query},
+func (p *LLMPlanner) Plan(ctx context.Context, history []session.Message, query string) (plan.AnalysisPlan, error) {
+	msgs := []llm.Message{{Role: "system", Content: p.systemPrompt()}}
+	for _, h := range history {
+		msgs = append(msgs, llm.Message{Role: h.Role, Content: h.Content})
 	}
+	msgs = append(msgs, llm.Message{Role: "user", Content: query})
 	raw, err := p.cli.Chat(ctx, p.model, msgs, llm.ChatOptions{Temperature: 0, MaxTokens: 512, JSONObject: p.forceJSON})
 	if err != nil {
 		return plan.AnalysisPlan{}, err
@@ -50,14 +52,23 @@ func snippet(s string, n int) string {
 }
 
 func (p *LLMPlanner) systemPrompt() string {
-	return `Ты — планировщик аналитических запросов для системы отчётов кафе.
-Твоя задача: превратить запрос владельца в строгий JSON-план. Ты НЕ считаешь числа и НЕ пишешь текст ответа.
+	return `Ты — ассистент по аналитике кафе. Сначала определи ТИП запроса (intent), затем верни строгий JSON.
+Учитывай историю диалога: «а за прошлый месяц?», «а по Выксе?» — это уточнение предыдущего запроса.
+Если в прошлой реплике ты просил уточнить период/параметр, новая реплика пользователя — это ответ на него.
+
+intent:
+- "report"    — пользователь хочет данные/отчёт → заполни поля плана ниже;
+- "help"      — «что ты умеешь / какие функции» → верни {"intent":"help"};
+- "smalltalk" — приветствие/благодарность/болтовня → {"intent":"smalltalk","reply":"<короткий дружелюбный ответ>"};
+- "off_topic" — не про аналитику заведения → {"intent":"off_topic"}.
+Для report поле "reply" не нужно.
 
 Доступные отчёты и поля (white-list — использовать ТОЛЬКО их):
 ` + p.cat.Describe() + `
-Верни СТРОГО один JSON-объект со схемой:
+Для intent="report" верни JSON со схемой:
 {
   "version": "1",
+  "intent": "report",
   "class": "A" | "B",            // A — простой отчёт, B — аналитика (сравнение/вклад)
   "report": "<slug отчёта>",
   "metrics": ["<ключи полей>"],

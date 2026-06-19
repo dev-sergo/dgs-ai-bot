@@ -9,6 +9,17 @@ const (
 	ClassB Class = "B"
 )
 
+// EffectiveIntent возвращает интент с дефолтом "report" для пустого значения.
+func (p AnalysisPlan) EffectiveIntent() string {
+	if p.Intent == "" {
+		return "report"
+	}
+	return p.Intent
+}
+
+// IsReport сообщает, является ли запрос запросом данных.
+func (p AnalysisPlan) IsReport() bool { return p.EffectiveIntent() == "report" }
+
 // Period — период отчёта. Относительный токен (today/last_7_days/...) или явные даты.
 type Period struct {
 	Kind  string `json:"kind"`            // "relative" | "explicit"
@@ -34,8 +45,16 @@ type Output struct {
 // AnalysisPlan — структурированный план, который LLM собирает из white-list.
 // tenant_id здесь НЕТ намеренно: он проставляется server-side.
 type AnalysisPlan struct {
-	Version    string   `json:"version"`
-	Class      Class    `json:"class"`
+	Version string `json:"version"`
+	// Intent — что вообще хочет пользователь:
+	//   "report"    — запрос данных (заполняются report/metrics/period/...);
+	//   "help"      — «что ты умеешь» → ответ возможностями;
+	//   "smalltalk" — приветствие/болтовня → короткий ответ (см. Reply);
+	//   "off_topic" — вне компетенции → вежливый отказ.
+	// Пусто трактуется как "report" (обратная совместимость).
+	Intent string `json:"intent,omitempty"`
+	Reply  string `json:"reply,omitempty"` // текст ответа для non-report интентов
+	Class  Class  `json:"class"`
 	Report     string   `json:"report"`
 	Metrics    []string `json:"metrics,omitempty"`
 	GroupBy    []string `json:"group_by,omitempty"`

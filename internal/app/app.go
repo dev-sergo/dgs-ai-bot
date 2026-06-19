@@ -17,6 +17,7 @@ import (
 	"dgsbot/internal/planner"
 	"dgsbot/internal/render"
 	"dgsbot/internal/resolver"
+	"dgsbot/internal/session"
 	"dgsbot/internal/tenantctx"
 )
 
@@ -36,6 +37,7 @@ type App struct {
 	client   dooglys.Client
 	resolver *resolver.Store
 	narrator narrator.Narrator
+	sessions *session.Store
 	cat      *catalog.Catalog
 
 	// Now инъектируется для детерминированных тестов.
@@ -43,33 +45,44 @@ type App struct {
 }
 
 // New собирает оркестратор.
-func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator) *App {
+func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator, sess *session.Store) *App {
 	return &App{
 		planner:  pl,
 		tenants:  tenants,
 		client:   client,
 		resolver: res,
 		narrator: nar,
+		sessions: sess,
 		cat:      catalog.Default(),
 		Now:      time.Now,
 	}
 }
 
 // Ask — основной вход: текст → ответ.
-func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
+func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer, error) {
 	ans := Answer{TenantID: tenantID}
 
-	p, err := a.planner.Plan(ctx, text)
+	// История диалога — для follow-up и возобновления уточнений.
+	p, err := a.planner.Plan(ctx, a.history(sessionID), text)
 	if err != nil {
 		return ans, err
 	}
 	ans.Plan = p
+
+	// Не-данные интенты (help/smalltalk/off_topic) — отвечаем словами, без отчётов.
+	if !p.IsReport() {
+		ans.Validation = plan.ValidationResult{OK: true}
+		ans.Text = a.replyForIntent(p)
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
 
 	ans.Validation = plan.Validate(&p, a.cat)
 	if !ans.Validation.OK {
 		// Невалидно или нужно уточнение — отдаём как есть (ветка clarify/refusal).
 		if ans.Validation.NeedClarify {
 			ans.Text = ans.Validation.ClarifyPrompt
+			a.remember(sessionID, text, ans.Text)
 		}
 		return ans, nil
 	}
@@ -83,6 +96,7 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 		ans.Validation.NeedClarify = true
 		ans.Validation.ClarifyPrompt = clarify
 		ans.Text = clarify
+		a.remember(sessionID, text, ans.Text)
 		return ans, nil
 	}
 
@@ -145,7 +159,56 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 	}
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
+	a.remember(sessionID, text, ans.Text)
 	return ans, nil
+}
+
+// replyForIntent формирует текстовый ответ для не-отчётных интентов.
+func (a *App) replyForIntent(p plan.AnalysisPlan) string {
+	switch p.EffectiveIntent() {
+	case "help":
+		return a.helpText()
+	case "smalltalk":
+		if p.Reply != "" {
+			return p.Reply
+		}
+		return "Здравствуйте! Я помогаю с аналитикой вашего заведения. " + a.helpHint()
+	case "off_topic":
+		return "Я отвечаю на вопросы по аналитике вашего заведения. " + a.helpHint()
+	default:
+		return a.helpText()
+	}
+}
+
+// helpText — список возможностей, собранный из каталога (не выдумывается моделью).
+func (a *App) helpText() string {
+	var names []string
+	for _, slug := range a.cat.Slugs() {
+		if r, ok := a.cat.Report(slug); ok {
+			names = append(names, r.Name)
+		}
+	}
+	return "Я — ассистент по аналитике вашего заведения. Могу показать отчёты: " +
+		strings.Join(names, ", ") + ".\n" +
+		"Также объясняю динамику — например «почему упала выручка за месяц».\n" +
+		a.helpHint()
+}
+
+func (a *App) helpHint() string {
+	return "Спросите, например: «выручка за неделю», «топ товаров за месяц», «сравни выручку с прошлой неделей»."
+}
+
+func (a *App) history(sessionID string) []session.Message {
+	if a.sessions == nil {
+		return nil
+	}
+	return a.sessions.History(sessionID)
+}
+
+func (a *App) remember(sessionID, userText, assistantText string) {
+	if a.sessions != nil {
+		a.sessions.Append(sessionID, userText, assistantText)
+	}
 }
 
 // resolveFilters превращает фильтры плана в фильтры запроса.

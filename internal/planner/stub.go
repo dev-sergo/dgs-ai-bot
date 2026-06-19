@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"dgsbot/internal/plan"
+	"dgsbot/internal/session"
 )
 
 // StubPlanner — детерминированный планировщик по ключевым словам.
@@ -14,8 +15,18 @@ type StubPlanner struct{}
 // NewStub создаёт стаб-планировщик.
 func NewStub() *StubPlanner { return &StubPlanner{} }
 
-func (s *StubPlanner) Plan(_ context.Context, query string) (plan.AnalysisPlan, error) {
+func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string) (plan.AnalysisPlan, error) {
 	q := strings.ToLower(query)
+
+	// Интент-гейт: не-данные запросы не должны превращаться в отчёт.
+	switch {
+	case containsAny(q, "умеешь", "функ", "что ты можешь", "что можешь", "помощь", "help", "возможност"):
+		return plan.AnalysisPlan{Version: "1", Intent: "help"}, nil
+	case containsAny(q, "привет", "здравствуй", "спасибо", "как дела"):
+		return plan.AnalysisPlan{Version: "1", Intent: "smalltalk", Reply: "Здравствуйте! Я помогаю с аналитикой вашего заведения."}, nil
+	case containsAny(q, "погод", "анекдот", "кто ты такой", "стих"):
+		return plan.AnalysisPlan{Version: "1", Intent: "off_topic"}, nil
+	}
 
 	report := "payment"
 	metrics := []string{"sum_all"}
@@ -64,6 +75,15 @@ func (s *StubPlanner) Plan(_ context.Context, query string) (plan.AnalysisPlan, 
 	}
 	p.Confidence = 0.9
 	return p, nil
+}
+
+func containsAny(q string, subs ...string) bool {
+	for _, s := range subs {
+		if strings.Contains(q, s) {
+			return true
+		}
+	}
+	return false
 }
 
 func token(q string) string {

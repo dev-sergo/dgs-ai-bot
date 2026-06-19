@@ -75,7 +75,13 @@ func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
 		tenantID = "mock_single"
 	}
 
-	ans, err := s.app.Ask(r.Context(), tenantID, req.Text)
+	// session_id — ключ памяти диалога (стаб; в проде из пре-слоя). По умолчанию — на тенанта.
+	sessionID := r.Header.Get("X-Session-ID")
+	if sessionID == "" {
+		sessionID = "default:" + tenantID
+	}
+
+	ans, err := s.app.Ask(r.Context(), tenantID, sessionID, req.Text)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
 		return

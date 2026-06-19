@@ -18,6 +18,7 @@ import (
 
 // Expect — ожидаемые свойства плана (проверяются только заданные поля).
 type Expect struct {
+	Intent      string   `json:"intent,omitempty"` // report|help|smalltalk|off_topic
 	Report      string   `json:"report,omitempty"`
 	Class       string   `json:"class,omitempty"`
 	Method      string   `json:"method,omitempty"`
@@ -50,6 +51,9 @@ func Check(p plan.AnalysisPlan, e Expect) []string {
 	add := func(s string) { m = append(m, s) }
 
 	// Ожидания могут содержать альтернативы через "|" (напр. "this_month|last_30_days").
+	if e.Intent != "" && !matchAlt(p.EffectiveIntent(), e.Intent) {
+		add("intent=" + p.EffectiveIntent() + " ожидался " + e.Intent)
+	}
 	if e.Report != "" && !matchAlt(p.Report, e.Report) {
 		add("report=" + p.Report + " ожидался " + e.Report)
 	}
@@ -94,14 +98,18 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 	out := make([]Result, 0, len(cases))
 	for _, c := range cases {
 		start := time.Now()
-		p, err := pl.Plan(ctx, c.Query)
+		p, err := pl.Plan(ctx, nil, c.Query) // eval — без истории диалога
 		lat := time.Since(start).Milliseconds()
 
 		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
 		if err == nil {
-			val := plan.Validate(&p, cat)
 			r.Plan = p
-			r.Valid = val.OK || val.NeedClarify
+			if p.IsReport() {
+				val := plan.Validate(&p, cat)
+				r.Valid = val.OK || val.NeedClarify
+			} else {
+				r.Valid = true // help/smalltalk/off_topic — валидны как разговорный ответ
+			}
 			r.Mismatch = Check(p, c.Expect)
 		}
 		out = append(out, r)
