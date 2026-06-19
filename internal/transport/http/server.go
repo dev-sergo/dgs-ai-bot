@@ -9,23 +9,20 @@ import (
 	"net/http"
 	"time"
 
-	"dgsbot/internal/catalog"
+	"dgsbot/internal/app"
 	"dgsbot/internal/config"
-	"dgsbot/internal/plan"
-	"dgsbot/internal/planner"
 )
 
 // Server — HTTP-сервер сервиса.
 type Server struct {
-	cfg     config.Config
-	planner planner.Planner
-	cat     *catalog.Catalog
-	srv     *http.Server
+	cfg config.Config
+	app *app.App
+	srv *http.Server
 }
 
-// New создаёт сервер.
-func New(cfg config.Config, pl planner.Planner) *Server {
-	s := &Server{cfg: cfg, planner: pl, cat: catalog.Default()}
+// New создаёт сервер поверх оркестратора.
+func New(cfg config.Config, a *app.App) *Server {
+	s := &Server{cfg: cfg, app: a}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("POST /ask", s.handleAsk)
@@ -62,14 +59,6 @@ type askRequest struct {
 	TenantID string `json:"tenant_id,omitempty"`
 }
 
-type askResponse struct {
-	TenantID   string                `json:"tenant_id"`
-	Plan       plan.AnalysisPlan     `json:"plan"`
-	Validation plan.ValidationResult `json:"validation"`
-	// Answer появится в M1, когда подключим движок и рендерер.
-	Answer string `json:"answer,omitempty"`
-}
-
 func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
 	var req askRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Text == "" {
@@ -86,14 +75,12 @@ func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
 		tenantID = "mock_single"
 	}
 
-	p, err := s.planner.Plan(r.Context(), req.Text)
+	ans, err := s.app.Ask(r.Context(), tenantID, req.Text)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "planner: " + err.Error()})
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
 		return
 	}
-
-	res := plan.Validate(&p, s.cat)
-	writeJSON(w, http.StatusOK, askResponse{TenantID: tenantID, Plan: p, Validation: res})
+	writeJSON(w, http.StatusOK, ans)
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {

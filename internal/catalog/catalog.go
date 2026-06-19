@@ -171,6 +171,16 @@ func (r Report) HasNonPIIField(key string) bool {
 	return false
 }
 
+// FieldByKey возвращает поле отчёта по ключу.
+func (r Report) FieldByKey(key string) (Field, bool) {
+	for _, f := range r.Fields {
+		if f.Key == key {
+			return f, true
+		}
+	}
+	return Field{}, false
+}
+
 // FilterByField возвращает описание фильтра по имени поля плана.
 func (r Report) FilterByField(field string) (Filter, bool) {
 	for _, f := range r.Filters {
