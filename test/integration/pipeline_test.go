@@ -10,22 +10,25 @@ import (
 	"dgsbot/internal/app"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/planner"
+	"dgsbot/internal/resolver"
 	"dgsbot/internal/tenantctx"
 )
 
 const fixturesDir = "../../docs/contracts/fixtures"
 
-func newApp(t *testing.T) *app.App {
+func newAppWith(t *testing.T, pl planner.Planner) *app.App {
 	t.Helper()
 	tenants, err := tenantctx.Load(fixturesDir + "/tenants.example.json")
 	if err != nil {
 		t.Fatalf("load tenants: %v", err)
 	}
-	a := app.New(planner.NewStub(), tenants, dooglys.NewFixtureClient(fixturesDir))
+	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir))
 	// Фиксированное «сейчас» для детерминизма дат: 2026-06-19 10:00 UTC.
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
 	return a
 }
+
+func newApp(t *testing.T) *app.App { return newAppWith(t, planner.NewStub()) }
 
 func TestRevenueLastWeek(t *testing.T) {
 	a := newApp(t)

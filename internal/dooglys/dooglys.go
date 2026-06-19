@@ -10,19 +10,31 @@ import "context"
 // Row — нормализованная строка отчёта (числа как float64, остальное как string).
 type Row map[string]any
 
+// QueryFilter — один резолвнутый фильтр.
+// Names — человекочитаемые значения (для фикстур/отображения),
+// UUIDs — резолвнутые идентификаторы (для реального клиента через BaseReportForm[Param]).
+type QueryFilter struct {
+	Field string
+	Param string
+	Names []string
+	UUIDs []string
+}
+
 // Query — запрос к источнику. tenant_id проставляется уже в выполнившем резолв слое.
 type Query struct {
-	Report string // slug отчёта
-	From   string // DD.MM.YYYY (включительно)
-	To     string // DD.MM.YYYY (включительно)
-	// Фильтры (точка/сотрудник/…) появятся на M2 вместе с resolver'ом.
+	Report  string // slug отчёта
+	From    string // DD.MM.YYYY (включительно)
+	To      string // DD.MM.YYYY (включительно)
+	Filters []QueryFilter
 }
 
 // Result — результат выборки.
 type Result struct {
-	Report string `json:"report"`
-	Label  string `json:"label"`
-	Rows   []Row  `json:"rows"`
+	Report         string   `json:"report"`
+	Label          string   `json:"label"`
+	Rows           []Row    `json:"rows"`
+	FiltersApplied []string `json:"filters_applied,omitempty"` // фактически отфильтровали строки
+	FiltersSkipped []string `json:"filters_skipped,omitempty"` // нет подходящей колонки в фикстуре
 }
 
 // Client — источник данных отчётов.

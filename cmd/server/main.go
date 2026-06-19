@@ -16,6 +16,7 @@ import (
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/llm"
 	"dgsbot/internal/planner"
+	"dgsbot/internal/resolver"
 	"dgsbot/internal/tenantctx"
 	httpx "dgsbot/internal/transport/http"
 )
@@ -42,7 +43,10 @@ func main() {
 	// Источник данных: фикстуры (M1). На M4 заменится на реальный клиент за тем же интерфейсом.
 	client := dooglys.NewFixtureClient(cfg.FixturesPath)
 
-	a := app.New(pl, tenants, client)
+	// Справочники для резолва имён в uuid.
+	res := resolver.Load(cfg.FixturesPath)
+
+	a := app.New(pl, tenants, client, res)
 	srv := httpx.New(cfg, a)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

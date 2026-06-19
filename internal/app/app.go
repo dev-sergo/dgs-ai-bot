@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"dgsbot/internal/catalog"
@@ -14,6 +15,7 @@ import (
 	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/render"
+	"dgsbot/internal/resolver"
 	"dgsbot/internal/tenantctx"
 )
 
@@ -28,23 +30,25 @@ type Answer struct {
 
 // App — собранный пайплайн.
 type App struct {
-	planner planner.Planner
-	tenants *tenantctx.Store
-	client  dooglys.Client
-	cat     *catalog.Catalog
+	planner  planner.Planner
+	tenants  *tenantctx.Store
+	client   dooglys.Client
+	resolver *resolver.Store
+	cat      *catalog.Catalog
 
 	// Now инъектируется для детерминированных тестов.
 	Now func() time.Time
 }
 
 // New собирает оркестратор.
-func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client) *App {
+func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store) *App {
 	return &App{
-		planner: pl,
-		tenants: tenants,
-		client:  client,
-		cat:     catalog.Default(),
-		Now:     time.Now,
+		planner:  pl,
+		tenants:  tenants,
+		client:   client,
+		resolver: res,
+		cat:      catalog.Default(),
+		Now:      time.Now,
 	}
 }
 
@@ -67,6 +71,18 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 		return ans, nil
 	}
 
+	rep, _ := a.cat.Report(p.Report)
+
+	// Резолв фильтров: имена → uuid (для ref). Нерезолвнутое имя → уточнение.
+	filters, clarify := a.resolveFilters(rep, p.Filters)
+	if clarify != "" {
+		ans.Validation.OK = false
+		ans.Validation.NeedClarify = true
+		ans.Validation.ClarifyPrompt = clarify
+		ans.Text = clarify
+		return ans, nil
+	}
+
 	// Контекст тенанта (таймзона/валюта). Неизвестный → дефолт Москва/RUB.
 	t, ok := a.tenants.Lookup(tenantID)
 	if !ok {
@@ -79,17 +95,53 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 		return ans, err
 	}
 
-	res, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to})
+	res, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
 	if err != nil {
 		return ans, err
 	}
 
-	rep, _ := a.cat.Report(p.Report)
 	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
 	env := engine.Plain(p, rep, res, tenantID, currencyOr(t.Currency), period)
+	if len(res.FiltersApplied) > 0 {
+		env.Meta["filters_applied"] = res.FiltersApplied
+	}
+	if len(res.FiltersSkipped) > 0 {
+		env.Meta["filters_skipped"] = res.FiltersSkipped
+	}
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
 	return ans, nil
+}
+
+// resolveFilters превращает фильтры плана в фильтры запроса.
+// Для ref-фильтров имена резолвятся в uuid; первая неудача → текст уточнения.
+func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.QueryFilter, string) {
+	var out []dooglys.QueryFilter
+	for _, pf := range pfs {
+		cf, ok := rep.FilterByField(pf.Field)
+		if !ok {
+			continue // валидатор уже отсёк неизвестные; страхуемся
+		}
+		qf := dooglys.QueryFilter{Field: pf.Field, Param: cf.Param, Names: pf.Values}
+		if cf.Kind == "ref" {
+			for _, name := range pf.Values {
+				m, err := a.resolver.Resolve(pf.Field, name)
+				if err != nil {
+					if re, ok := err.(*resolver.ResolveError); ok && re.Ambiguous {
+						return nil, "Уточните " + pf.Field + " «" + name + "»: подходят " + joinRu(re.Candidates) + "."
+					}
+					return nil, "Не нашёл " + pf.Field + " «" + name + "». Проверьте название."
+				}
+				qf.UUIDs = append(qf.UUIDs, m.UUID)
+			}
+		}
+		out = append(out, qf)
+	}
+	return out, ""
+}
+
+func joinRu(ss []string) string {
+	return strings.Join(ss, ", ")
 }
 
 func (a *App) resolvePeriod(p plan.Period, t tenantctx.Tenant) (from, to string, err error) {
