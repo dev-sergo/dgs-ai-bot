@@ -1,0 +1,26 @@
+{
+  "url": "/notification/item/view/37df2048-b804-4c61-b9b2-6941dbfb2383",
+  "columns": [
+    {
+      "label": "Пользователь",
+      "field": "user_id"
+    },
+    {
+      "label": "Прочитано",
+      "field": "read_time"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "{\"notification_id\":\"37df2048-b804-4c61-b9b2-6941dbfb2383\",\"user_id\":\"e17423c8-cdc7-43e0-9432-1e9f7c233ce7\"}"
+      },
+      "cells": [
+        "qatestProd",
+        "5 июн. 2026 г., 20:08:03"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

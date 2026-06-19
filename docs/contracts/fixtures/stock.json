@@ -1,0 +1,9 @@
+{
+  "report": "stock",
+  "label": "Остатки по складам",
+  "rows": [
+    {
+      "product_name": null
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "report": "device_terminal_info_39ee1334-ac91-4c93-ad88-8899f0804725",
+  "label": "",
+  "rows": [
+    {
+      "col": 1.0,
+      "nazvanie": "Фискальный регистратор АТОЛ(5)",
+      "model": "FiscalRegistrarAtol5",
+      "ffd": null
+    },
+    {
+      "col": 2.0,
+      "nazvanie": "Posiflex PP6900 Printer",
+      "model": "SystemPrinter",
+      "ffd": null
+    },
+    {
+      "col": 3.0,
+      "nazvanie": "Эмулятор эк.терминала",
+      "model": "GateEmulator",
+      "ffd": null
+    }
+  ]
+}

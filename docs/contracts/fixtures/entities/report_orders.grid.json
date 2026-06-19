@@ -1,0 +1,113 @@
+{
+  "url": "/report/orders",
+  "columns": [
+    {
+      "label": "№",
+      "field": "number"
+    },
+    {
+      "label": "Источник",
+      "field": null
+    },
+    {
+      "label": "Кассир",
+      "field": null
+    },
+    {
+      "label": "Покупатель",
+      "field": null
+    },
+    {
+      "label": "Торговая точка",
+      "field": null
+    },
+    {
+      "label": "Открыт",
+      "field": "open"
+    },
+    {
+      "label": "Доставлен",
+      "field": null
+    },
+    {
+      "label": "Завершен",
+      "field": null
+    },
+    {
+      "label": "Стоимость (₽)",
+      "field": "paid"
+    },
+    {
+      "label": "Скидка (₽)",
+      "field": "discount_value"
+    },
+    {
+      "label": "Статус",
+      "field": null
+    },
+    {
+      "label": "Тип заказа",
+      "field": null
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Доставка ко времени",
+      "field": null
+    },
+    {
+      "label": "Причина возврата",
+      "field": null
+    },
+    {
+      "label": "ФИО",
+      "field": null
+    },
+    {
+      "label": "Адрес",
+      "field": null
+    },
+    {
+      "label": "Координаты",
+      "field": null
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "Итого:",
+    "Итого:",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "0,00₽",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "row_count": 1
+}

@@ -1,0 +1,53 @@
+{
+  "url": "/report/cash-on-hand",
+  "columns": [
+    {
+      "label": "Торговая точка",
+      "field": "-name"
+    },
+    {
+      "label": "Продажи",
+      "field": "sell"
+    },
+    {
+      "label": "Возвраты",
+      "field": "payback"
+    },
+    {
+      "label": "Внесения",
+      "field": "income"
+    },
+    {
+      "label": "Выплаты",
+      "field": "outcome"
+    },
+    {
+      "label": "Итого",
+      "field": "total"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "a229a4e7-2c69-4b34-a95e-8f7a2052af9e"
+      },
+      "cells": [
+        "ТС ПИоТ",
+        "0,00 ₽",
+        "0,00 ₽",
+        "1,00 ₽",
+        "0,00 ₽",
+        "1,00 ₽"
+      ]
+    }
+  ],
+  "total": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "row_count": 1
+}

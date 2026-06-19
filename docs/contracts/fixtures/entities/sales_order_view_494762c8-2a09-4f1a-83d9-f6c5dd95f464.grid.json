@@ -1,0 +1,71 @@
+{
+  "url": "/sales/order/view/494762c8-2a09-4f1a-83d9-f6c5dd95f464",
+  "columns": [
+    {
+      "label": "№ чека",
+      "field": "number"
+    },
+    {
+      "label": "№ кассовой смены",
+      "field": "shift_number"
+    },
+    {
+      "label": "Кассир",
+      "field": "cashier_name"
+    },
+    {
+      "label": "Терминал",
+      "field": "terminal_name"
+    },
+    {
+      "label": "Тип чека",
+      "field": null
+    },
+    {
+      "label": "Закрыт",
+      "field": "close"
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Оплачено (₽)",
+      "field": "paid"
+    },
+    {
+      "label": "Скидка (₽)",
+      "field": "sell_discount"
+    },
+    {
+      "label": "Прибыль (₽)",
+      "field": "profit"
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "9f29d09d-10bf-4951-af38-6b87414262c6"
+      },
+      "cells": [
+        "0",
+        "0",
+        "REDACTED",
+        "ТС ПИоТ",
+        "Продажа",
+        "16 июн. 18:23",
+        "Наличные",
+        "115,00",
+        "0,00",
+        "114,77",
+        "Подробнее"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

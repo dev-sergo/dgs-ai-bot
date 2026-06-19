@@ -1,0 +1,32 @@
+{
+  "report": "report_bonuses",
+  "label": "",
+  "rows": [
+    {
+      "data": "2026-06-03",
+      "zachisleniya": 2.0,
+      "zachisleniya_summa": 2000.0,
+      "spisaniya": 0.0,
+      "spisaniya_summa": 0.0,
+      "pokupki_urovnya": 0.0,
+      "pokupki_urovnya_summa": 0.0,
+      "sgoraniya": 0.0,
+      "sgoraniya_summa": 0.0,
+      "bez_kart": 1.0,
+      "bez_kart_summa": 100.0
+    },
+    {
+      "data": "2026-06-02",
+      "zachisleniya": 1.0,
+      "zachisleniya_summa": 100.0,
+      "spisaniya": 0.0,
+      "spisaniya_summa": 0.0,
+      "pokupki_urovnya": 0.0,
+      "pokupki_urovnya_summa": 0.0,
+      "sgoraniya": 0.0,
+      "sgoraniya_summa": 0.0,
+      "bez_kart": 2.0,
+      "bez_kart_summa": 1000.0
+    }
+  ]
+}

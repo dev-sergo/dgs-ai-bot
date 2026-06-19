@@ -1,0 +1,62 @@
+{
+  "report": "structure_organization",
+  "label": "",
+  "rows": [
+    {
+      "yuridicheskoe_nazvanie": "asd",
+      "tip_sistemy_nalogooblozheniya": "Общая система - ОСН",
+      "inn": null,
+      "adres": "REDACTED",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "ТС ПИоТ",
+      "tip_sistemy_nalogooblozheniya": "Общая система - ОСН",
+      "inn": null,
+      "adres": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "ВЫКСА",
+      "tip_sistemy_nalogooblozheniya": "Упрощенная система - УСН (Доход минус Расход)",
+      "inn": "0000000000",
+      "adres": "REDACTED",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "Моя организация",
+      "tip_sistemy_nalogooblozheniya": "Патентная система налогообложения",
+      "inn": null,
+      "adres": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "Общество с ограниченной ответственностью ЧАСТНАЯ ОХРАННАЯ ОРГАНИЗАЦИЯ РАТНИК",
+      "tip_sistemy_nalogooblozheniya": "Упрощенная система - УСН (Доход минус Расход)",
+      "inn": "0000000000",
+      "adres": "REDACTED",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "Автосуши №1",
+      "tip_sistemy_nalogooblozheniya": "Общая система - ОСН",
+      "inn": "0000000000",
+      "adres": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "АвтоPizza",
+      "tip_sistemy_nalogooblozheniya": "Общая система - ОСН",
+      "inn": "0000000000",
+      "adres": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "ghjkl",
+      "tip_sistemy_nalogooblozheniya": null,
+      "inn": null,
+      "adres": "REDACTED",
+      "col": "Редактировать Удалить"
+    }
+  ]
+}

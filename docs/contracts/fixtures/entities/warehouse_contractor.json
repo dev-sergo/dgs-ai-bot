@@ -1,0 +1,46 @@
+{
+  "report": "warehouse_contractor",
+  "label": "",
+  "rows": [
+    {
+      "name": "222-дубль",
+      "phone_number": null,
+      "fax": null,
+      "email": null,
+      "legal_address": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": 22.0,
+      "phone_number": null,
+      "fax": null,
+      "email": null,
+      "legal_address": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": 123.0,
+      "phone_number": null,
+      "fax": null,
+      "email": null,
+      "legal_address": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Розничный клиент",
+      "phone_number": null,
+      "fax": null,
+      "email": null,
+      "legal_address": null,
+      "col": "Редактировать"
+    },
+    {
+      "name": "Розничный клиент",
+      "phone_number": null,
+      "fax": null,
+      "email": null,
+      "legal_address": null,
+      "col": "Редактировать"
+    }
+  ]
+}

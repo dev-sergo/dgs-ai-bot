@@ -1,0 +1,65 @@
+{
+  "url": "/structure/organization/archive",
+  "columns": [
+    {
+      "label": "Юридическое название",
+      "field": null
+    },
+    {
+      "label": "Тип системы налогообложения",
+      "field": null
+    },
+    {
+      "label": "ИНН",
+      "field": null
+    },
+    {
+      "label": "Адрес",
+      "field": null
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "bea47443-8ba1-4cfb-b73f-16cdb1ac8bbf"
+      },
+      "cells": [
+        "wer",
+        "",
+        "",
+        "REDACTED",
+        "Восстановить"
+      ]
+    },
+    {
+      "meta": {
+        "key": "6d4b8b05-2250-4405-9d33-4208b92c7fd1"
+      },
+      "cells": [
+        "Пименова Татьяна Арсентьевна",
+        "",
+        "",
+        "REDACTED",
+        "Восстановить"
+      ]
+    },
+    {
+      "meta": {
+        "key": "9e89d4ea-d816-457b-b757-f777db0be137"
+      },
+      "cells": [
+        "1",
+        "",
+        "",
+        "",
+        "Восстановить"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 3
+}

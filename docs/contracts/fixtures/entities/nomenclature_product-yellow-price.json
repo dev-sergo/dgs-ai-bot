@@ -1,0 +1,51 @@
+{
+  "report": "nomenclature_product-yellow-price",
+  "label": "",
+  "rows": [
+    {
+      "short_name": "выкса",
+      "kolichestvo_cennikov": 6.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Выкса осн",
+      "kolichestvo_cennikov": 2.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Казань",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Киров",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Москва",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "НН",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Регион франшизы",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "Самара",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    },
+    {
+      "short_name": "СПБ",
+      "kolichestvo_cennikov": 0.0,
+      "col": "Редактировать"
+    }
+  ]
+}

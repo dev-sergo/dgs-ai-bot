@@ -1,0 +1,35 @@
+{
+  "url": "/notification/item/view/e25125f1-a6d8-4d08-afea-d94b8c0aa456",
+  "columns": [
+    {
+      "label": "Пользователь",
+      "field": "user_id"
+    },
+    {
+      "label": "Прочитано",
+      "field": "read_time"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "{\"notification_id\":\"e25125f1-a6d8-4d08-afea-d94b8c0aa456\",\"user_id\":\"4ffe2c09-67a8-4607-8226-4b7eb91ed7a9\"}"
+      },
+      "cells": [
+        "Google Google",
+        "24 янв. 2025 г., 13:24:40"
+      ]
+    },
+    {
+      "meta": {
+        "key": "{\"notification_id\":\"e25125f1-a6d8-4d08-afea-d94b8c0aa456\",\"user_id\":\"59a9ec02-b700-477e-85f4-f512b207738b\"}"
+      },
+      "cells": [
+        "Marochkin Petr",
+        "19 июл. 2021 г., 16:30:34"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 2
+}

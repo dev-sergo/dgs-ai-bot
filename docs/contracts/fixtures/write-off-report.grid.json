@@ -1,0 +1,63 @@
+{
+  "label": "Отчёт по списаниям",
+  "columns": [
+    {
+      "label": "Документ",
+      "field": null
+    },
+    {
+      "label": "Дата движения",
+      "field": "date"
+    },
+    {
+      "label": "Склад",
+      "field": "warehouse_name"
+    },
+    {
+      "label": "Сотрудник",
+      "field": "user_name"
+    },
+    {
+      "label": "Позиция",
+      "field": "product_name"
+    },
+    {
+      "label": "Ед. изм.",
+      "field": null
+    },
+    {
+      "label": "Количество",
+      "field": null
+    },
+    {
+      "label": "Сумма, ₽",
+      "field": "total_cost"
+    },
+    {
+      "label": "Статья",
+      "field": "reason_name"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "Итого:",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "0,00",
+    ""
+  ],
+  "row_count": 1
+}

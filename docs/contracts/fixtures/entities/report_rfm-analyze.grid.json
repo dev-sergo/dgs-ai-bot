@@ -1,0 +1,72 @@
+{
+  "url": "/report/rfm-analyze",
+  "columns": [
+    {
+      "label": "Клиент",
+      "field": "-fio"
+    },
+    {
+      "label": "Группа",
+      "field": null
+    },
+    {
+      "label": "RFM-Индекс",
+      "field": null
+    },
+    {
+      "label": "Последняя покупка (дней назад)",
+      "field": "last_purchase_days"
+    },
+    {
+      "label": "Кол-во покупок",
+      "field": "purchase_quantity"
+    },
+    {
+      "label": "Сумма покупок, ₽",
+      "field": "purchase_amount"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "d52e44ad-8d1d-412d-9781-050baa79ef4c"
+      },
+      "cells": [
+        "Dmitry",
+        "В зоне потери",
+        "133",
+        "203",
+        "15",
+        "4 926,00"
+      ]
+    },
+    {
+      "meta": {
+        "key": "d8bd2686-1b77-4a2f-8b06-76136e986f70"
+      },
+      "cells": [
+        "Тестов Тест",
+        "Спящие",
+        "113",
+        "79",
+        "1",
+        "430,00"
+      ]
+    },
+    {
+      "meta": {
+        "key": "6aabf379-af51-4d90-902e-7c168fa271b7"
+      },
+      "cells": [
+        "Фамилия Имя Отчество",
+        "В зоне потери",
+        "133",
+        "17",
+        "25",
+        "8 221,56"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 3
+}

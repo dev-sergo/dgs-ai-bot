@@ -1,0 +1,206 @@
+{
+  "report": "coupon_coupon",
+  "label": "",
+  "rows": [
+    {
+      "col": null,
+      "code": "DYRKOW2",
+      "deystvitelen_s": null,
+      "deystvitelen_po": null,
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетмногократное применение",
+      "kolichestvo_primeneniy": null,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "DYRKOW",
+      "deystvitelen_s": null,
+      "deystvitelen_po": null,
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетмногократное применение",
+      "kolichestvo_primeneniy": null,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA-ONE2",
+      "deystvitelen_s": "22 окт. 2025 г.",
+      "deystvitelen_po": "30 нояб. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетоднократное применение",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "AAA",
+      "deystvitelen_s": "22 окт. 2025 г.",
+      "deystvitelen_po": "30 нояб. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетоднократное применение",
+      "kolichestvo_primeneniy": null,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": 4747.0,
+      "deystvitelen_s": null,
+      "deystvitelen_po": null,
+      "data_poslednego_ispolzovaniya": "26 июн. 2025 г., 17:02:57",
+      "yavlyaetsya_odnorazovym": "Нетмногократное применение",
+      "kolichestvo_primeneniy": 13.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA-ONE1",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "8 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": "6 июн. 2025 г., 14:03:14",
+      "yavlyaetsya_odnorazovym": "Нетоднократное применение",
+      "kolichestvo_primeneniy": 1.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA-ONE3",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "7 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетоднократное применение",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA-ONE4",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "7 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Нетоднократное применение",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA2",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "7 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA3",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "7 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "QA4",
+      "deystvitelen_s": "5 июн. 2025 г.",
+      "deystvitelen_po": "7 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТËЫТ5РБ",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТБ5А9АЯ",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТБЕЧ7ЗЩ",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТВКИ9ЙП",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТЗБЯП2У",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТЛ-ЕТ5У",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТО9ЧЫ9Ч",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТР2Ш8О7",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    },
+    {
+      "col": null,
+      "code": "ТЕСТШЫС31С",
+      "deystvitelen_s": "30 мая 2025 г.",
+      "deystvitelen_po": "1 июн. 2025 г.",
+      "data_poslednego_ispolzovaniya": null,
+      "yavlyaetsya_odnorazovym": "Да",
+      "kolichestvo_primeneniy": 0.0,
+      "col_1": "Удалить Редактировать"
+    }
+  ]
+}

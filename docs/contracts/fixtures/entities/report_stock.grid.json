@@ -1,0 +1,53 @@
+{
+  "url": "/report/stock",
+  "columns": [
+    {
+      "label": "Продукт",
+      "field": "-product_name"
+    },
+    {
+      "label": "Категория",
+      "field": "category_name"
+    },
+    {
+      "label": "Склад",
+      "field": null
+    },
+    {
+      "label": "Количество",
+      "field": "stock"
+    },
+    {
+      "label": "Ед. изм.",
+      "field": null
+    },
+    {
+      "label": "Общ. сумма по цене себестоимости, ₽",
+      "field": "cost_sum"
+    },
+    {
+      "label": "Общ. сумма по розничной цене, ₽",
+      "field": "price_sum"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "Итого:",
+    "",
+    "",
+    "",
+    "",
+    "0,00",
+    "0,00"
+  ],
+  "row_count": 1
+}

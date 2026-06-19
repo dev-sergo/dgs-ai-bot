@@ -1,0 +1,9 @@
+{
+  "report": "report_order-processing-time",
+  "label": "",
+  "rows": [
+    {
+      "sale_point_name": null
+    }
+  ]
+}

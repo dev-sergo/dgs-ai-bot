@@ -1,0 +1,206 @@
+{
+  "report": "device_terminal_index",
+  "label": "",
+  "rows": [
+    {
+      "name": "ТС ПИоТ",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "ТС ПИоТ",
+      "sklad": null,
+      "last_login": "19.06.2026 12:47:44",
+      "date_activated": "-",
+      "col": "Редактировать Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "ТСПИоТ SUNMI",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "ТС ПИоТ",
+      "sklad": null,
+      "last_login": "19.06.2026 12:47:31",
+      "date_activated": "-",
+      "col": "Редактировать Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "EVOTOR Evotor",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "пустой склад",
+      "last_login": "19.06.2026 12:43:35",
+      "date_activated": "-",
+      "col": "Редактировать Посмотреть настройки"
+    },
+    {
+      "name": "ANDROID",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "пустой склад",
+      "last_login": "18.06.2026 19:31:03",
+      "date_activated": "-",
+      "col": "Редактировать Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "SUNMI",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "пустой склад",
+      "last_login": "18.06.2026 19:11:16",
+      "date_activated": "-",
+      "col": "Редактировать Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "Склад (алексей)",
+      "kod_aktivacii": null,
+      "tip_terminala": "Складской терминал",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "18.06.2026 15:36:32",
+      "date_activated": "-",
+      "col": "Редактировать Отвязать устройство"
+    },
+    {
+      "name": "Выкса",
+      "kod_aktivacii": null,
+      "tip_terminala": "Колл-центр",
+      "torgovaya_tochka": null,
+      "sklad": null,
+      "last_login": "09.06.2026 15:01:03",
+      "date_activated": "29.01.2026 12:13:27",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "@RetailKassaTest",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "ТехноТест",
+      "last_login": "05.06.2026 20:08:34",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "fdsafdsafdas",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": 123.0,
+      "sklad": null,
+      "last_login": "04.06.2026 13:01:43",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "SmartSky Demo",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "ВЫКСА",
+      "sklad": null,
+      "last_login": "04.06.2026 12:58:49",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "Терминал склада",
+      "kod_aktivacii": null,
+      "tip_terminala": "Складской терминал",
+      "torgovaya_tochka": null,
+      "sklad": "ТехноТест",
+      "last_login": "03.06.2026 23:54:02",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Отвязать устройство"
+    },
+    {
+      "name": "WEB",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "ВЫКСА",
+      "sklad": "пустой склад",
+      "last_login": "02.06.2026 18:48:00",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "РОБОТ АНДРЕЯ",
+      "kod_aktivacii": null,
+      "tip_terminala": "Робот",
+      "torgovaya_tochka": "ВЫКСА",
+      "sklad": "dfssafdsafdsafdsafdsafdsa",
+      "last_login": "02.06.2026 18:46:53",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Отвязать устройство"
+    },
+    {
+      "name": "Anton terminal",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "очень длинное название склада",
+      "last_login": "02.06.2026 03:31:46",
+      "date_activated": "13.09.2022 18:05:55",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "Петр Chrome",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "очень длинное название склада",
+      "last_login": "14.05.2026 16:03:40",
+      "date_activated": "26.11.2019 16:26:29",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Робот",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "пустой склад",
+      "last_login": "20.04.2026 15:35:23",
+      "date_activated": "03.03.2023 18:10:22",
+      "col": "Редактировать Удалить Отвязать устройство"
+    },
+    {
+      "name": "mkrtchyan test",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Нижний Новгород_new",
+      "sklad": "пустой склад",
+      "last_login": "01.04.2026 13:50:28",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "Bulat designer (do not touch!)",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Bulat Designer (do not touch!)",
+      "sklad": "ТехноТест",
+      "last_login": "15.02.2026 18:56:35",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Посмотреть настройки Отвязать устройство"
+    },
+    {
+      "name": "mkrtchian_test",
+      "kod_aktivacii": null,
+      "tip_terminala": "Робот",
+      "torgovaya_tochka": "АвтоPizza",
+      "sklad": "пустой склад",
+      "last_login": "20.01.2026 20:56:01",
+      "date_activated": "-",
+      "col": "Редактировать Удалить Отвязать устройство"
+    },
+    {
+      "name": "Новый терминал Petr",
+      "kod_aktivacii": null,
+      "tip_terminala": "Робот",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "ТехноТест",
+      "last_login": "20.01.2026 18:36:09",
+      "date_activated": "20.01.2026 18:28:50",
+      "col": "Редактировать Удалить Отвязать устройство"
+    }
+  ]
+}

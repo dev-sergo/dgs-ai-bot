@@ -1,0 +1,26 @@
+{
+  "url": "/notification/item/view/8d28488a-880e-4703-a443-557774492f90",
+  "columns": [
+    {
+      "label": "Пользователь",
+      "field": "user_id"
+    },
+    {
+      "label": "Прочитано",
+      "field": "read_time"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "{\"notification_id\":\"8d28488a-880e-4703-a443-557774492f90\",\"user_id\":\"e17423c8-cdc7-43e0-9432-1e9f7c233ce7\"}"
+      },
+      "cells": [
+        "qatestProd",
+        "3 июн. 2025 г., 11:52:05"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

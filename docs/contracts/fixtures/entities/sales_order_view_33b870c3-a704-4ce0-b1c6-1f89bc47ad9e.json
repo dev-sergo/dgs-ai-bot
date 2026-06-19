@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_33b870c3-a704-4ce0-b1c6-1f89bc47ad9e",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 0.0
+    },
+    {
+      "nazvanie": "Пиво Сценарий 5, 16",
+      "cena": 105.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 105.0
+    }
+  ]
+}

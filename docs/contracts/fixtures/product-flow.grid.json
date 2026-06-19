@@ -1,0 +1,57 @@
+{
+  "label": "Отчёт по движению",
+  "columns": [
+    {
+      "label": "Склад",
+      "field": null
+    },
+    {
+      "label": "Товар",
+      "field": "-product_name"
+    },
+    {
+      "label": "Себестоимость",
+      "field": null
+    },
+    {
+      "label": "Σ (Расход * себестоимость",
+      "field": null
+    },
+    {
+      "label": "Категория",
+      "field": "category_name"
+    },
+    {
+      "label": "Нач. ост.",
+      "field": null
+    },
+    {
+      "label": "Приход",
+      "field": null
+    },
+    {
+      "label": "Расход",
+      "field": null
+    },
+    {
+      "label": "Кон. ост.",
+      "field": null
+    },
+    {
+      "label": "Ед. изм.",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

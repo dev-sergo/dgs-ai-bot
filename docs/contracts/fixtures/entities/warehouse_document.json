@@ -1,0 +1,166 @@
+{
+  "report": "warehouse_document",
+  "label": "",
+  "rows": [
+    {
+      "number": "СПИС-25",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПЕР-11",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "РЕАЛ-1",
+      "is_register": "Не проведен",
+      "registration_date": "21 апр. 2026 г., 11:55:00",
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-51",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-50",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-49",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-48",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ОПР-28",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-47",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ОПР-27",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "DGS-4312",
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ОПР-26",
+      "is_register": "Проведен",
+      "registration_date": "17 нояб. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "DGS-4312",
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ЗПОСТ-8",
+      "is_register": "Проведен",
+      "registration_date": "22 окт. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "fsvsdc",
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ОПР-25",
+      "is_register": "Проведен",
+      "registration_date": "9 сент. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": "1111\\2",
+      "kommentariy": null,
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ИНВ-32",
+      "is_register": "Проведен",
+      "registration_date": "9 сент. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": "1111\\2",
+      "kommentariy": "Разница, после разделения...",
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ПЕР-10",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "test",
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-46",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "аауа",
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ИНВ-31",
+      "is_register": "Не проведен",
+      "registration_date": null,
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "тест",
+      "col": "Редактировать Копировать Удалить"
+    },
+    {
+      "number": "ПОСТ-45",
+      "is_register": "Проведен",
+      "registration_date": "18 июл. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": "DGS-3812",
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ПЕРЕОЦ-12",
+      "is_register": "Проведен",
+      "registration_date": "1 июл. 2025 г., 00:00:00",
+      "nomer_vhodyaschego_dokumenta": 1.0,
+      "kommentariy": "test view",
+      "col": "Просмотр Копировать"
+    },
+    {
+      "number": "ПЕРЕОЦ-11",
+      "is_register": "Не проведен",
+      "registration_date": "4 июн. 2025 г., 02:00:00",
+      "nomer_vhodyaschego_dokumenta": null,
+      "kommentariy": null,
+      "col": "Редактировать Копировать Удалить"
+    }
+  ]
+}

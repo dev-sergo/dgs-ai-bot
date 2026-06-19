@@ -1,0 +1,30 @@
+{
+  "report": "sales_order_view_843b637c-8f70-4d27-8b6d-043d86c444ac",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Спагетти",
+      "cena": 60.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 60.0
+    },
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 0.0
+    },
+    {
+      "nazvanie": "Палочки комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 0.0
+    }
+  ]
+}

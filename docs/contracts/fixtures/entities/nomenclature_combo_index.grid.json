@@ -1,0 +1,48 @@
+{
+  "url": "/nomenclature/combo/index",
+  "label": "Комбо",
+  "columns": [
+    {
+      "label": "",
+      "field": null
+    },
+    {
+      "label": "Наименование товара",
+      "field": "-name"
+    },
+    {
+      "label": "Категория",
+      "field": "product_category_id"
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "ab243ebb-8f89-4b27-a461-5e7ca89f1c45"
+      },
+      "cells": [
+        "",
+        "Test combo (шт) Повар",
+        "пицца",
+        "Посмотреть"
+      ]
+    },
+    {
+      "meta": {
+        "key": "380a062e-ee55-4ec3-8a08-db993ab1a3e2"
+      },
+      "cells": [
+        "",
+        "две пиццы (шт) Повар",
+        "пицца",
+        "Посмотреть"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 2
+}

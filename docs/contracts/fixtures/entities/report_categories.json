@@ -1,0 +1,42 @@
+{
+  "report": "report_categories",
+  "label": "",
+  "rows": [
+    {
+      "name": "Второе",
+      "quantity": 3.0,
+      "amount": 180.0,
+      "profit": -153.0
+    },
+    {
+      "name": "Напитки",
+      "quantity": 1.0,
+      "amount": 150.0,
+      "profit": 95.0
+    },
+    {
+      "name": "Пицца",
+      "quantity": 2.0,
+      "amount": 1000.0,
+      "profit": 1000.0
+    },
+    {
+      "name": "ТС ПИоТ",
+      "quantity": 5.0,
+      "amount": 942.0,
+      "profit": 942.0
+    },
+    {
+      "name": "Фурнитура",
+      "quantity": 1.0,
+      "amount": 100.0,
+      "profit": 80.0
+    },
+    {
+      "name": "Холодные напитки: морс, лимонад, молоко",
+      "quantity": 4.0,
+      "amount": 199.48,
+      "profit": 119.48
+    }
+  ]
+}

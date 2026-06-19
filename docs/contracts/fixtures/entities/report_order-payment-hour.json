@@ -1,0 +1,72 @@
+{
+  "report": "report_order-payment-hour",
+  "label": "",
+  "rows": [
+    {
+      "hour": 1.0,
+      "quantity": 1.0,
+      "sales_sum": 49.87,
+      "items_sum": 49.87
+    },
+    {
+      "hour": 3.0,
+      "quantity": 2.0,
+      "sales_sum": 1000.0,
+      "items_sum": 1000.0
+    },
+    {
+      "hour": 12.0,
+      "quantity": 1.0,
+      "sales_sum": 49.87,
+      "items_sum": 49.87
+    },
+    {
+      "hour": 13.0,
+      "quantity": 2.0,
+      "sales_sum": 1322.0,
+      "items_sum": 1322.0
+    },
+    {
+      "hour": 14.0,
+      "quantity": 1.0,
+      "sales_sum": 416.0,
+      "items_sum": 416.0
+    },
+    {
+      "hour": 15.0,
+      "quantity": 1.0,
+      "sales_sum": 100.0,
+      "items_sum": 100.0
+    },
+    {
+      "hour": 16.0,
+      "quantity": 3.0,
+      "sales_sum": 317.87,
+      "items_sum": 317.87
+    },
+    {
+      "hour": 17.0,
+      "quantity": 2.0,
+      "sales_sum": 303.0,
+      "items_sum": 303.0
+    },
+    {
+      "hour": 18.0,
+      "quantity": 3.0,
+      "sales_sum": 307.74,
+      "items_sum": 307.74
+    },
+    {
+      "hour": 19.0,
+      "quantity": 5.0,
+      "sales_sum": 309.35,
+      "items_sum": 309.35
+    },
+    {
+      "hour": 21.0,
+      "quantity": 0.0,
+      "sales_sum": 0.0,
+      "items_sum": 0.0
+    }
+  ]
+}

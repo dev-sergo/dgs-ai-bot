@@ -1,0 +1,206 @@
+{
+  "report": "device_terminal_archive",
+  "label": "",
+  "rows": [
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "02.10.2023 17:32:14",
+      "date_activated": "05.10.2023 14:48:47",
+      "col": "Восстановить"
+    },
+    {
+      "name": "test_pixel",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "30.08.2023 16:49:37",
+      "date_activated": "21.08.2023 16:15:15",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "21.08.2023 14:52:50",
+      "date_activated": "21.08.2023 14:46:43",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Робот",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "23.05.2023 19:49:54",
+      "date_activated": "23.05.2023 19:40:42",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "пустой склад",
+      "last_login": "23.05.2023 13:51:23",
+      "date_activated": "23.05.2023 13:27:17",
+      "col": "Восстановить"
+    },
+    {
+      "name": "BIG MSPOS",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "21.04.2023 15:59:11",
+      "date_activated": "08.06.2022 12:03:19",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "09.03.2023 17:54:56",
+      "date_activated": "28.02.2023 15:59:11",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "21.02.2023 13:43:05",
+      "date_activated": "21.02.2023 13:36:32",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "15.11.2022 11:10:55",
+      "date_activated": "03.03.2022 18:44:03",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "пустой склад",
+      "last_login": "09.11.2022 19:46:27",
+      "date_activated": "09.11.2022 19:46:07",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "30.10.2022 01:53:53",
+      "date_activated": "04.08.2022 12:17:25",
+      "col": "Восстановить"
+    },
+    {
+      "name": "matebook-retail-g",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": "Выкса",
+      "sklad": "фывфывф",
+      "last_login": "19.09.2022 19:25:42",
+      "date_activated": "11.10.2021 19:20:51",
+      "col": "Восстановить"
+    },
+    {
+      "name": "ОФИЦИАНТ",
+      "kod_aktivacii": null,
+      "tip_terminala": "Официант",
+      "torgovaya_tochka": "Выкса",
+      "sklad": null,
+      "last_login": "06.07.2022 19:45:20",
+      "date_activated": "06.07.2022 19:22:00",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Официант",
+      "torgovaya_tochka": null,
+      "sklad": null,
+      "last_login": "06.07.2022 19:24:27",
+      "date_activated": "06.07.2022 19:24:32",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал - admin -test",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "04.07.2022 13:13:59",
+      "date_activated": "25.11.2021 18:44:47",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "17.06.2022 16:46:02",
+      "date_activated": "17.06.2022 13:15:33",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "16.06.2022 17:36:38",
+      "date_activated": "16.06.2022 16:56:54",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "16.06.2022 16:42:42",
+      "date_activated": "16.06.2022 16:20:45",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "16.06.2022 16:17:15",
+      "date_activated": "16.06.2022 16:13:59",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Новый терминал",
+      "kod_aktivacii": null,
+      "tip_terminala": "Касса-ритейл",
+      "torgovaya_tochka": null,
+      "sklad": "фывфывф",
+      "last_login": "16.06.2022 16:10:08",
+      "date_activated": "16.06.2022 15:24:20",
+      "col": "Восстановить"
+    }
+  ]
+}

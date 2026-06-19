@@ -1,0 +1,206 @@
+{
+  "report": "structure_user",
+  "label": "",
+  "rows": [
+    {
+      "col": 1.0,
+      "fio": "REDACTED",
+      "login": "alexey",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 2.0,
+      "fio": "REDACTED",
+      "login": "gmailllll.com",
+      "dolzhnost": "Водитель",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 3.0,
+      "fio": "REDACTED",
+      "login": "bulat",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 4.0,
+      "fio": "REDACTED",
+      "login": "call",
+      "dolzhnost": "Оператор call-центра",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 5.0,
+      "fio": "REDACTED",
+      "login": "call_center",
+      "dolzhnost": "Оператор call-центра",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 6.0,
+      "fio": "REDACTED",
+      "login": "test33",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 7.0,
+      "fio": "REDACTED",
+      "login": "google_test2",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 8.0,
+      "fio": "REDACTED",
+      "login": "google_test",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 9.0,
+      "fio": "REDACTED",
+      "login": "ivan",
+      "dolzhnost": "Логист1",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 10.0,
+      "fio": "REDACTED",
+      "login": "doe",
+      "dolzhnost": "Логист1",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 11.0,
+      "fio": "REDACTED",
+      "login": "admin",
+      "dolzhnost": "Владелец",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать"
+    },
+    {
+      "col": 12.0,
+      "fio": "REDACTED",
+      "login": "serieznyi",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 13.0,
+      "fio": "REDACTED",
+      "login": "oleg",
+      "dolzhnost": "Логист1",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 14.0,
+      "fio": "REDACTED",
+      "login": "petrotimon",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 15.0,
+      "fio": "REDACTED",
+      "login": "promo",
+      "dolzhnost": "Промо менеджер",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 16.0,
+      "fio": "REDACTED",
+      "login": "QATestFrank",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 17.0,
+      "fio": "REDACTED",
+      "login": "qatestProd",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 18.0,
+      "fio": "REDACTED",
+      "login": "test990",
+      "dolzhnost": "Логист1",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 19.0,
+      "fio": "REDACTED",
+      "login": "google_test1",
+      "dolzhnost": "Кассир",
+      "sostoyanie": "Активен",
+      "email": null,
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": 20.0,
+      "fio": "REDACTED",
+      "login": "vsaa",
+      "dolzhnost": "Директор",
+      "sostoyanie": "Активен",
+      "email": "redacted@example.com",
+      "pin_kod": "0000",
+      "col_1": "Редактировать Удалить"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "report": "personnel",
+  "label": "Персонал",
+  "rows": [
+    {
+      "name": "REDACTED",
+      "earnings": 340.0,
+      "profit": 67.0,
+      "checks_count": 2.0,
+      "average_check": 170.0
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 26863.01,
+      "profit": 9729.13,
+      "checks_count": 100.0,
+      "average_check": 268.63
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 1580.28,
+      "profit": 1014.05,
+      "checks_count": 6.0,
+      "average_check": 263.38
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 100.0,
+      "profit": 79.77,
+      "checks_count": 1.0,
+      "average_check": 100.0
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 45201.31,
+      "profit": 682.73,
+      "checks_count": 96.0,
+      "average_check": 470.85
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 6237.87,
+      "profit": -11976.78,
+      "checks_count": 21.0,
+      "average_check": 297.04
+    }
+  ]
+}

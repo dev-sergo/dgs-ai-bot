@@ -1,0 +1,16 @@
+{
+  "report": "telephony_operator_index",
+  "label": "",
+  "rows": [
+    {
+      "operator": "Манго Офис",
+      "podklyuchenie": "Подключено",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "operator": "МегаФон",
+      "podklyuchenie": "Подключено",
+      "col": "Редактировать Удалить"
+    }
+  ]
+}

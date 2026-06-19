@@ -1,0 +1,36 @@
+{
+  "report": "notification_campaign_index",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "test",
+      "data_sozdaniya": "7 мая 2026 г., 16:31:08",
+      "data_obnovleniya": "7 мая 2026 г., 16:31:08",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "nazvanie": "Привет",
+      "data_sozdaniya": "1 дек. 2022 г., 18:26:36",
+      "data_obnovleniya": "30 мар. 2026 г., 13:04:26",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "nazvanie": "Push with action",
+      "data_sozdaniya": "9 нояб. 2022 г., 01:24:01",
+      "data_obnovleniya": "9 нояб. 2022 г., 16:06:10",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "nazvanie": "Push without action",
+      "data_sozdaniya": "9 нояб. 2022 г., 00:34:10",
+      "data_obnovleniya": "9 нояб. 2022 г., 11:57:56",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "nazvanie": "Новый купон",
+      "data_sozdaniya": "1 сент. 2022 г., 13:28:17",
+      "data_obnovleniya": "30 мар. 2026 г., 13:04:34",
+      "col": "Редактировать Удалить"
+    }
+  ]
+}

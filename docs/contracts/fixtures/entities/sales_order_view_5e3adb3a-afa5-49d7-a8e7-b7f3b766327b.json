@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_5e3adb3a-afa5-49d7-a8e7-b7f3b766327b",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Котлета",
+      "cena": 50.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 50.0
+    },
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 0.0
+    }
+  ]
+}

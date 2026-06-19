@@ -1,0 +1,111 @@
+{
+  "report": "structure_sale-point",
+  "label": "Торговые точки",
+  "rows": [
+    {
+      "name": 123.0,
+      "region": "Выкса осн",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 4.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "asdasd",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Bulat Designer (do not touch!)",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "lkjlkjlkj",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": 4.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "АвтоPizza",
+      "region": "Казань",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Автосуши №1",
+      "region": null,
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "вываыа",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Выкса",
+      "region": "Выкса осн",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 31.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "ВЫКСА",
+      "region": "Выкса осн",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 5.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Казанский вокзал",
+      "region": "Москва",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Кафе на Садовой",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Магазин РЫБОЛОВ",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": 10.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Мой магазин обновленный",
+      "region": "Выкса осн",
+      "telefon": null,
+      "kolichestvo_stolov": 4.0,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Нижний Новгород_new",
+      "region": "НН",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "ТС ПИоТ",
+      "region": "Москва",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Редактировать Удалить"
+    }
+  ]
+}

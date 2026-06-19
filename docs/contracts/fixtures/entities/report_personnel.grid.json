@@ -1,0 +1,59 @@
+{
+  "url": "/report/personnel",
+  "columns": [
+    {
+      "label": "ФИО",
+      "field": "-name"
+    },
+    {
+      "label": "Выручка (₽)",
+      "field": "earnings"
+    },
+    {
+      "label": "Ожидаемая прибыль (₽)",
+      "field": "profit"
+    },
+    {
+      "label": "Кол-во чеков",
+      "field": "checks_count"
+    },
+    {
+      "label": "Средний чек (₽)",
+      "field": "average_check"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "Marochkin Petr"
+      },
+      "cells": [
+        "REDACTED",
+        "2 471,48",
+        "1 970,26",
+        "14",
+        "176,53"
+      ]
+    },
+    {
+      "meta": {
+        "key": "bulat"
+      },
+      "cells": [
+        "REDACTED",
+        "100,00",
+        "79,77",
+        "1",
+        "100,00"
+      ]
+    }
+  ],
+  "total": [
+    "",
+    "2 571,48",
+    "2 050,03",
+    "15",
+    "171,43"
+  ],
+  "row_count": 2
+}

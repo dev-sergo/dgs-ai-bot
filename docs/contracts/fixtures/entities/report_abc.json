@@ -1,0 +1,66 @@
+{
+  "report": "report_abc",
+  "label": "",
+  "rows": [
+    {
+      "category_name": "Упаковка",
+      "name": "Салфетка",
+      "quantity": 15.0,
+      "cost_price": 3.45
+    },
+    {
+      "category_name": "Холодные напитки: морс, лимонад, молоко",
+      "name": "Молоко",
+      "quantity": 4.0,
+      "cost_price": 80.0
+    },
+    {
+      "category_name": "Второе",
+      "name": "Спагетти",
+      "quantity": 3.0,
+      "cost_price": 333.0
+    },
+    {
+      "category_name": "Комплекты",
+      "name": "Палочки",
+      "quantity": 3.0,
+      "cost_price": 30.0
+    },
+    {
+      "category_name": "ТС ПИоТ",
+      "name": "Табак Сценарий 8",
+      "quantity": 3.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Пицца",
+      "name": "Длинное название самой большой пиццы в мире",
+      "quantity": 2.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Напитки",
+      "name": "Биолимонад \"Мед и травы\" 0.33",
+      "quantity": 1.0,
+      "cost_price": 55.0
+    },
+    {
+      "category_name": "Фурнитура",
+      "name": "Васаби",
+      "quantity": 1.0,
+      "cost_price": 20.0
+    },
+    {
+      "category_name": "ТС ПИоТ",
+      "name": "Вода Сценарий 10, 12, 13, 14, 15, 18",
+      "quantity": 1.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "ТС ПИоТ",
+      "name": "Табак Сценарий 3",
+      "quantity": 1.0,
+      "cost_price": 0.0
+    }
+  ]
+}

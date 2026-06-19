@@ -1,0 +1,56 @@
+{
+  "tenants": [
+    {
+      "tenant_id": "11111111-0000-0000-0000-000000000001",
+      "domain": "mock_single",
+      "timezone": "Europe/Moscow",
+      "currency": "RUB",
+      "currency_precision": 2,
+      "sale_points": [
+        {
+          "id": "aaaa0001-0000-0000-0000-000000000001",
+          "name": "Кафе на Садовой",
+          "locality": "Москва"
+        }
+      ]
+    },
+    {
+      "tenant_id": "11111111-0000-0000-0000-000000000002",
+      "domain": "mock_multi",
+      "timezone": "Europe/Moscow",
+      "currency": "RUB",
+      "currency_precision": 2,
+      "sale_points": [
+        {
+          "id": "aaaa0002-0000-0000-0000-000000000001",
+          "name": "Точка НН",
+          "locality": "НН"
+        },
+        {
+          "id": "aaaa0002-0000-0000-0000-000000000002",
+          "name": "Точка Казань",
+          "locality": "Казань"
+        },
+        {
+          "id": "aaaa0002-0000-0000-0000-000000000003",
+          "name": "Точка СПБ",
+          "locality": "СПБ"
+        }
+      ]
+    },
+    {
+      "tenant_id": "11111111-0000-0000-0000-000000000003",
+      "domain": "mock_tz",
+      "timezone": "Asia/Yekaterinburg",
+      "currency": "RUB",
+      "currency_precision": 2,
+      "sale_points": [
+        {
+          "id": "aaaa0003-0000-0000-0000-000000000001",
+          "name": "Точка Самара",
+          "locality": "Самара"
+        }
+      ]
+    }
+  ]
+}

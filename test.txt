@@ -1,0 +1,473 @@
+    <!DOCTYPE html>
+    <html lang="ru-RU">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="user-scalable=yes">
+        <meta name="msapplication-TileImage" content="/frontend/template/images/favicons/win8-tile-144.png">
+        <meta name="msapplication-TileColor" content="#f0f6f7">
+        <!-- для windows 8 плиток-->
+        <meta name="msapplication-TileImage" content="/frontend/template/images/favicons/win8-tile-144.png">
+        <meta name="msapplication-TileColor" content="#f0f6f7">
+        <meta name="theme-color" content="#f0f6f7">
+        <link rel="shortcut icon" href="/frontend/template/images/favicons/favicon.ico" type="image/x-icon"/>
+        <!-- для apple устройств-->
+        <link rel="mask-icon" sizes="any" href="/frontend/template/images/favicons/favicon.svg" color="#f0f6f7"/>
+        <link rel="apple-touch-icon" href="/frontend/template/images/favicons/apple-touch-icon-192x192.png" sizes="192x192"/>
+        <!-- для apple устройств-->
+        <link rel="mask-icon" sizes="any" href="/frontend/template/images/favicons/favicon.svg" color="#f0f6f7"/>
+        <link rel="apple-touch-icon" href="/frontend/template/images/favicons/apple-touch-icon-192x192.png" sizes="192x192"/>
+        <base href="/"/>
+        <meta name="csrf-param" content="_csrf-backend">
+<meta name="csrf-token" content="CNTA7fyVWBMrrdboTw3vl4_kw0sKYgwMsCH3yc_EWHpApbW1meIAfG2at4woUr7G_4WVI0svQ1bnV6_4irYQGQ==">
+        <title>Выручка</title>
+
+        <script type="text/javascript">
+            var LANG = {"delete":"\u0423\u0434\u0430\u043b\u0438\u0442\u044c","edit":"\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c","add":"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c","cancel":"\u041e\u0442\u043c\u0435\u043d\u0438\u0442\u044c","attention":"\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435","name":"\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435","key":"\u041a\u043b\u044e\u0447","code":"\u041a\u043e\u0434","value":"\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435","typeField":"\u0422\u0438\u043f \u043f\u043e\u043b\u044f","hasError":"\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430","objWasNotAdded":"\u041e\u0431\u044a\u0435\u043a\u0442 \u043d\u0435 \u0431\u044b\u043b \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d","nomenclature":{"changeName":"\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435"},"extraField":{"dropdown":"\u0421\u043f\u0438\u0441\u043e\u043a","textarea":"\u0422\u0435\u043a\u0441\u0442","text":"\u0422\u0435\u043a\u0441\u0442\u043e\u0432\u043e\u0435 \u043f\u043e\u043b\u0435","checkbox":"\u041b\u043e\u0433\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u043f\u043e\u043b\u0435 (\u0414\u0430\/\u041d\u0435\u0442)","dropdownElements":"\u042d\u043b\u0435\u043c\u0435\u043d\u0442\u044b \u0432\u044b\u043f\u0430\u0434\u0430\u044e\u0449\u0435\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430","entity":"\u0421\u0432\u044f\u0437\u0430\u043d\u043d\u0430\u044f \u0441\u0443\u0449\u043d\u043e\u0441\u0442\u044c","image":"\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435"},"menu":{"contains":"\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u043e\u0432\u0430\u0440\u044b, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0431\u0443\u0434\u0443\u0442 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u0432 \u044d\u0442\u0443 \u044f\u0447\u0435\u0439\u043a\u0443","include":"\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438 \u0442\u043e\u0432\u0430\u0440\u043e\u0432, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0434\u043e\u043b\u0436\u043d\u044b \u0431\u044b\u0442\u044c \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u0432 \u044d\u0442\u0443 \u044f\u0447\u0435\u0439\u043a\u0443","exclude":"\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u043e\u0432\u0430\u0440\u044b, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u043d\u0435 \u0434\u043e\u043b\u0436\u043d\u044b \u0431\u044b\u0442\u044c \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u0432 \u044d\u0442\u0443 \u044f\u0447\u0435\u0439\u043a\u0443","path":"\u0417\u0434\u0435\u0441\u044c \u0432\u044b \u043c\u043e\u0436\u0435\u0442\u0435 \u043a\u043e\u043d\u0441\u0442\u0440\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043c\u0435\u043d\u044e. \u0418\u0442\u043e\u0433\u043e\u0432\u043e\u0435 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043c\u043e\u0436\u043d\u043e \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043d\u0430 \u043a\u0430\u0441\u0441\u0435. \u0412\u044b \u043c\u043e\u0436\u0435\u0442\u0435 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u044c \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438 \u0441\u043b\u0435\u0432\u0430 \u043d\u0430 \u044f\u0447\u0435\u0439\u043a\u0438 \u0438\u043b\u0438 \u0441\u043e\u0437\u0434\u0430\u0432\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0435 \u0437\u0430\u043f\u0438\u0441\u0438, \u0432\u043a\u043b\u044e\u0447\u0430\u044f \u0432 \u043d\u0438\u0445 \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u044b\u0435 \u0442\u043e\u0432\u0430\u0440\u044b \u0438 \u0438\u0441\u043a\u043b\u044e\u0447\u0430\u044f \u043d\u0435\u043d\u0443\u0436\u043d\u044b\u0435"},"plan":{"move":"\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435 \u043f\u043b\u0430\u043d, \u0430 \u0437\u0430\u0442\u0435\u043c \u043f\u0440\u043e\u0432\u0435\u0434\u0438\u0442\u0435 \u0435\u0433\u043e"},"productionPlan":{"addProduct":"\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u043d\u0443\u0436\u043d\u044b\u0439 \u0442\u043e\u0432\u0430\u0440, \u0447\u0442\u043e\u0431\u044b \u0441\u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u0433\u0440\u0430\u0444\u0438\u043a \u0435\u0433\u043e \u043f\u0440\u0438\u0433\u043e\u0442\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0432 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u044b\u0439 \u0434\u0435\u043d\u044c. \u041d\u0435 \u0437\u0430\u0431\u0443\u0434\u044c\u0442\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c, \u043a\u043e\u0433\u0434\u0430 \u0433\u0440\u0430\u0444\u0438\u043a \u0431\u0443\u0434\u0435\u0442 \u0433\u043e\u0442\u043e\u0432"},"noConnect":"\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u0437\u0430\u043f\u0440\u043e\u0441","elemSpecification":"\u042d\u043b\u0435\u043c\u0435\u043d\u0442 \u0441\u043f\u0435\u0446\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u0438","resetTemplate":"\u0412\u044b \u0443\u0432\u0435\u0440\u0435\u043d\u044b \u0447\u0442\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0441\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0448\u0430\u0431\u043b\u043e\u043d? \u042d\u0442\u043e \u0443\u0434\u0430\u043b\u0438\u0442 \u0432\u0441\u0435 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044b\u0435 \u0440\u0430\u043d\u0435\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438."};
+        </script>
+        <meta name="currency-symbol" content="₽">
+<meta name="currency-code" content="RUB">
+<meta name="tenant-id" content="ed4f3d74-5c99-4fa5-894b-4c1044374e7b">
+<meta name="tenant-domain" content="google">
+<meta name="loyalty-type" content="dooglys">
+<meta name="access-token" content="ibMtt64fQmF3GMqvjvJuMiNegqIY2yvL">
+<meta name="access-token-google-maps-javascript-api" content="AIzaSyApQQUopmimSqndjcJj2O066883NeYR6JQ">
+<meta name="access-token-yandex-javascript-api" content="b2c97a16-55f9-4d6e-8ce5-4fc029321de0">
+<link href="/assets/fd832760/css/bootstrap.css?v=1781765180" rel="stylesheet">
+<link href="/assets/61e32ad9/css/kv-export-columns.min.css?v=1781765414" rel="stylesheet">
+<link href="/assets/ecc02fcf/css/datepicker.min.css?v=1781765179" rel="stylesheet">
+<link href="/frontend/template/styles/select2.min.css?v=1781765161" rel="stylesheet">
+<link href="/frontend/template/styles/app.css?v=1781765161" rel="stylesheet">
+<link href="/frontend/yii-assets/backendApp/index.css?v=1781765161" rel="stylesheet">
+<link href="/frontend/yii-assets/backendFeedback/index.css?v=1781765161" rel="stylesheet">
+<script src="/assets/f34a11dc/js/dialog.min.js?v=1781765414"></script>
+<script>var krajeeDialogDefaults_f77ffd0f = {"alert":{"type":"type-info","title":"Information","buttonLabel":"<span class=\"glyphicon glyphicon-ok\"></span> Ok"},"confirm":{"type":"type-warning","title":"Confirmation","btnOKClass":"btn-warning","btnOKLabel":"<span class=\"glyphicon glyphicon-ok\"></span> Ok","btnCancelLabel":"<span class=\"glyphicon glyphicon-ban-circle\"></span>  Cancel"},"prompt":{"draggable":false,"title":"Information","buttons":[{"label":"Cancel","icon":"glyphicon glyphicon-ban-circle","cssClass":"btn-default"},{"label":"Ok","icon":"glyphicon glyphicon-ok","cssClass":"btn-primary"}],"closable":false},"dialog":{"draggable":true,"title":"Information","buttons":[{"label":"Cancel","icon":"glyphicon glyphicon-ban-circle","cssClass":"btn-default"},{"label":"Ok","icon":"glyphicon glyphicon-ok","cssClass":"btn-primary"}]}};
+var krajeeDialog_6d7f2d25 = {"id":"w2"};
+var krajeeDialog=new KrajeeDialog(false,krajeeDialog_6d7f2d25,krajeeDialogDefaults_f77ffd0f);
+var kvexpmenu_76a91abf = {"target":"_blank","formOptions":{"class":"kv-export-full-form","id":"w1-export-form"},"messages":{"allowPopups":"Disable any popup blockers in your browser to ensure proper download.","confirmDownload":"Ok to proceed?","downloadProgress":"Generating the export file. Please wait...","downloadComplete":"Request submitted! You may safely close this dialog after saving your downloaded file."},"exportType":null,"colSelFlagParam":"column_selector_enabled","colSelEnabled":1,"exportRequestParam":"exportFull_w1","exportTypeParam":"export_type","exportColsParam":"export_columns","exportFormHiddenInputs":[],"showConfirmAlert":false,"dialogLib":"krajeeDialog","colSelId":"w1-cols"};
+
+var inputmask_e8a63036 = {"mask":"+7 (999) 999 99 99"};</script>        <!-- Манифест с информацией о сайте-->
+        <link rel="manifest" href="/frontend/template/images/favicons/manifest.json"/>
+    </head>
+    <body class="">
+    
+    
+    <div class="container-layout">
+        <header class="header">
+            <nav class="navbar navbar-default navbar_header ">
+                <div class="container-fluid container-fluid_big">
+                    <div class="navbar-header">
+                        <a class="logo" href="/"></a>
+                        <span style="white-space: nowrap">
+                            v3.29.174                                                    </span>
+                    </div>
+                    <div id="w16" class="menu-widget template-navbar"><ul id="w8" class="nav navbar-nav"><li class="dropdown active"><a id="menu-item-report-open" class="navbar-icon navbar-icon_report dropdown-toggle" href="/report/main" data-training-search="report" data-training-show-on="22+" data-toggle="dropdown">Отчеты <span class="caret"></span></a><ul id="w9" class="dropdown-menu"><li><a href="/report/main" tabindex="-1">Все отчеты</a></li>
+<li><a href="/report/paycheck" tabindex="-1">Чеки</a></li>
+<li><a href="/report/active-orders" tabindex="-1">Активные заказы</a></li>
+<li><a href="/report/cash-income-outcome" tabindex="-1">Внесения и выплаты</a></li>
+<li><a href="/report/stock" tabindex="-1">Остатки по складам</a></li>
+<li><a href="/report/product-flow" tabindex="-1">Отчет по движению</a></li>
+<li><a href="/report/minimum-stock" tabindex="-1">Минимальные остатки</a></li>
+<li><a href="/report/write-off-report" tabindex="-1">Отчет по списаниям</a></li>
+<li><a href="/report/purchase-price-dynamics" tabindex="-1">Динамика закупочных цен</a></li></ul></li>
+<li class="dropdown"><a id="menu-item-structure-open" class="navbar-icon navbar-icon_structure dropdown-toggle" href="#" data-training-show-on="2+" data-toggle="dropdown">Предприятие <span class="caret"></span></a><ul id="w10" class="dropdown-menu"><li><a id="menu-item-structure-organization" href="/structure/organization" tabindex="-1">Организации</a></li>
+<li><a id="menu-item-structure-warehouses" href="/structure/warehouses" tabindex="-1">Склады</a></li>
+<li><a id="menu-item-structure-locality" href="/structure/locality" tabindex="-1">Регионы</a></li>
+<li><a href="/structure/sale-point" tabindex="-1">Торговые точки</a></li>
+<li><a href="/device/terminal/index" tabindex="-1">Терминалы</a></li>
+<li><a href="/notification/item" tabindex="-1">Уведомления</a></li>
+<li><a href="/telephony/operator/index" tabindex="-1">IP-телефония</a></li>
+<li><a href="/extra-field/list/product" tabindex="-1">Дополнительные поля<sup class="beta-mark text-danger m-l-xs">beta</sup></a></li>
+<li><a href="/nomenclature/manufacture-place/index" tabindex="-1">Справочники</a></li>
+<li><a href="/application/dds" tabindex="-1">Финансы<sup class="beta-mark text-danger m-l-xs">beta</sup></a></li></ul></li>
+<li class="dropdown"><a id="menu-item-nomenclature-open" class="navbar-icon navbar-icon_nomenclature dropdown-toggle" href="#" data-training-show-on="3+" data-toggle="dropdown">Номенклатура <span class="caret"></span></a><ul id="w11" class="dropdown-menu"><li><a id="menu-item-nomenclature-product" href="/nomenclature/product/index" data-test="1" data-training-search="product" tabindex="-1">Товары и услуги</a></li>
+<li><a href="/nomenclature/prepack" tabindex="-1">Полуфабрикаты</a></li>
+<li><a href="/nomenclature/material/index" data-training-search="materials" tabindex="-1">Материалы и ингредиенты</a></li>
+<li><a href="/nomenclature/combo/index" tabindex="-1">Комбо</a></li>
+<li><a href="/nomenclature/modifier" tabindex="-1">Модификаторы</a></li>
+<li class="divider"></li>
+<li><a id="menu-item-nomenclature-menu" href="/terminal-menu/menu" data-training-search="terminal-menu" tabindex="-1">Меню терминала</a></li>
+<li><a href="/stop-list/default" tabindex="-1">Стоп-лист</a></li>
+<li><a href="/sales/order-kit" tabindex="-1">Комплектация</a></li>
+<li class="divider"></li>
+<li><a href="/nomenclature/transfer/import" tabindex="-1">Импорт</a></li>
+<li><a href="/nomenclature/price/transfer" tabindex="-1">Импорт / Экспорт цен</a></li>
+<li><a href="/nomenclature/cost-price/transfer" tabindex="-1">Импорт / Экспорт себестоимости</a></li>
+<li><a href="/nomenclature/transfer/export" tabindex="-1">Экспорт</a></li></ul></li>
+<li class="dropdown"><a id="menu-item-personal-open" class="navbar-icon navbar-icon_hr dropdown-toggle" href="#" data-training-show-on="24+" data-toggle="dropdown">Персонал <span class="caret"></span></a><ul id="w12" class="dropdown-menu"><li><a id="menu-item-personal-user" href="/structure/user" tabindex="-1">Сотрудники</a></li>
+<li><a id="menu-item-personal-post" href="/structure/post" tabindex="-1">Должности</a></li>
+<li><a href="/application/personal" tabindex="-1">Табель <sup class="beta-mark text-danger m-l-xs">beta</sup></a></li></ul></li>
+<li class="dropdown"><a id="menu-item-marketing-open" class="navbar-icon navbar-icon_marketing dropdown-toggle" href="#" data-training-show-on="25+" data-toggle="dropdown">Маркетинг <span class="caret"></span></a><ul id="w13" class="dropdown-menu"><li><a href="/ishop?login=1781853755" tabindex="-1">Интернет-магазин</a></li>
+<li><a id="menu-item-marketing-loyalty" href="/loyalty/loyalty-settings/change-settings" tabindex="-1">Лояльность</a></li>
+<li><a href="/sales/customer" tabindex="-1">Покупатели</a></li>
+<li><a href="/loyalty/card" tabindex="-1">Карты</a></li>
+<li><a href="/message-templates/template" tabindex="-1">Шаблоны сообщений</a></li>
+<li><a href="/notification/campaign/index" tabindex="-1">Push-уведомления</a></li>
+<li><a id="menu-item-marketing-special" href="/special/special" tabindex="-1">Акции</a></li>
+<li><a href="/nomenclature/product-yellow-price" tabindex="-1">Желтый ценник</a></li>
+<li><a href="/trade-recommendation/recommendation" tabindex="-1">Рекомендации</a></li>
+<li><a href="/device/tv/tv-set-list?type=tv-set-list" tabindex="-1">Цифровое меню</a></li>
+<li><a href="/coupon/coupon" tabindex="-1">Купоны</a></li></ul></li>
+<li class="dropdown"><a id="menu-item-warehouse-open" class="navbar-icon navbar-icon_warehouse dropdown-toggle" href="#" data-training-show-on="27+" data-toggle="dropdown">Склад <span class="caret"></span></a><ul id="w14" class="dropdown-menu"><li><a id="menu-item-warehouse-document" href="/warehouse/document" tabindex="-1">Журнал документов</a></li>
+<li><a href="/warehouse/contractor" tabindex="-1">Контрагенты</a></li>
+<li><a href="/warehouse/sales/repost" tabindex="-1">Перепроведение</a></li>
+<li><a id="menu-item-marketing-document" href="/planning/production-plan" tabindex="-1">План приготовления</a></li>
+<li><a href="/warehouse/minimum-stock" tabindex="-1">Минимальные остатки</a></li></ul></li>
+<li class="dropdown"><a class="dropdown-toggle" href="#" data-training-show-on="25+" data-toggle="dropdown">Сервис <span class="caret"></span></a><ul id="w15" class="dropdown-menu"><li><a href="/structure/service/menu" data-method="POST" tabindex="-1">Обновить меню</a></li>
+<li><a href="/app/call-center" tabindex="-1">Колл-центр</a></li>
+<li><a href="/app/robot" target="_blank" tabindex="-1">Терминал самообслуживания</a></li>
+<li><a href="/application/receipt-editor" tabindex="-1">Редактор чеков</a></li></ul></li></ul></div>                    <div id="w19" class="menu-widget template-right-menu"><ul id="w17" class="nav navbar-nav navbar-right"><li><a class="btn btn-primary" href="#" data-action="showFeedbackModal"><span class="glyphicon glyphicon-question-sign vertical-middle"></span></a></li>
+<li><a class="btn btn-primary" href="/app/retail" data-training-search="cashbox" target="_blank">Касса</a></li>
+<li><a class="btn btn-primary" href="/structure/service/menu" title="Обновить меню" data-method="POST"><span class="glyphicon glyphicon-refresh vertical-middle" style="margin: 0;"></span></a></li>
+<li class="dropdown dropdown-profile"><a class="dropdown-profil dropdown-toggle" href="#" data-profile-name="US" data-toggle="dropdown"> <span class="caret"></span></a><ul id="w18" class="dropdown-menu"><li><a href="/billing/payment" tabindex="-1">Биллинг     -2 300,68 ₽</a></li>
+<li><a href="/structure/user/profile" tabindex="-1">Профиль (google_test)</a></li>
+<li><a href="/structure/tenant-settings" tabindex="-1">Настройки предприятия</a></li>
+<li><a href="/journal/entry/index" tabindex="-1">Журнал</a></li>
+<li><a href="/site/logout" tabindex="-1">Выйти</a></li></ul></li></ul></div>                </div>
+            </nav>
+        </header>
+                        <div class="container-fluid container-main">
+                            <div class="sidebar" data-training-show-on="1-3 5 8 16-20 22 24+" data-training-search='sidebar'>
+                    <div class='report-area'>
+<ul class=""><li class=""><a href="/report/main" data-slug="main">Главная</a></li>
+<li><span class="title" data-slug="sales_report">Отчеты по продажам <span class="caret"></span></span> </a>
+<ul class="report-mnu-ctg" data-slug="sales_report">
+<li class="active"><a href="/report/payment" data-slug="sales_report">Выручка</a></li>
+<li class=""><a href="/report/expected-profit" data-slug="sales_report">Ожидаемая прибыль</a></li>
+<li class=""><a href="/report/orders" data-slug="sales_report">Заказы</a></li>
+<li class=""><a href="/report/active-orders" data-slug="sales_report">Активные заказы</a></li>
+<li class=""><a href="/report/paycheck" data-slug="sales_report">Чеки</a></li>
+<li class=""><a href="/report/cash-on-hand" data-slug="sales_report">Наличные</a></li>
+<li class=""><a href="/report/cash-income-outcome" data-slug="sales_report">Внесения и выплаты</a></li>
+<li class=""><a href="/report/products" data-slug="sales_report">Товары</a></li>
+<li class=""><a href="/report/categories" data-slug="sales_report">Категории</a></li>
+<li class=""><a href="/report/personnel" data-slug="sales_report">Персонал</a></li>
+<li class=""><a href="/report/clients" data-slug="sales_report">Клиенты</a></li>
+</ul>
+</li>
+<li><span class="title" data-slug="report_advanced">Расширенные отчеты <span class="caret"></span></span> </a>
+<ul class="report-mnu-ctg" data-slug="report_advanced">
+<li class=""><a href="/report/sales-on-map" data-slug="report_advanced">Продажи на карте</a></li>
+<li class=""><a href="/report/abc" data-slug="report_advanced">ABC</a></li>
+<li class=""><a href="/report/source-order" data-slug="report_advanced">Источники заказов</a></li>
+<li class=""><a href="/report/order-payment-hour" data-slug="report_advanced">Часы заказов</a></li>
+<li class=""><a href="/report/type-order" data-slug="report_advanced">Типы заказов<sup class="text-danger m-l-xs">beta</sup></a></li>
+<li class=""><a href="/report/order-processing-time" data-slug="report_advanced">Время выполнения</a></li>
+<li class=""><a href="/report/order-processing-time-detail" data-slug="report_advanced">Время выполнения по дням</a></li>
+<li class=""><a href="/report/suspect-orders" data-slug="report_advanced">Опасные кассовые операции</a></li>
+</ul>
+</li>
+<li><span class="title" data-slug="marketing_reports">Маркетинговые отчеты <span class="caret"></span></span> </a>
+<ul class="report-mnu-ctg" data-slug="marketing_reports">
+<li class=""><a href="/report/special" data-slug="marketing_reports">Акции</a></li>
+<li class=""><a href="/report/special-products" data-slug="marketing_reports">Товары по акции</a></li>
+<li class=""><a href="/report/level-balance" data-slug="marketing_reports">Баланс по уровням</a></li>
+<li class=""><a href="/report/bonuses" data-slug="marketing_reports">Бонусы</a></li>
+<li class=""><a href="/report/level-orders" data-slug="marketing_reports">Заказы по уровням</a></li>
+<li class=""><a href="/report/dangerous-operations" data-slug="marketing_reports">Транзакции по картам</a></li>
+<li class=""><a href="/report/level-clients" data-slug="marketing_reports">Уровни клиентов</a></li>
+<li class=""><a href="/report/rfm-analyze" data-slug="marketing_reports">RFM-анализ<sup class="text-danger m-l-xs">beta</sup></a></li>
+<li class=""><a href="/report/customer-segmentation" data-slug="marketing_reports">Сегментация клиентов<sup class="text-danger m-l-xs">beta</sup></a></li>
+</ul>
+</li>
+<li><span class="title" data-slug="warehouse_reports">Складские отчеты <span class="caret"></span></span> </a>
+<ul class="report-mnu-ctg" data-slug="warehouse_reports">
+<li class=""><a href="/report/warehouse-document-supply" data-slug="warehouse_reports">Поступления</a></li>
+<li class=""><a href="/report/stock" data-slug="warehouse_reports">Остатки по складам</a></li>
+<li class=""><a href="/report/product-flow" data-slug="warehouse_reports">Отчет по движению</a></li>
+<li class=""><a href="/report/minimum-stock" data-slug="warehouse_reports">Минимальные остатки</a></li>
+<li class=""><a href="/report/write-off-report" data-slug="warehouse_reports">Отчет по списаниям</a></li>
+<li class=""><a href="/report/purchase-price-dynamics" data-slug="warehouse_reports">Динамика закупочных цен</a></li>
+</ul>
+</li>
+<li><span class="title" data-slug="kitchen">Отчеты по кухне <span class="caret"></span></span> </a>
+<ul class="report-mnu-ctg" data-slug="kitchen">
+<li class="disabled"><a href="/report/cooks" data-slug="kitchen">Производительность поваров</a></li>
+</ul>
+</li></ul></div>
+                </div>
+                        <main class="wrapper">
+                                                                                                        <div class="main-content" data-training-show-on="0-3 6 7 9 11-14 16 17-20 22 24-28">
+                                            <div class="main-content__filter">
+    <div class="filter content_bg">
+        <!-- TODO: filter__head place -->
+        
+<form id="w6" action="report/payment" method="get"><div class="col-xs-12">
+    <h3 class="filter__head d-ib m-r">Фильтр</h3>
+</div>
+<div class="col-xs-12 m-t-xs">
+    <div class="form-group field-basereportform-period">
+
+
+<div class="btn-group">
+    <div class="btn btn-sm select-date btn-primary" data-date-value="19.05.2026-19.06.2026">Месяц</div><div class="btn btn-sm select-date btn-border text-control" data-date-value="12.06.2026-19.06.2026">Неделя</div><div class="btn btn-sm select-date btn-border text-control" data-date-value="18.06.2026-18.06.2026">Вчера</div><div class="btn btn-sm select-date btn-border text-control" data-date-value="19.06.2026-19.06.2026">Сегодня</div><input type="text" id="date-picker" class="btn btn-border btn-sm" name="BaseReportForm[period]" value="19.05.2026-19.06.2026" title="Дата"></div>
+
+
+<p class="help-block help-block-error"></p>
+</div></div>
+<div class="col-xs-12 p-l-none p-r-none m-t">
+    <div class="col-xs-5 col-lg-12">
+        <div class="form-group field-basereportform-locality_id">
+<div class="input-group"><span class="input-group-addon">Регион:</span><input type="hidden" name="BaseReportForm[locality_id]" value=""><select id="basereportform-locality_id" class="form-control drop-down-init" name="BaseReportForm[locality_id][]" multiple size="4">
+<option value="0f585eb1-6413-4f42-bf8a-257142acf537">Выкса осн</option>
+<option value="6d095a20-c4b7-42d0-a999-ea7fb8fcf74d">Казань</option>
+<option value="a330e532-61a4-4ef3-87c4-9ccff25f7d6b">Киров</option>
+<option value="f0cd64fa-a2e6-40b8-8b7e-165d783316b3">Москва</option>
+<option value="0af223df-40f5-4022-9a1a-a932d444d3b4">НН</option>
+<option value="6ea0279a-7e78-45ca-b46a-4541836d3019">Регион франшизы</option>
+<option value="6c5bd588-e32a-4eb2-9102-15d6434416df">Самара</option>
+<option value="3e7459a4-c8b3-4fd8-9166-f34c095d03bb">СПБ</option>
+</select><span class="input-group-addon"></span></div><p class="help-block help-block-error"></p>
+</div>    </div>
+    <div class="col-xs-5 col-lg-12">
+        <div class="form-group field-basereportform-sale_point_id">
+<div class="input-group"><span class="input-group-addon">Торговая точка:</span><input type="hidden" name="BaseReportForm[sale_point_id]" value=""><select id="basereportform-sale_point_id" class="form-control drop-down-init" name="BaseReportForm[sale_point_id][]" multiple size="4">
+<option value="c1ba07bd-489b-4d1e-885f-3141250548c2">123</option>
+<option value="712ada51-eb32-45f8-8315-b4f89a8c4762">asdasd</option>
+<option value="446fccc9-b35d-4d16-af88-2364791c7686">Bulat Designer (do not touch!)</option>
+<option value="f593f999-2a87-4863-a4ae-c401e9d72f87">lkjlkjlkj</option>
+<option value="76128bf1-fbf3-481f-a816-54643367f155">АвтоPizza</option>
+<option value="a700eeb9-bc93-4f97-9203-e9b43288ec29">Автосуши №1</option>
+<option value="a6fa9a0e-470a-4e9e-a94f-af44edb1de12">вываыа</option>
+<option value="4b837e5a-4367-488c-91be-3b349157d965">Выкса</option>
+<option value="06b8a877-7637-4bbc-b5e6-02fcdc6fd77a">ВЫКСА</option>
+<option value="5db4a971-955f-44e3-a274-2bbded509db9">Казанский вокзал</option>
+<option value="f1bf9356-e115-4d01-a578-fd6589384232">Кафе на Садовой</option>
+<option value="c4b606d8-7ffa-4ddc-afb8-97cb842c95fa">Магазин РЫБОЛОВ</option>
+<option value="c46f49b6-58fb-4f97-86c0-bc1ad1a7eb48">Мой магазин обновленный</option>
+<option value="a1472a93-39c2-418e-adfc-4d5733492f94">Нижний Новгород_new</option>
+<option value="a229a4e7-2c69-4b34-a95e-8f7a2052af9e">ТС ПИоТ</option>
+</select><span class="input-group-addon"></span></div><p class="help-block help-block-error"></p>
+</div>    </div>
+    <div class="col-xs-2 col-lg-12">
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Применить</button>        </div>
+    </div>
+</div>
+</form>
+    </div>
+</div>
+                                        <div class="main-content__center">
+                        <div id="messages-block"></div>                        
+                                                
+
+<div class="content-header">
+    <div class="navbar content-head">
+        <div class="nav navbar navbar-left">
+            <div id="page-title-block" data-pjax-container="" data-pjax-push-state data-pjax-timeout="1000">            <h1 class="content-head__head">Выручка                            </h1>
+            </div>        </div>
+                    <div class="nav navbar-nav navbar-right content-head__filter nav navbar-nav navbar-right content-head__filter">
+        <button type="button" class="btn btn-default btn-sprite_filter content-head__btn_filter f-r" data-has-filters>Фильтр</button>    </div>
+
+                                    <div class="nav navbar-nav navbar-right content-head__filter">
+                <div class="m-l-sm export-buttons"><div class="btn-group" role="group"><form method="post"><button type="button" id="w1-cols" class="btn btn-default dropdown-toggle" title="Select columns to export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" header="&lt;li class=&quot;dropdown-header&quot;&gt;Выбрать все&lt;/li&gt;&lt;li class=&quot;kv-divider&quot;&gt;&lt;/li&gt;"><i class="glyphicon glyphicon-list"></i>&nbsp;&nbsp;Колонки <span class="caret"></span></button><ul id="w1-cols-list" class="dropdown-menu kv-checkbox-list" role="menu" aria-labelledby="w1-cols"><li><div class="checkbox"><label class="" for="export_columns_selector_w1_1"><input type="checkbox" id="export_columns_selector_w1_1" class="" name="export_columns_selector[]" value="Дата" checked data-key="0">
+Дата</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_2"><input type="checkbox" id="export_columns_selector_w1_2" class="" name="export_columns_selector[]" value="Кол-во чеков" checked data-key="1">
+Кол-во чеков</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_3"><input type="checkbox" id="export_columns_selector_w1_3" class="" name="export_columns_selector[]" value="Возвраты" checked data-key="2">
+Возвраты</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_4"><input type="checkbox" id="export_columns_selector_w1_4" class="" name="export_columns_selector[]" value="Сумма возвратов (₽)" checked data-key="3">
+Сумма возвратов (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_5"><input type="checkbox" id="export_columns_selector_w1_5" class="" name="export_columns_selector[]" value="Карта (₽)" checked data-key="4">
+Карта (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_6"><input type="checkbox" id="export_columns_selector_w1_6" class="" name="export_columns_selector[]" value="Наличные (₽)" checked data-key="5">
+Наличные (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_7"><input type="checkbox" id="export_columns_selector_w1_7" class="" name="export_columns_selector[]" value="Онлайн (₽)" checked data-key="6">
+Онлайн (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_8"><input type="checkbox" id="export_columns_selector_w1_8" class="" name="export_columns_selector[]" value="СБП (₽)" checked data-key="7">
+СБП (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_9"><input type="checkbox" id="export_columns_selector_w1_9" class="" name="export_columns_selector[]" value="Выручка (₽)" checked data-key="8">
+Выручка (₽)</label></div></li><li><div class="checkbox"><label class="" for="export_columns_selector_w1_10"><input type="checkbox" id="export_columns_selector_w1_10" class="" name="export_columns_selector[]" value="Средний чек (₽)" checked data-key="9">
+Средний чек (₽)</label></div></li><input type="hidden" name="_csrf-backend" value="CNTA7fyVWBMrrdboTw3vl4_kw0sKYgwMsCH3yc_EWHpApbW1meIAfG2at4woUr7G_4WVI0svQ1bnV6_4irYQGQ=="><div class="buttons"><button type="submit" class="btn btn-primary">Сохранить</button><input type="submit" class="btn" name="_clear_columns" value="Cбросить"></div></ul></form></div>
+<div class="btn-group">
+<button id="w3" class="ml-10 btn btn-default dropdown-toggle" title="Export data in selected format" data-toggle="dropdown"><i class="glyphicon glyphicon-export"></i> Экспорт <span class="caret"></span></button>
+
+<ul id="w4" class="dropdown-menu"><li title="Comma Separated Values"><a id="paymentexport-Csv" class="js-dataflex-export" href="#" data-format="Csv" data-report="payment" data-gridview="modules\report\backend\widgets\gridViews\PaymentGridView" tabindex="-1"><i class="text-primary glyphicon glyphicon-floppy-open"></i> CSV</a></li>
+<li title="Microsoft Excel 2007+ (xlsx)"><a id="paymentexport-Xlsx" class="js-dataflex-export" href="#" data-format="Xlsx" data-report="payment" data-gridview="modules\report\backend\widgets\gridViews\PaymentGridView" tabindex="-1"><i class="text-success glyphicon glyphicon-floppy-remove"></i> Excel 2007+</a></li></ul>
+</div></div>            </div>
+            </div>
+</div>
+
+
+
+<div id="report-download-modal" class="fade modal" role="dialog">
+<div class="modal-dialog ">
+<div class="modal-content">
+
+<div class="modal-body">
+<div class="text-center js-progress-text">Ожидание начала</div>
+</div>
+
+</div>
+</div>
+</div><div id="reports">
+    <div class="report-content">
+        <div id="w0" class="grid-view"><div class="table-responsive"><table class="table table-wrap"><thead>
+<tr><th class="grid-header-top col-xs-1"><a class="desc" href="/report/payment/index?sort=date" data-sort="date">Дата</a></th><th class="grid-header-top-right col-xs-1">Кол-во чеков</th><th class="grid-header-top-right col-xs-1"><a href="/report/payment/index?sort=return_count" data-sort="return_count">Возвраты</a></th><th class="grid-header-top-right col-xs-1"><a href="/report/payment/index?sort=return_sum" data-sort="return_sum">Сумма возвратов (₽)</a></th><th class="grid-header-top-right col-xs-1"><a href="/report/payment/index?sort=sum_card" data-sort="sum_card">Карта (₽)</a></th><th class="grid-header-top-right col-xs-1"><a href="/report/payment/index?sort=sum_cash" data-sort="sum_cash">Наличные (₽)</a></th><th class="grid-header-top-right col-xs-1">Онлайн (₽)</th><th class="grid-header-top-right col-xs-1">СБП (₽)</th><th class="grid-header-top-right col-xs-1"><a href="/report/payment/index?sort=sum_all" data-sort="sum_all">Выручка (₽)</a></th><th class="grid-header-top-right col-xs-1">Средний чек (₽)</th><th class="grid-header-top col-xs-1"></th></tr>
+</thead>
+<tfoot>
+<tr><td class="col-xs-1">Итого за период</td><td class="grid-content-right col-xs-1">25</td><td class="grid-content-right col-xs-1">5</td><td class="grid-content-right col-xs-1">299,48</td><td class="grid-content-right col-xs-1">1 127,61</td><td class="grid-content-right col-xs-1">1 443,87</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">2 571,48</td><td class="grid-content-right col-xs-1">171,43</td><td class="col-xs-1">&nbsp;</td></tr>
+</tfoot>
+<tbody>
+<tr class="page-row-item" data-key="2026-06-18"><td class="col-xs-1">18.06.2026</td><td class="grid-content-right col-xs-1">4</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">257,87</td><td class="grid-content-right col-xs-1">252,87</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">510,74</td><td class="grid-content-right col-xs-1">127,68</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-18?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-06-16"><td class="col-xs-1">16.06.2026</td><td class="grid-content-right col-xs-1">1</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">115,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">115,00</td><td class="grid-content-right col-xs-1">115,00</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-16?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-06-15"><td class="col-xs-1">15.06.2026</td><td class="grid-content-right col-xs-1">1</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">416,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">416,00</td><td class="grid-content-right col-xs-1">416,00</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-15?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-06-03"><td class="col-xs-1">03.06.2026</td><td class="grid-content-right col-xs-1">1</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">100,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">100,00</td><td class="grid-content-right col-xs-1">100,00</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-03?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-06-02"><td class="col-xs-1">02.06.2026</td><td class="grid-content-right col-xs-1">2</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">500,00</td><td class="grid-content-right col-xs-1">500,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">1 000,00</td><td class="grid-content-right col-xs-1">500,00</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-02?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-06-01"><td class="col-xs-1">01.06.2026</td><td class="grid-content-right col-xs-1">4</td><td class="grid-content-right col-xs-1">0</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">270,00</td><td class="grid-content-right col-xs-1">60,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">330,00</td><td class="grid-content-right col-xs-1">82,50</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-06-01?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-05-25"><td class="col-xs-1">25.05.2026</td><td class="grid-content-right col-xs-1">7</td><td class="grid-content-right col-xs-1">3</td><td class="grid-content-right col-xs-1">149,61</td><td class="grid-content-right col-xs-1">49,87</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">49,87</td><td class="grid-content-right col-xs-1">49,87</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-05-25?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+<tr class="page-row-item" data-key="2026-05-20"><td class="col-xs-1">20.05.2026</td><td class="grid-content-right col-xs-1">5</td><td class="grid-content-right col-xs-1">2</td><td class="grid-content-right col-xs-1">149,87</td><td class="grid-content-right col-xs-1">49,87</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">0,00</td><td class="grid-content-right col-xs-1">49,87</td><td class="grid-content-right col-xs-1">49,87</td><td class="col-xs-1"><a class="cash-on-hand-detail-load btn btn-default btn-sm" href="#" data-cash-on-hand-url="/report/payment/details/2026-05-20?period=19.05.2026-19.06.2026">Детали</a></td></tr>
+</tbody></table></div>
+<div class="summary">Показаны записи <b>1-8</b> из <b>8</b>.</div>
+</div>    </div>
+</div>
+
+
+                    </div>
+                                    </div>
+            </main>
+        </div>
+        
+<div id="feedback-modal" class="fade modal" role="dialog" tabindex="-1">
+<div class="modal-dialog ">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+<h4>Обратная связь</h4>
+</div>
+<div class="modal-body">
+<form id="feedback-form" action="/report/payment" method="post">
+<input type="hidden" name="_csrf-backend" value="CNTA7fyVWBMrrdboTw3vl4_kw0sKYgwMsCH3yc_EWHpApbW1meIAfG2at4woUr7G_4WVI0svQ1bnV6_4irYQGQ=="><div class="form-group field-feedbackmessagemodel-name required">
+<label class="control-label" for="feedbackmessagemodel-name">Ваше имя</label>
+<input type="text" id="feedbackmessagemodel-name" class="form-control" name="FeedbackMessageModel[name]" value="Google Google" aria-required="true">
+
+<p class="help-block help-block-error"></p>
+</div><div class="form-group field-feedbackmessagemodel-phone">
+<label class="control-label" for="feedbackmessagemodel-phone">Контактный телефон</label>
+<input type="text" id="feedbackmessagemodel-phone" class="form-control" name="FeedbackMessageModel[phone]" value="9991389576" data-plugin-inputmask="inputmask_e8a63036">
+
+<p class="help-block help-block-error"></p>
+</div><div class="form-group field-feedbackmessagemodel-email required">
+<label class="control-label" for="feedbackmessagemodel-email">Почта</label>
+<input type="text" id="feedbackmessagemodel-email" class="form-control" name="FeedbackMessageModel[email]" value="petun911@gmail.com" aria-required="true">
+
+<p class="help-block help-block-error"></p>
+</div><div class="form-group field-feedbackmessagemodel-question required">
+<label class="control-label" for="feedbackmessagemodel-question">Вопрос</label> <textarea id="feedbackmessagemodel-question" class="form-control" name="FeedbackMessageModel[question]" aria-required="true"></textarea><p class="help-block help-block-error"></p>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button><button type="submit" class="btn btn-primary" data-action="sendFeedback" data-action-url="/site/send-feedback">Отправить</button>
+</div>
+</div>
+</div>
+</div>    </div>
+
+
+            <!-- Yandex.Metrika counter -->
+        <script type="text/javascript">
+            (function (d, w, c) {
+                (w[c] = w[c] || []).push(function () {
+                    try {
+                        w.yaCounter43924334 = new Ya.Metrika({
+                            id: 43924334,
+                            clickmap: true,
+                            trackLinks: true,
+                            accurateTrackBounce: true,
+                            webvisor: true,
+                            ut: "noindex"
+                        });
+                    } catch (e) {
+                    }
+                });
+
+                var n = d.getElementsByTagName("script")[0],
+                    s = d.createElement("script"),
+                    f = function () {
+                        n.parentNode.insertBefore(s, n);
+                    };
+                s.type = "text/javascript";
+                s.async = true;
+                s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+                if (w.opera == "[object Opera]") {
+                    d.addEventListener("DOMContentLoaded", f, false);
+                } else {
+                    f();
+                }
+            })(document, window, "yandex_metrika_callbacks");
+        </script>
+        <noscript>
+            <div><img src="https://mc.yandex.ru/watch/43924334?ut=noindex" style="position:absolute; left:-9999px;"
+                      alt=""/></div>
+        </noscript>
+        <!-- /Yandex.Metrika counter -->
+            
+    
+            
+    <script src="//cdn.dooglys.net/vendor/jquery/3.3.1/jquery.min.js"></script>
+<script src="/assets/6cf9a353/yii.js?v=1781765179"></script>
+<script src="/assets/f34a11dc/js/dialog-yii.min.js?v=1781765414"></script>
+<script src="/assets/61e32ad9/js/kv-export-data.min.js?v=1781765414"></script>
+<script src="/assets/61e32ad9/js/kv-export-columns.min.js?v=1781765414"></script>
+<script src="/assets/fd832760/js/bootstrap.js?v=1781765180"></script>
+<script src="/assets/7229f32b/jquery.pjax.js?v=1781765184"></script>
+<script src="/assets/6cf9a353/yii.activeForm.js?v=1781765179"></script>
+<script src="/assets/6cf9a353/yii.gridView.js?v=1781765179"></script>
+<script src="/assets/d3d55bc4/jquery.inputmask.bundle.js?v=1781765180"></script>
+<script src="/frontend/yii-assets/backendMoneyInput/index.js?v=1781765161"></script>
+<script src="/assets/ecc02fcf/js/datepicker.js?v=1781765179"></script>
+<script src="/frontend/template/js/select2.min.js?v=1781765161"></script>
+<script src="/frontend/template/js/app.js?v=1781765161"></script>
+<script src="/frontend/yii-assets/backendApp/index.js?v=1781765161"></script>
+<script src="/frontend/yii-assets/report/index.js?v=1781765161"></script>
+<script src="/frontend/yii-assets/backend/index.js?v=1781765161"></script>
+<script src="/frontend/yii-assets/backendFeedback/index.js?v=1781765161"></script>
+<script src="/assets/6cf9a353/yii.validation.js?v=1781765179"></script>
+<script>jQuery(function ($) {
+krajeeYiiConfirm('krajeeDialog');
+jQuery('#w1-csv').exportdata({"settings":kvexpmenu_76a91abf,"alertMsg":"The CSV export file will be generated for download."});
+jQuery('#w1-xlsx').exportdata({"settings":kvexpmenu_76a91abf,"alertMsg":"The EXCEL 2007+ (xlsx) export file will be generated for download."});
+jQuery('#w1-cols-list').exportcolumns({});
+
+jQuery('#w3').dropdown();
+jQuery(document).pjax("#page-title-block a", {"push":true,"replace":false,"timeout":1000,"scrollTo":false,"container":"#page-title-block"});
+jQuery(document).off("submit", "#page-title-block form[data-pjax]").on("submit", "#page-title-block form[data-pjax]", function (event) {jQuery.pjax.submit(event, {"push":true,"replace":false,"timeout":1000,"scrollTo":false,"container":"#page-title-block"});});
+jQuery('#w6').yiiActiveForm([], []);
+jQuery('#report-download-modal').modal({"show":false,"backdrop":"static","keyboard":false});
+jQuery('#w0').yiiGridView({"filterUrl":"\/report\/payment","filterSelector":"#w0-filters input, #w0-filters select","filterOnFocusOut":true});
+jQuery("#feedbackmessagemodel-phone").inputmask(inputmask_e8a63036);
+jQuery('#feedback-form').yiiActiveForm([{"id":"feedbackmessagemodel-name","name":"name","container":".field-feedbackmessagemodel-name","input":"#feedbackmessagemodel-name","error":".help-block.help-block-error","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Необходимо заполнить «Ваше имя»."});yii.validation.string(value, messages, {"message":"Значение «Ваше имя» должно быть строкой.","skipOnEmpty":1});}},{"id":"feedbackmessagemodel-email","name":"email","container":".field-feedbackmessagemodel-email","input":"#feedbackmessagemodel-email","error":".help-block.help-block-error","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Необходимо заполнить «Почта»."});yii.validation.string(value, messages, {"message":"Значение «Почта» должно быть строкой.","skipOnEmpty":1});yii.validation.email(value, messages, {"pattern":/^[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/,"fullPattern":/^[^@]*<[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?>$/,"allowName":false,"message":"Значение «Почта» не является правильным email адресом.","enableIDN":false,"skipOnEmpty":1});}},{"id":"feedbackmessagemodel-question","name":"question","container":".field-feedbackmessagemodel-question","input":"#feedbackmessagemodel-question","error":".help-block.help-block-error","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Необходимо заполнить «Вопрос»."});yii.validation.string(value, messages, {"message":"Значение «Вопрос» должно быть строкой.","min":10,"tooShort":"Значение «Вопрос» должно содержать минимум 10 символов.","skipOnEmpty":1});}}], []);
+jQuery('#feedback-modal').modal({"show":false});
+});</script>
+    <!-- ВЫДЕЛИТЬ В ОТДЕЛЬНЫЙ БЛОК training -->
+    <div class="training__overlay training--hide js-training-layout"></div>
+    <div class="training training--hide js-training"></div>
+    <div class="training__step-line training--hide js-training-line">
+        <div data-training-step="1" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Добавление позиции</span></label>
+        </div>
+        <div data-training-step="2" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Добавление ингредиентов</span></label>
+        </div>
+        <div data-training-step="3" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Добавление спецификаций</span></label>
+        </div>
+        <div data-training-step="4" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Создание меню</span></label>
+        </div>
+        <div data-training-step="5" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Оформление заказа</span></label>
+        </div>
+        <div data-training-step="6" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Отчет по продаже</span></label>
+        </div>
+        <div data-training-step="7" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Маркетинг и Справочники</span></label>
+        </div>
+        <div data-training-step="8" class="training__step">
+            <label><span class="cr"><span class="cr-icon glyphicon glyphicon-ok"></span></span><span
+                        class="checkbox__text">Склад и Настройки</span></label>
+        </div>
+    </div>
+    </body>
+    </html>

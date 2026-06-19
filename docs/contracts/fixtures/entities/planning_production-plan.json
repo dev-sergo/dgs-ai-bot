@@ -1,0 +1,96 @@
+{
+  "report": "planning_production-plan",
+  "label": "",
+  "rows": [
+    {
+      "name": 123.0,
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 4.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "asdasd",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "Bulat Designer (do not touch!)",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "lkjlkjlkj",
+      "telefon": null,
+      "kolichestvo_stolov": 4.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "АвтоPizza",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "Автосуши №1",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "вываыа",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "Выкса",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 31.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "ВЫКСА",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": 5.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "Казанский вокзал",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "Кафе на Садовой",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "Магазин РЫБОЛОВ",
+      "telefon": null,
+      "kolichestvo_stolov": 10.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "Мой магазин обновленный",
+      "telefon": null,
+      "kolichestvo_stolov": 4.0,
+      "col": "Настроить"
+    },
+    {
+      "name": "Нижний Новгород_new",
+      "telefon": "+70000000000",
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    },
+    {
+      "name": "ТС ПИоТ",
+      "telefon": null,
+      "kolichestvo_stolov": null,
+      "col": "Настроить"
+    }
+  ]
+}

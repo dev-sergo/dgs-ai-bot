@@ -1,0 +1,126 @@
+{
+  "report": "nomenclature_material_index",
+  "label": "Материалы и ингредиенты",
+  "rows": [
+    {
+      "col": null,
+      "name": "123 (шт)",
+      "product_category_id": "Пакет чай",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "fdsafda (шт)",
+      "product_category_id": "Пластмасса",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "fdsafdsa (шт)",
+      "product_category_id": "Заготовки",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "rewqreqw (шт)",
+      "product_category_id": "Пластмасса",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "адриоль для посуды (л) Тег 2",
+      "product_category_id": "Упаковка",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "антижир 600мл (шт) Тег 2",
+      "product_category_id": "Упаковка",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "бекон (кг) Тег 2",
+      "product_category_id": "Мясо",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Бумажные стаканы 250 мл (шт) Тег 2",
+      "product_category_id": "Упаковка",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "васаби (кг) Тег 2",
+      "product_category_id": "Специальные",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "вилка (шт) Тег 2",
+      "product_category_id": "Без категории",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Вилки1 (шт)",
+      "product_category_id": "Пластмасса",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Вино белое (л) Повар",
+      "product_category_id": "Жидкости",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Вино красное (мл) Повар",
+      "product_category_id": "Жидкости",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Вода (л)",
+      "product_category_id": "Материалы",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Вода (л) Тег 2",
+      "product_category_id": "Специальные",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "глютамат натрия (кг) Тег 2",
+      "product_category_id": "Сухие сыпучие",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Говядина (кг)",
+      "product_category_id": "Мясо",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Икра летучей рыбы \"Красная\" (кг) Тег 2",
+      "product_category_id": "Материалы",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "имбирь (кг) Тег 2",
+      "product_category_id": "Специальные",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Капуста (кг)",
+      "product_category_id": "fgfdsgfds",
+      "col_1": "Посмотреть"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_37a2dc39-cdf6-40f4-94cb-902b31854b26",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 0.0
+    },
+    {
+      "nazvanie": "Половина Барбекю",
+      "cena": 1.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 1.0
+    }
+  ]
+}

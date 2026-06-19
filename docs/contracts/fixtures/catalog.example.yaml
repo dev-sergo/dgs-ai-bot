@@ -1,0 +1,1322 @@
+# Каталог отчётов и сущностей Dooglys (автоген, PII вырезан)
+
+# === ОТЧЁТЫ ===
+abc:
+  name: "ABC"
+  fields:
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: name, label: "Товар", unit: string}
+    - {key: quantity, label: "Продажи", unit: count}
+    - {key: cost_price, label: "Себестоимость, (₽)", unit: RUB}
+
+active-orders:
+  name: "Активные заказы"
+  fields:
+    - {key: region_name, label: "Регион", unit: string}
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: kassir, label: "Кассир", unit: string, pii: true}
+    - {key: source, label: "Источник", unit: string}
+    - {key: nomer, label: "Номер", unit: string}
+    - {key: tip, label: "Тип", unit: string}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: total_cost, label: "Сумма заказа", unit: string}
+    - {key: status, label: "Статус", unit: string}
+    - {key: first_name, label: "Имя покупателя", unit: string, pii: true}
+    - {key: telefon_pokupatelya, label: "Телефон покупателя", unit: string, pii: true}
+    - {key: in_time, label: "Ко времени", unit: string}
+    - {key: date_delivery, label: "Дата доставки", unit: date}
+    - {key: date_created, label: "Дата создания", unit: date}
+
+cash-income-outcome:
+  name: "Внесения и выплаты"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: close_date, label: "Дата", unit: date}
+    - {key: tip, label: "Тип", unit: string}
+    - {key: sum, label: "Сумма", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: prichina, label: "Причина", unit: string}
+
+cash-on-hand:
+  name: "Наличные"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: sell, label: "Продажи", unit: string}
+    - {key: payback, label: "Возвраты", unit: string}
+    - {key: income, label: "Внесения", unit: string}
+    - {key: outcome, label: "Выплаты", unit: string}
+    - {key: total, label: "Итого", unit: string}
+
+categories:
+  name: "Категории"
+  fields:
+    - {key: name, label: "Категории", unit: string}
+    - {key: quantity, label: "Кол-во", unit: count}
+    - {key: amount, label: "Выручка (₽)", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+
+clients:
+  name: "Клиенты"
+  fields:
+    - {key: last_name, label: "ФИО", unit: string, pii: true}
+    - {key: sex, label: "Пол", unit: string}
+    - {key: email, label: "E-mail", unit: string, pii: true}
+    - {key: phone, label: "Телефон", unit: string, pii: true}
+    - {key: registration_date, label: "Дата регистрации", unit: date}
+    - {key: profile_status, label: "Статус", unit: string}
+    - {key: birth_date, label: "День рождения", unit: string, pii: true}
+    - {key: crm_status, label: "CRM Статус", unit: string}
+
+expected-profit:
+  name: "Ожидаемая прибыль"
+  fields:
+    - {key: date, label: "Дата", unit: date}
+    - {key: real_count, label: "Кол-во чеков", unit: count}
+    - {key: sum_all, label: "Выручка, ₽", unit: RUB}
+    - {key: cost_price, label: "Прогнозная себестоимость, ₽", unit: RUB}
+    - {key: profit, label: "Прогнозная прибыль, ₽", unit: RUB}
+    - {key: percent, label: "Процент наценки", unit: string}
+
+level-balance:
+  name: "Балансы по уровням"
+  fields:
+    - {key: title, label: "Уровень", unit: string}
+    - {key: date, label: "Месяц", unit: date}
+    - {key: balance, label: "Баланс (₽)", unit: RUB}
+
+minimum-stock:
+  name: "Минимальные остатки"
+  fields:
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: kategoriya, label: "Категория", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: stock, label: "Минимальный остаток", unit: string}
+    - {key: current_stock, label: "Фактический остаток", unit: string}
+    - {key: diff, label: "Разница", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+
+order-payment-hour:
+  name: "Часы заказов"
+  fields:
+    - {key: hour, label: "Час", unit: string}
+    - {key: quantity, label: "Кол-во заказов", unit: count}
+    - {key: sales_sum, label: "Сумма заказов", unit: string}
+    - {key: items_sum, label: "Сумма заказов без скидки", unit: string}
+
+order-processing-time:
+  name: "Время выполнения"
+  fields:
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: not_confirmed_time, label: "Не подтвержден", unit: string}
+    - {key: confirmed_time, label: "Подтвержден", unit: string}
+    - {key: cooking_time, label: "Готовится", unit: string}
+    - {key: ready_time, label: "Готов", unit: string}
+    - {key: sent_time, label: "Доставляется", unit: string}
+    - {key: processing_time, label: "Общее время", unit: string}
+
+orders:
+  name: "Заказы"
+  fields:
+    - {key: number, label: "№", unit: string}
+    - {key: istochnik, label: "Источник", unit: string}
+    - {key: kassir, label: "Кассир", unit: string, pii: true}
+    - {key: pokupatel, label: "Покупатель", unit: string, pii: true}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: open, label: "Открыт", unit: date}
+    - {key: dostavlen, label: "Доставлен", unit: string}
+    - {key: zavershen, label: "Завершен", unit: string}
+    - {key: paid, label: "Стоимость (₽)", unit: RUB}
+    - {key: discount_value, label: "Скидка (₽)", unit: RUB}
+    - {key: status, label: "Статус", unit: string}
+    - {key: tip_zakaza, label: "Тип заказа", unit: string}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: dostavka_ko_vremeni, label: "Доставка ко времени", unit: string}
+    - {key: prichina_vozvrata, label: "Причина возврата", unit: string}
+    - {key: fio, label: "ФИО", unit: string, pii: true}
+    - {key: adres, label: "Адрес", unit: string, pii: true}
+    - {key: koordinaty, label: "Координаты", unit: string, pii: true}
+
+paycheck:
+  name: "Чеки"
+  fields:
+    - {key: number, label: "№ чека", unit: string}
+    - {key: zakaza, label: "№ Заказа", unit: string}
+    - {key: shift_number, label: "№ кассовой смены", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: terminal_name, label: "Терминал", unit: string}
+    - {key: tip_cheka, label: "Тип чека", unit: string}
+    - {key: close, label: "Закрыт", unit: date}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: paid, label: "Оплачено (₽)", unit: RUB}
+    - {key: sell_discount, label: "Скидка (₽)", unit: RUB}
+    - {key: profit, label: "Прибыль (₽)", unit: RUB}
+
+payment:
+  name: "Выручка"
+  fields:
+    - {key: date, label: "Дата", unit: date}
+    - {key: kol_vo_chekov, label: "Кол-во чеков", unit: count}
+    - {key: return_count, label: "Возвраты", unit: string}
+    - {key: return_sum, label: "Сумма возвратов (₽)", unit: RUB}
+    - {key: sum_card, label: "Карта (₽)", unit: RUB}
+    - {key: sum_cash, label: "Наличные (₽)", unit: RUB}
+    - {key: onlayn, label: "Онлайн (₽)", unit: RUB}
+    - {key: sbp, label: "СБП (₽)", unit: RUB}
+    - {key: sum_all, label: "Выручка (₽)", unit: RUB}
+    - {key: sredniy_chek, label: "Средний чек (₽)", unit: RUB}
+
+personnel:
+  name: "Персонал"
+  fields:
+    - {key: name, label: "ФИО", unit: string, pii: true}
+    - {key: earnings, label: "Выручка (₽)", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+    - {key: checks_count, label: "Кол-во чеков", unit: count}
+    - {key: average_check, label: "Средний чек (₽)", unit: RUB}
+
+product-flow:
+  name: "Отчёт по движению"
+  fields:
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: sebestoimost, label: "Себестоимость", unit: string}
+    - {key: rashod_sebestoimost, label: "Σ (Расход * себестоимость", unit: string}
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: nach_ost, label: "Нач. ост.", unit: string}
+    - {key: prihod, label: "Приход", unit: string}
+    - {key: rashod, label: "Расход", unit: string}
+    - {key: kon_ost, label: "Кон. ост.", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+
+products:
+  name: "Товары"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: artikul, label: "Артикул", unit: string}
+    - {key: quantity, label: "Кол-во", unit: count}
+    - {key: quantity_with_discount, label: "Кол-во со скидкой", unit: count}
+    - {key: quantity_without_discount, label: "Кол-во без скидки", unit: count}
+    - {key: amount, label: "Выручка (₽)", unit: RUB}
+    - {key: amount_with_discount, label: "Выручка (₽) от товаров со скидкой", unit: RUB}
+    - {key: amount_without_discount, label: "Выручка (₽) от товаров без скидки", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+    - {key: profit_with_discount, label: "Ожидаемая прибыль (₽) от товаров со скидкой", unit: RUB}
+    - {key: profit_without_discount, label: "Ожидаемая прибыль (₽)от товаров без скидки", unit: RUB}
+    - {key: discount_sum, label: "Сумма скидки (₽)", unit: RUB}
+
+purchase-price-dynamics:
+  name: "Динамика закупочных цен"
+  fields:
+    - {key: produkt, label: "Продукт", unit: string}
+    - {key: kontragent, label: "Контрагент", unit: string}
+    - {key: may_26g, label: "Май 26г.", unit: string}
+    - {key: iyun_26g, label: "Июн 26г.", unit: string}
+    - {key: srednyaya_cena, label: "Средняя цена", unit: string}
+
+sales-on-map:
+  name: "Продажи на карте"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: count_orders, label: "Кол-во заказов", unit: count}
+    - {key: count_drivers, label: "Кол-во водителей", unit: count}
+    - {key: total, label: "Сумма заказов, ₽", unit: RUB}
+
+source-order:
+  name: "Источники заказов"
+  fields:
+    - {key: source, label: "Источник", unit: string}
+    - {key: delivery_quantity, label: "Кол-во (Доставка)", unit: count}
+    - {key: delivery_total, label: "Сумма (Доставка)", unit: string}
+    - {key: delivery_profit, label: "Прибыль (Доставка)", unit: string}
+    - {key: hold_quantity, label: "Кол-во (В заведении)", unit: count}
+    - {key: hold_total, label: "Сумма (В заведении)", unit: string}
+    - {key: hold_profit, label: "Прибыль (В заведении)", unit: string}
+    - {key: retail_quantity, label: "Кол-во (Розничная продажа)", unit: count}
+    - {key: retail_total, label: "Сумма (Розничная продажа)", unit: string}
+    - {key: retail_profit, label: "Прибыль (Розничная продажа)", unit: string}
+    - {key: pickup_quantity, label: "Кол-во (Самовывоз)", unit: count}
+    - {key: pickup_total, label: "Сумма (Самовывоз)", unit: string}
+    - {key: pickup_profit, label: "Прибыль (Самовывоз)", unit: string}
+    - {key: quantity, label: "Итог. кол-во", unit: count}
+    - {key: total, label: "Итог. сумма", unit: string}
+    - {key: profit, label: "Итог. прибыль", unit: string}
+
+special-products:
+  name: "Товары по акции"
+  fields:
+    - {key: special_name, label: "Акция", unit: string}
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: total_cost, label: "Сумма ₽", unit: RUB}
+    - {key: discount, label: "Скидка ₽", unit: RUB}
+    - {key: quantity, label: "Количество", unit: count}
+
+special:
+  name: "Акции"
+  fields:
+    - {key: name, label: "Заказы", unit: string}
+    - {key: orders_count, label: "Количество заказов", unit: count}
+    - {key: orders_amount_without_discount, label: "Сумма без скидок (₽)", unit: RUB}
+    - {key: orders_amount_discount, label: "Сумма скидок (₽)", unit: RUB}
+    - {key: orders_amount_with_discount, label: "Фактическая выручка (₽)", unit: RUB}
+
+stock:
+  name: "Остатки по складам"
+  fields:
+    - {key: product_name, label: "Продукт", unit: string}
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: stock, label: "Количество", unit: count}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+    - {key: cost_sum, label: "Общ. сумма по цене себестоимости, ₽", unit: RUB}
+    - {key: price_sum, label: "Общ. сумма по розничной цене, ₽", unit: RUB}
+
+warehouse-document-supply:
+  name: "Поступления (склад)"
+  fields:
+    - {key: number, label: "Номер", unit: string}
+    - {key: is_register, label: "Статус документа", unit: string}
+    - {key: registration_date, label: "Дата регистрации", unit: date}
+    - {key: incoming_document_number, label: "Номер входящего документа", unit: string}
+    - {key: warehouse_id, label: "Склад", unit: string}
+    - {key: contractor_id, label: "Контрагент", unit: string}
+    - {key: nds, label: "НДС, ₽", unit: RUB}
+    - {key: nds_1, label: "НДС, %", unit: percent}
+    - {key: invoice, label: "Счет-фактура", unit: string}
+    - {key: waybill, label: "ТТН", unit: string}
+    - {key: comment, label: "Комментарий", unit: string}
+
+write-off-report:
+  name: "Отчёт по списаниям"
+  fields:
+    - {key: dokument, label: "Документ", unit: string}
+    - {key: date, label: "Дата движения", unit: date}
+    - {key: warehouse_name, label: "Склад", unit: string}
+    - {key: user_name, label: "Сотрудник", unit: string, pii: true}
+    - {key: product_name, label: "Позиция", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: total_cost, label: "Сумма, ₽", unit: RUB}
+    - {key: reason_name, label: "Статья", unit: string}
+
+# === СУЩНОСТИ/СПРАВОЧНИКИ ===
+coupon_coupon:
+  name: "coupon_coupon"
+  fields:
+    - {key: code, label: "Код купона", unit: string}
+    - {key: deystvitelen_s, label: "Действителен с", unit: string}
+    - {key: deystvitelen_po, label: "Действителен по", unit: string}
+    - {key: data_poslednego_ispolzovaniya, label: "Дата последнего использования", unit: date}
+    - {key: yavlyaetsya_odnorazovym, label: "Является одноразовым", unit: string}
+    - {key: kolichestvo_primeneniy, label: "Количество применений", unit: count}
+
+device_terminal_archive:
+  name: "device_terminal_archive"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: kod_aktivacii, label: "Код активации", unit: string}
+    - {key: tip_terminala, label: "Тип терминала", unit: string}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: last_login, label: "Был активен", unit: string}
+    - {key: date_activated, label: "Дата активации", unit: date}
+
+device_terminal_index:
+  name: "device_terminal_index"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: kod_aktivacii, label: "Код активации", unit: string}
+    - {key: tip_terminala, label: "Тип терминала", unit: string}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: last_login, label: "Был активен", unit: string}
+    - {key: date_activated, label: "Дата активации", unit: date}
+
+device_terminal_info_39053269-81be-4c5f-9434-74be90d12e81:
+  name: "device_terminal_info_39053269-81be-4c5f-9434-74be90d12e81"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_39ee1334-ac91-4c93-ad88-8899f0804725:
+  name: "device_terminal_info_39ee1334-ac91-4c93-ad88-8899f0804725"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_5b85fcaa-6116-46ab-85b9-15cba816c77c:
+  name: "device_terminal_info_5b85fcaa-6116-46ab-85b9-15cba816c77c"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_68c09b74-8c24-4ac0-9baa-17de459068a2:
+  name: "device_terminal_info_68c09b74-8c24-4ac0-9baa-17de459068a2"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_7308e8d4-3675-4cdf-9e06-62fcc96d47d4:
+  name: "device_terminal_info_7308e8d4-3675-4cdf-9e06-62fcc96d47d4"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_79521208-3823-4273-abed-ec7bd2e1fc3c:
+  name: "device_terminal_info_79521208-3823-4273-abed-ec7bd2e1fc3c"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_84277e0f-991f-4b8c-9400-c8f085837be8:
+  name: "device_terminal_info_84277e0f-991f-4b8c-9400-c8f085837be8"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_8ac09369-160e-4f67-b728-737efe49c5f7:
+  name: "device_terminal_info_8ac09369-160e-4f67-b728-737efe49c5f7"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_8cde472d-88b0-4888-bad2-ec72b5ecd7c3:
+  name: "device_terminal_info_8cde472d-88b0-4888-bad2-ec72b5ecd7c3"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_94b72499-3f20-4588-98cd-2f83f8fdec61:
+  name: "device_terminal_info_94b72499-3f20-4588-98cd-2f83f8fdec61"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_94f734cb-c691-4fe9-9509-5601d414f2c0:
+  name: "device_terminal_info_94f734cb-c691-4fe9-9509-5601d414f2c0"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_c5c5b129-fb05-47f4-9c84-c698d50def0d:
+  name: "device_terminal_info_c5c5b129-fb05-47f4-9c84-c698d50def0d"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+device_terminal_info_c952beac-53f8-4822-b1a6-3c8a5dc90ee8:
+  name: "device_terminal_info_c952beac-53f8-4822-b1a6-3c8a5dc90ee8"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: model, label: "Модель", unit: string}
+    - {key: ffd, label: "ФФД", unit: string}
+
+extra-field_list_product:
+  name: "extra-field_list_product"
+  fields:
+    - {key: title, label: "Название", unit: string}
+    - {key: key, label: "Ключ", unit: string}
+    - {key: type, label: "Тип", unit: string}
+    - {key: created_at, label: "Создан", unit: string}
+    - {key: updated_at, label: "Обновлен", unit: string}
+
+extra-field_list_sale_point:
+  name: "extra-field_list_sale_point"
+  fields:
+    - {key: title, label: "Название", unit: string}
+    - {key: key, label: "Ключ", unit: string}
+    - {key: type, label: "Тип", unit: string}
+    - {key: created_at, label: "Создан", unit: string}
+    - {key: updated_at, label: "Обновлен", unit: string}
+
+journal_entry_index:
+  name: "journal_entry_index"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: occurred_on, label: "Время события", unit: string}
+    - {key: sobytie, label: "Событие", unit: string}
+    - {key: informaciya, label: "Информация", unit: string}
+    - {key: polzovatel, label: "Пользователь", unit: string}
+
+loyalty_card:
+  name: "loyalty_card"
+  fields:
+    - {key: num, label: "Номер", unit: string}
+    - {key: state, label: "Статус карты", unit: string}
+    - {key: customer_id, label: "Владелец карты", unit: string, pii: true}
+    - {key: mode, label: "Тип", unit: string}
+
+message-templates_template:
+  name: "message-templates_template"
+  fields:
+    - {key: alias, label: "Название шаблона", unit: string}
+    - {key: send_email, label: "Отправлять E-mail", unit: string, pii: true}
+    - {key: send_sms, label: "Отправлять СМС", unit: string}
+
+nomenclature_combo_index:
+  name: "Комбо"
+  fields:
+    - {key: name, label: "Наименование товара", unit: string}
+    - {key: product_category_id, label: "Категория", unit: string}
+
+nomenclature_manufacture-place_index:
+  name: "nomenclature_manufacture-place_index"
+  fields:
+    - {key: name, label: "Название места изготовления", unit: string}
+
+nomenclature_material_index:
+  name: "Материалы и ингредиенты"
+  fields:
+    - {key: name, label: "Наименование товара", unit: string}
+    - {key: product_category_id, label: "Категория", unit: string}
+
+nomenclature_modifier:
+  name: "Модификаторы"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: product_category_id, label: "Категория", unit: string}
+    - {key: ispolzuetsya, label: "Используется", unit: string}
+    - {key: price, label: "Цена", unit: string}
+
+nomenclature_prepack:
+  name: "Полуфабрикаты"
+  fields:
+    - {key: name, label: "Наименование товара", unit: string}
+    - {key: product_category_id, label: "Категория", unit: string}
+
+nomenclature_product-yellow-price:
+  name: "nomenclature_product-yellow-price"
+  fields:
+    - {key: short_name, label: "Название", unit: string}
+    - {key: kolichestvo_cennikov, label: "Количество ценников", unit: count}
+
+nomenclature_product_index:
+  name: "Товары и услуги"
+  fields:
+    - {key: name, label: "Наименование товара", unit: string}
+    - {key: product_category_id, label: "Категория", unit: string}
+    - {key: price, label: "Цена", unit: string}
+    - {key: nacenka, label: "Наценка", unit: string}
+
+notification_campaign_index:
+  name: "notification_campaign_index"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: data_sozdaniya, label: "Дата создания", unit: date}
+    - {key: data_obnovleniya, label: "Дата обновления", unit: date}
+
+notification_item:
+  name: "notification_item"
+  fields:
+    - {key: title, label: "Заголовок", unit: string}
+    - {key: status, label: "Статус", unit: string}
+    - {key: publish_date, label: "Дата публикации", unit: date}
+    - {key: prochitano, label: "Прочитано", unit: string}
+
+notification_item_archive:
+  name: "notification_item_archive"
+  fields:
+    - {key: title, label: "Заголовок", unit: string}
+    - {key: status, label: "Статус", unit: string}
+    - {key: publish_date, label: "Дата публикации", unit: date}
+    - {key: prochitano, label: "Прочитано", unit: string}
+
+notification_item_view_37df2048-b804-4c61-b9b2-6941dbfb2383:
+  name: "notification_item_view_37df2048-b804-4c61-b9b2-6941dbfb2383"
+  fields:
+    - {key: user_id, label: "Пользователь", unit: string}
+    - {key: read_time, label: "Прочитано", unit: string}
+
+notification_item_view_73985d63-acb3-4d90-9856-ede477140b2e:
+  name: "notification_item_view_73985d63-acb3-4d90-9856-ede477140b2e"
+  fields:
+    - {key: user_id, label: "Пользователь", unit: string}
+    - {key: read_time, label: "Прочитано", unit: string}
+
+notification_item_view_8d28488a-880e-4703-a443-557774492f90:
+  name: "notification_item_view_8d28488a-880e-4703-a443-557774492f90"
+  fields:
+    - {key: user_id, label: "Пользователь", unit: string}
+    - {key: read_time, label: "Прочитано", unit: string}
+
+notification_item_view_a060ef43-2b01-4119-8f52-34b1a643f238:
+  name: "notification_item_view_a060ef43-2b01-4119-8f52-34b1a643f238"
+  fields:
+    - {key: user_id, label: "Пользователь", unit: string}
+    - {key: read_time, label: "Прочитано", unit: string}
+
+notification_item_view_e25125f1-a6d8-4d08-afea-d94b8c0aa456:
+  name: "notification_item_view_e25125f1-a6d8-4d08-afea-d94b8c0aa456"
+  fields:
+    - {key: user_id, label: "Пользователь", unit: string}
+    - {key: read_time, label: "Прочитано", unit: string}
+
+planning_production-plan:
+  name: "planning_production-plan"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: telefon, label: "Телефон", unit: string, pii: true}
+    - {key: kolichestvo_stolov, label: "Количество столов", unit: count}
+
+report_abc:
+  name: "report_abc"
+  fields:
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: name, label: "Товар", unit: string}
+    - {key: quantity, label: "Продажи", unit: count}
+    - {key: cost_price, label: "Себестоимость, (₽)", unit: RUB}
+
+report_active-orders:
+  name: "report_active-orders"
+  fields:
+    - {key: region_name, label: "Регион", unit: string}
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: kassir, label: "Кассир", unit: string, pii: true}
+    - {key: source, label: "Источник", unit: string}
+    - {key: nomer, label: "Номер", unit: string}
+    - {key: tip, label: "Тип", unit: string}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: total_cost, label: "Сумма заказа", unit: string}
+    - {key: status, label: "Статус", unit: string}
+    - {key: first_name, label: "Имя покупателя", unit: string, pii: true}
+    - {key: telefon_pokupatelya, label: "Телефон покупателя", unit: string, pii: true}
+    - {key: in_time, label: "Ко времени", unit: string}
+    - {key: date_delivery, label: "Дата доставки", unit: date}
+    - {key: date_created, label: "Дата создания", unit: date}
+
+report_bonuses:
+  name: "report_bonuses"
+  fields:
+    - {key: data, label: "Дата", unit: date}
+    - {key: zachisleniya, label: "Зачисления", unit: string}
+    - {key: zachisleniya_summa, label: "Зачисления (Сумма ₽)", unit: RUB}
+    - {key: spisaniya, label: "Списания", unit: string}
+    - {key: spisaniya_summa, label: "Списания (Сумма ₽)", unit: RUB}
+    - {key: pokupki_urovnya, label: "Покупки уровня", unit: string}
+    - {key: pokupki_urovnya_summa, label: "Покупки уровня (Сумма ₽)", unit: RUB}
+    - {key: sgoraniya, label: "Сгорания", unit: string}
+    - {key: sgoraniya_summa, label: "Сгорания (Сумма ₽)", unit: RUB}
+    - {key: bez_kart, label: "Без карт", unit: string}
+    - {key: bez_kart_summa, label: "Без карт (Сумма ₽)", unit: RUB}
+
+report_cash-income-outcome:
+  name: "report_cash-income-outcome"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: close_date, label: "Дата", unit: date}
+    - {key: tip, label: "Тип", unit: string}
+    - {key: sum, label: "Сумма", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: prichina, label: "Причина", unit: string}
+
+report_cash-on-hand:
+  name: "report_cash-on-hand"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: sell, label: "Продажи", unit: string}
+    - {key: payback, label: "Возвраты", unit: string}
+    - {key: income, label: "Внесения", unit: string}
+    - {key: outcome, label: "Выплаты", unit: string}
+    - {key: total, label: "Итого", unit: string}
+
+report_categories:
+  name: "report_categories"
+  fields:
+    - {key: name, label: "Категории", unit: string}
+    - {key: quantity, label: "Кол-во", unit: count}
+    - {key: amount, label: "Выручка (₽)", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+
+report_clients:
+  name: "report_clients"
+  fields:
+    - {key: last_name, label: "ФИО", unit: string, pii: true}
+    - {key: sex, label: "Пол", unit: string}
+    - {key: email, label: "E-mail", unit: string, pii: true}
+    - {key: phone, label: "Телефон", unit: string, pii: true}
+    - {key: registration_date, label: "Дата регистрации", unit: date}
+    - {key: profile_status, label: "Статус", unit: string}
+    - {key: birth_date, label: "День рождения", unit: string, pii: true}
+    - {key: crm_status, label: "CRM Статус", unit: string}
+
+report_customer-segmentation:
+  name: "report_customer-segmentation"
+  fields:
+    - {key: fio, label: "Клиент", unit: string}
+    - {key: telefon, label: "Телефон", unit: string, pii: true}
+    - {key: birth_date, label: "Дата рождения", unit: date}
+    - {key: rfm_gruppa, label: "RFM-Группа", unit: string}
+    - {key: region, label: "Регион", unit: string}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: quantity, label: "Количество заказов", unit: count}
+    - {key: amount, label: "Сумма заказов", unit: string}
+    - {key: avg_amount, label: "Средний чек", unit: string}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: tip_zakaza, label: "Тип заказа", unit: string}
+    - {key: istochnik, label: "Источник", unit: string}
+    - {key: bonus_quantity, label: "Кол-во бонусов", unit: count}
+    - {key: kupon, label: "Купон", unit: string}
+    - {key: tovary, label: "Товары", unit: string}
+    - {key: kategorii_tovarov, label: "Категории товаров", unit: string}
+    - {key: registration_date, label: "Дата регистрации", unit: date}
+
+report_dangerous-operations:
+  name: "report_dangerous-operations"
+  fields:
+    - {key: transactions_count, label: "Кол-во транзакций", unit: count}
+    - {key: card_num, label: "Карта", unit: string}
+    - {key: card_owner, label: "Владелец", unit: string, pii: true}
+
+report_expected-profit:
+  name: "report_expected-profit"
+  fields:
+    - {key: date, label: "Дата", unit: date}
+    - {key: real_count, label: "Кол-во чеков", unit: count}
+    - {key: sum_all, label: "Выручка, ₽", unit: RUB}
+    - {key: cost_price, label: "Прогнозная себестоимость, ₽", unit: RUB}
+    - {key: profit, label: "Прогнозная прибыль, ₽", unit: RUB}
+    - {key: percent, label: "Процент наценки", unit: string}
+
+report_level-balance:
+  name: "report_level-balance"
+  fields:
+    - {key: title, label: "Уровень", unit: string}
+    - {key: date, label: "Месяц", unit: date}
+    - {key: balance, label: "Баланс (₽)", unit: RUB}
+
+report_level-orders:
+  name: "report_level-orders"
+  fields:
+    - {key: title, label: "Уровень", unit: string}
+    - {key: date, label: "Месяц", unit: date}
+    - {key: order_count, label: "Количество заказов", unit: count}
+    - {key: sredniy_chek, label: "Средний чек", unit: string}
+    - {key: vyruchka, label: "Выручка", unit: string}
+
+report_minimum-stock:
+  name: "report_minimum-stock"
+  fields:
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: kategoriya, label: "Категория", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: stock, label: "Минимальный остаток", unit: string}
+    - {key: current_stock, label: "Фактический остаток", unit: string}
+    - {key: diff, label: "Разница", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+
+report_order-payment-hour:
+  name: "report_order-payment-hour"
+  fields:
+    - {key: hour, label: "Час", unit: string}
+    - {key: quantity, label: "Кол-во заказов", unit: count}
+    - {key: sales_sum, label: "Сумма заказов", unit: string}
+    - {key: items_sum, label: "Сумма заказов без скидки", unit: string}
+
+report_order-processing-time-detail:
+  name: "report_order-processing-time-detail"
+  fields:
+    - {key: order_day, label: "Дата", unit: date}
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: not_confirmed_time, label: "Не подтвержден", unit: string}
+    - {key: confirmed_time, label: "Подтвержден", unit: string}
+    - {key: cooking_time, label: "Готовится", unit: string}
+    - {key: ready_time, label: "Готов", unit: string}
+    - {key: sent_time, label: "Доставляется", unit: string}
+    - {key: processing_time, label: "Общее время", unit: string}
+
+report_order-processing-time:
+  name: "report_order-processing-time"
+  fields:
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: not_confirmed_time, label: "Не подтвержден", unit: string}
+    - {key: confirmed_time, label: "Подтвержден", unit: string}
+    - {key: cooking_time, label: "Готовится", unit: string}
+    - {key: ready_time, label: "Готов", unit: string}
+    - {key: sent_time, label: "Доставляется", unit: string}
+    - {key: processing_time, label: "Общее время", unit: string}
+
+report_orders:
+  name: "report_orders"
+  fields:
+    - {key: number, label: "№", unit: string}
+    - {key: istochnik, label: "Источник", unit: string}
+    - {key: kassir, label: "Кассир", unit: string, pii: true}
+    - {key: pokupatel, label: "Покупатель", unit: string, pii: true}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: open, label: "Открыт", unit: date}
+    - {key: dostavlen, label: "Доставлен", unit: string}
+    - {key: zavershen, label: "Завершен", unit: string}
+    - {key: paid, label: "Стоимость (₽)", unit: RUB}
+    - {key: discount_value, label: "Скидка (₽)", unit: RUB}
+    - {key: status, label: "Статус", unit: string}
+    - {key: tip_zakaza, label: "Тип заказа", unit: string}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: dostavka_ko_vremeni, label: "Доставка ко времени", unit: string}
+    - {key: prichina_vozvrata, label: "Причина возврата", unit: string}
+    - {key: fio, label: "ФИО", unit: string, pii: true}
+    - {key: adres, label: "Адрес", unit: string, pii: true}
+    - {key: koordinaty, label: "Координаты", unit: string, pii: true}
+
+report_paycheck:
+  name: "report_paycheck"
+  fields:
+    - {key: number, label: "№ чека", unit: string}
+    - {key: zakaza, label: "№ Заказа", unit: string}
+    - {key: shift_number, label: "№ кассовой смены", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: terminal_name, label: "Терминал", unit: string}
+    - {key: tip_cheka, label: "Тип чека", unit: string}
+    - {key: close, label: "Закрыт", unit: date}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: paid, label: "Оплачено (₽)", unit: RUB}
+    - {key: sell_discount, label: "Скидка (₽)", unit: RUB}
+    - {key: profit, label: "Прибыль (₽)", unit: RUB}
+
+report_payment:
+  name: "report_payment"
+  fields:
+    - {key: date, label: "Дата", unit: date}
+    - {key: kol_vo_chekov, label: "Кол-во чеков", unit: count}
+    - {key: return_count, label: "Возвраты", unit: string}
+    - {key: return_sum, label: "Сумма возвратов (₽)", unit: RUB}
+    - {key: sum_card, label: "Карта (₽)", unit: RUB}
+    - {key: sum_cash, label: "Наличные (₽)", unit: RUB}
+    - {key: onlayn, label: "Онлайн (₽)", unit: RUB}
+    - {key: sbp, label: "СБП (₽)", unit: RUB}
+    - {key: sum_all, label: "Выручка (₽)", unit: RUB}
+    - {key: sredniy_chek, label: "Средний чек (₽)", unit: RUB}
+
+report_personnel:
+  name: "report_personnel"
+  fields:
+    - {key: name, label: "ФИО", unit: string, pii: true}
+    - {key: earnings, label: "Выручка (₽)", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+    - {key: checks_count, label: "Кол-во чеков", unit: count}
+    - {key: average_check, label: "Средний чек (₽)", unit: RUB}
+
+report_product-flow:
+  name: "report_product-flow"
+  fields:
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: sebestoimost, label: "Себестоимость", unit: string}
+    - {key: rashod_sebestoimost, label: "Σ (Расход * себестоимость", unit: string}
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: nach_ost, label: "Нач. ост.", unit: string}
+    - {key: prihod, label: "Приход", unit: string}
+    - {key: rashod, label: "Расход", unit: string}
+    - {key: kon_ost, label: "Кон. ост.", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+
+report_products:
+  name: "report_products"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: artikul, label: "Артикул", unit: string}
+    - {key: quantity, label: "Кол-во", unit: count}
+    - {key: quantity_with_discount, label: "Кол-во со скидкой", unit: count}
+    - {key: quantity_without_discount, label: "Кол-во без скидки", unit: count}
+    - {key: amount, label: "Выручка (₽)", unit: RUB}
+    - {key: amount_with_discount, label: "Выручка (₽) от товаров со скидкой", unit: RUB}
+    - {key: amount_without_discount, label: "Выручка (₽) от товаров без скидки", unit: RUB}
+    - {key: profit, label: "Ожидаемая прибыль (₽)", unit: RUB}
+    - {key: profit_with_discount, label: "Ожидаемая прибыль (₽) от товаров со скидкой", unit: RUB}
+    - {key: profit_without_discount, label: "Ожидаемая прибыль (₽)от товаров без скидки", unit: RUB}
+    - {key: discount_sum, label: "Сумма скидки (₽)", unit: RUB}
+
+report_purchase-price-dynamics:
+  name: "report_purchase-price-dynamics"
+  fields:
+    - {key: produkt, label: "Продукт", unit: string}
+    - {key: kontragent, label: "Контрагент", unit: string}
+    - {key: may_26g, label: "Май 26г.", unit: string}
+    - {key: iyun_26g, label: "Июн 26г.", unit: string}
+    - {key: srednyaya_cena, label: "Средняя цена", unit: string}
+
+report_rfm-analyze:
+  name: "report_rfm-analyze"
+  fields:
+    - {key: fio, label: "Клиент", unit: string}
+    - {key: gruppa, label: "Группа", unit: string}
+    - {key: rfm_indeks, label: "RFM-Индекс", unit: string}
+    - {key: last_purchase_days, label: "Последняя покупка (дней назад)", unit: string}
+    - {key: purchase_quantity, label: "Кол-во покупок", unit: count}
+    - {key: purchase_amount, label: "Сумма покупок, ₽", unit: RUB}
+
+report_sales-on-map:
+  name: "report_sales-on-map"
+  fields:
+    - {key: name, label: "Торговая точка", unit: string}
+    - {key: count_orders, label: "Кол-во заказов", unit: count}
+    - {key: count_drivers, label: "Кол-во водителей", unit: count}
+    - {key: total, label: "Сумма заказов, ₽", unit: RUB}
+
+report_special-products:
+  name: "report_special-products"
+  fields:
+    - {key: special_name, label: "Акция", unit: string}
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: total_cost, label: "Сумма ₽", unit: RUB}
+    - {key: discount, label: "Скидка ₽", unit: RUB}
+    - {key: quantity, label: "Количество", unit: count}
+
+report_special:
+  name: "report_special"
+  fields:
+    - {key: name, label: "Заказы", unit: string}
+    - {key: orders_count, label: "Количество заказов", unit: count}
+    - {key: orders_amount_without_discount, label: "Сумма без скидок (₽)", unit: RUB}
+    - {key: orders_amount_discount, label: "Сумма скидок (₽)", unit: RUB}
+    - {key: orders_amount_with_discount, label: "Фактическая выручка (₽)", unit: RUB}
+
+report_stock:
+  name: "report_stock"
+  fields:
+    - {key: product_name, label: "Продукт", unit: string}
+    - {key: category_name, label: "Категория", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: stock, label: "Количество", unit: count}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+    - {key: cost_sum, label: "Общ. сумма по цене себестоимости, ₽", unit: RUB}
+    - {key: price_sum, label: "Общ. сумма по розничной цене, ₽", unit: RUB}
+
+report_suspect-orders:
+  name: "report_suspect-orders"
+  fields:
+    - {key: nomer_zakaza, label: "Номер заказа", unit: string}
+    - {key: torgovaya_tochka, label: "Торговая точка", unit: string}
+    - {key: kassir, label: "Кассир", unit: string, pii: true}
+    - {key: pokupatel, label: "Покупатель", unit: string, pii: true}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: deystviya_kassira, label: "Действия кассира", unit: string, pii: true}
+
+report_type-order:
+  name: "report_type-order"
+  fields:
+    - {key: shift_date, label: "Дата кассовой смены", unit: date}
+    - {key: region_name, label: "Регион", unit: string}
+    - {key: sale_point_name, label: "Торговая точка", unit: string}
+    - {key: quantity, label: "кол-во", unit: count}
+    - {key: sales_sum, label: "Сумма продаж", unit: string}
+    - {key: roznichnye_prodazhi_kol_vo, label: "Розничные продажи (кол-во)", unit: count}
+    - {key: roznichnye_prodazhi_nalichnye, label: "Розничные продажи (наличные)", unit: string}
+    - {key: roznichnye_prodazhi_karta, label: "Розничные продажи (карта)", unit: string}
+    - {key: roznichnye_prodazhi_onlayn, label: "Розничные продажи (онлайн)", unit: string}
+    - {key: roznichnye_prodazhi_sbp, label: "Розничные продажи (СБП)", unit: string}
+    - {key: v_zavedenii_kol_vo, label: "В заведении (кол-во)", unit: count}
+    - {key: v_zavedenii_nalichnye, label: "В заведении (наличные)", unit: string}
+    - {key: v_zavedenii_karta, label: "В заведении (карта)", unit: string}
+    - {key: v_zavedenii_onlayn, label: "В заведении (онлайн)", unit: string}
+    - {key: v_zavedenii_sbp, label: "В заведении (СБП)", unit: string}
+    - {key: samovyvoz_kol_vo, label: "Самовывоз (кол-во)", unit: count}
+    - {key: samovyvoz_nalichnye, label: "Самовывоз (наличные)", unit: string}
+    - {key: samovyvoz_karta, label: "Самовывоз (карта)", unit: string}
+    - {key: samovyvoz_onlayn, label: "Самовывоз (онлайн)", unit: string}
+    - {key: samovyvoz_sbp, label: "Самовывоз (СБП)", unit: string}
+    - {key: dostavka_kol_vo, label: "Доставка (кол-во)", unit: count}
+    - {key: dostavka_nalichnye, label: "Доставка (наличные)", unit: string}
+    - {key: dostavka_karta, label: "Доставка (карта)", unit: string}
+    - {key: dostavka_onlayn, label: "Доставка (онлайн)", unit: string}
+    - {key: dostavka_sbp, label: "Доставка (СБП)", unit: string}
+
+report_warehouse-document-supply:
+  name: "report_warehouse-document-supply"
+  fields:
+    - {key: number, label: "Номер", unit: string}
+    - {key: is_register, label: "Статус документа", unit: string}
+    - {key: registration_date, label: "Дата регистрации", unit: date}
+    - {key: incoming_document_number, label: "Номер входящего документа", unit: string}
+    - {key: warehouse_id, label: "Склад", unit: string}
+    - {key: contractor_id, label: "Контрагент", unit: string}
+    - {key: nds, label: "НДС, ₽", unit: RUB}
+    - {key: nds_1, label: "НДС, %", unit: percent}
+    - {key: invoice, label: "Счет-фактура", unit: string}
+    - {key: waybill, label: "ТТН", unit: string}
+    - {key: comment, label: "Комментарий", unit: string}
+
+report_write-off-report:
+  name: "report_write-off-report"
+  fields:
+    - {key: dokument, label: "Документ", unit: string}
+    - {key: date, label: "Дата движения", unit: date}
+    - {key: warehouse_name, label: "Склад", unit: string}
+    - {key: user_name, label: "Сотрудник", unit: string, pii: true}
+    - {key: product_name, label: "Позиция", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: total_cost, label: "Сумма, ₽", unit: RUB}
+    - {key: reason_name, label: "Статья", unit: string}
+
+sales_customer:
+  name: "sales_customer"
+  fields:
+    - {key: last_name, label: "ФИО", unit: string, pii: true}
+    - {key: telefon, label: "Телефон", unit: string, pii: true}
+    - {key: email, label: "Email", unit: string, pii: true}
+    - {key: karty, label: "Карты", unit: string}
+    - {key: loyalty_level_id, label: "Уровень лояльности", unit: string}
+
+sales_order_view_0a395522-6812-4125-8f86-6c9494eacb63:
+  name: "sales_order_view_0a395522-6812-4125-8f86-6c9494eacb63"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_2008e57a-83df-4c3f-8468-95bebed1f891:
+  name: "sales_order_view_2008e57a-83df-4c3f-8468-95bebed1f891"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_32c3526f-2715-469f-b9c6-ef2523703eea:
+  name: "sales_order_view_32c3526f-2715-469f-b9c6-ef2523703eea"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_33b870c3-a704-4ce0-b1c6-1f89bc47ad9e:
+  name: "sales_order_view_33b870c3-a704-4ce0-b1c6-1f89bc47ad9e"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_37a2dc39-cdf6-40f4-94cb-902b31854b26:
+  name: "sales_order_view_37a2dc39-cdf6-40f4-94cb-902b31854b26"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_43ecc901-4b06-4aa5-8d6f-efbd71d5cf6d:
+  name: "sales_order_view_43ecc901-4b06-4aa5-8d6f-efbd71d5cf6d"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_494762c8-2a09-4f1a-83d9-f6c5dd95f464:
+  name: "sales_order_view_494762c8-2a09-4f1a-83d9-f6c5dd95f464"
+  fields:
+    - {key: number, label: "№ чека", unit: string}
+    - {key: shift_number, label: "№ кассовой смены", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: terminal_name, label: "Терминал", unit: string}
+    - {key: tip_cheka, label: "Тип чека", unit: string}
+    - {key: close, label: "Закрыт", unit: date}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: paid, label: "Оплачено (₽)", unit: RUB}
+    - {key: sell_discount, label: "Скидка (₽)", unit: RUB}
+    - {key: profit, label: "Прибыль (₽)", unit: RUB}
+
+sales_order_view_4b16973a-bcbf-4751-b605-6df49c12d4c8:
+  name: "sales_order_view_4b16973a-bcbf-4751-b605-6df49c12d4c8"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_4ef80967-2e85-4379-ba5c-ce092fb5c538:
+  name: "sales_order_view_4ef80967-2e85-4379-ba5c-ce092fb5c538"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_59a7e875-72c7-4cbc-ba47-af058b0da79e:
+  name: "sales_order_view_59a7e875-72c7-4cbc-ba47-af058b0da79e"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_5d943415-bd17-4479-b172-0f15f5ec540f:
+  name: "sales_order_view_5d943415-bd17-4479-b172-0f15f5ec540f"
+  fields:
+    - {key: number, label: "№ чека", unit: string}
+    - {key: shift_number, label: "№ кассовой смены", unit: string}
+    - {key: cashier_name, label: "Кассир", unit: string, pii: true}
+    - {key: terminal_name, label: "Терминал", unit: string}
+    - {key: tip_cheka, label: "Тип чека", unit: string}
+    - {key: close, label: "Закрыт", unit: date}
+    - {key: tip_oplaty, label: "Тип оплаты", unit: string}
+    - {key: paid, label: "Оплачено (₽)", unit: RUB}
+    - {key: sell_discount, label: "Скидка (₽)", unit: RUB}
+    - {key: profit, label: "Прибыль (₽)", unit: RUB}
+
+sales_order_view_5e3adb3a-afa5-49d7-a8e7-b7f3b766327b:
+  name: "sales_order_view_5e3adb3a-afa5-49d7-a8e7-b7f3b766327b"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_843b637c-8f70-4d27-8b6d-043d86c444ac:
+  name: "sales_order_view_843b637c-8f70-4d27-8b6d-043d86c444ac"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_8613fda1-d483-4096-9bfb-a1fa7ea37228:
+  name: "sales_order_view_8613fda1-d483-4096-9bfb-a1fa7ea37228"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_8cf2d20e-bb8b-4691-8130-bc4e69a5d1e8:
+  name: "sales_order_view_8cf2d20e-bb8b-4691-8130-bc4e69a5d1e8"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_b1651a09-6c1d-4f06-9142-ad7d9ce3bda1:
+  name: "sales_order_view_b1651a09-6c1d-4f06-9142-ad7d9ce3bda1"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_b2c87b63-6a7c-4277-920e-18a2cf1409f2:
+  name: "sales_order_view_b2c87b63-6a7c-4277-920e-18a2cf1409f2"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_beb67abd-f566-46bb-be38-9e22fabf5056:
+  name: "sales_order_view_beb67abd-f566-46bb-be38-9e22fabf5056"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_bfab0ebc-2bca-4cb4-b163-137f539db87e:
+  name: "sales_order_view_bfab0ebc-2bca-4cb4-b163-137f539db87e"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+sales_order_view_c47bbcd4-2d0f-475c-8d28-6cfd42e2526c:
+  name: "sales_order_view_c47bbcd4-2d0f-475c-8d28-6cfd42e2526c"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+    - {key: cena, label: "Цена", unit: string}
+    - {key: skidka, label: "Скидка, ₽", unit: RUB}
+    - {key: kolichestvo, label: "Количество", unit: count}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: itogo, label: "Итого", unit: string}
+
+special_special:
+  name: "special_special"
+  fields:
+    - {key: rule_name, label: "Название", unit: string}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+    - {key: usloviya, label: "Условия", unit: string}
+    - {key: created_at, label: "Дата создания", unit: date}
+    - {key: sozdal, label: "Создал", unit: string, pii: true}
+    - {key: obnovil, label: "Обновил", unit: string, pii: true}
+    - {key: aktivna, label: "Активна", unit: string}
+
+stop-list_default:
+  name: "stop-list_default"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: name, label: "Название", unit: string}
+    - {key: kol_vo_tovarov, label: "Кол-во товаров", unit: count}
+
+structure_locality:
+  name: "structure_locality"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: kratkoe_nazvanie, label: "Краткое название", unit: string}
+    - {key: radius_poiska_adresov_km, label: "Радиус поиска адресов (км.)", unit: string, pii: true}
+    - {key: data_sozdaniya, label: "Дата создания", unit: date}
+
+structure_locality_archive:
+  name: "structure_locality_archive"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: kratkoe_nazvanie, label: "Краткое название", unit: string}
+    - {key: radius_poiska_adresov_km, label: "Радиус поиска адресов (км.)", unit: string, pii: true}
+    - {key: data_sozdaniya, label: "Дата создания", unit: date}
+
+structure_organization:
+  name: "structure_organization"
+  fields:
+    - {key: yuridicheskoe_nazvanie, label: "Юридическое название", unit: string}
+    - {key: tip_sistemy_nalogooblozheniya, label: "Тип системы налогообложения", unit: string}
+    - {key: inn, label: "ИНН", unit: string, pii: true}
+    - {key: adres, label: "Адрес", unit: string, pii: true}
+
+structure_organization_archive:
+  name: "structure_organization_archive"
+  fields:
+    - {key: yuridicheskoe_nazvanie, label: "Юридическое название", unit: string}
+    - {key: tip_sistemy_nalogooblozheniya, label: "Тип системы налогообложения", unit: string}
+    - {key: inn, label: "ИНН", unit: string, pii: true}
+    - {key: adres, label: "Адрес", unit: string, pii: true}
+
+structure_post:
+  name: "structure_post"
+  fields:
+    - {key: name, label: "Название", unit: string}
+
+structure_sale-point:
+  name: "Торговые точки"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: region, label: "Регион", unit: string}
+    - {key: telefon, label: "Телефон", unit: string, pii: true}
+    - {key: kolichestvo_stolov, label: "Количество столов", unit: count}
+
+structure_user:
+  name: "structure_user"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: fio, label: "ФИО", unit: string, pii: true}
+    - {key: login, label: "Логин", unit: string}
+    - {key: dolzhnost, label: "Должность", unit: string}
+    - {key: sostoyanie, label: "Состояние", unit: string}
+    - {key: email, label: "Email", unit: string, pii: true}
+    - {key: pin_kod, label: "Пин-код", unit: string, pii: true}
+
+structure_warehouses:
+  name: "structure_warehouses"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+
+structure_warehouses_archive:
+  name: "structure_warehouses_archive"
+  fields:
+    - {key: nazvanie, label: "Название", unit: string}
+
+telephony_operator_index:
+  name: "telephony_operator_index"
+  fields:
+    - {key: operator, label: "Оператор", unit: string}
+    - {key: podklyuchenie, label: "Подключение", unit: string}
+
+terminal-menu_menu:
+  name: "terminal-menu_menu"
+  fields:
+    - {key: col, label: "#", unit: string}
+    - {key: name, label: "Название", unit: string}
+    - {key: created_at, label: "Дата создания", unit: date}
+
+trade-recommendation_recommendation:
+  name: "trade-recommendation_recommendation"
+  fields:
+    - {key: name, label: "Название", unit: string}
+    - {key: aktivna, label: "Активна", unit: string}
+
+warehouse_contractor:
+  name: "warehouse_contractor"
+  fields:
+    - {key: name, label: "Юридическое название", unit: string}
+    - {key: phone_number, label: "Телефон", unit: string, pii: true}
+    - {key: fax, label: "Факс", unit: string, pii: true}
+    - {key: email, label: "Email", unit: string, pii: true}
+    - {key: legal_address, label: "Юридический адрес", unit: string, pii: true}
+
+warehouse_document:
+  name: "warehouse_document"
+  fields:
+    - {key: number, label: "Номер", unit: string}
+    - {key: is_register, label: "Статус документа", unit: string}
+    - {key: registration_date, label: "Дата проведения", unit: date}
+    - {key: nomer_vhodyaschego_dokumenta, label: "Номер входящего документа", unit: string}
+    - {key: kommentariy, label: "Комментарий", unit: string}
+
+warehouse_minimum-stock:
+  name: "warehouse_minimum-stock"
+  fields:
+    - {key: product_name, label: "Товар", unit: string}
+    - {key: kategoriya, label: "Категория", unit: string}
+    - {key: sklad, label: "Склад", unit: string}
+    - {key: stock, label: "Минимальный остаток", unit: string}
+    - {key: current_stock, label: "Фактический остаток", unit: string}
+    - {key: diff, label: "Разница", unit: string}
+    - {key: ed_izm, label: "Ед. изм.", unit: string}

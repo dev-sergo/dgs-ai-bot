@@ -1,0 +1,63 @@
+{
+  "url": "/warehouse/minimum-stock",
+  "columns": [
+    {
+      "label": "",
+      "field": null
+    },
+    {
+      "label": "Товар",
+      "field": "-product_name"
+    },
+    {
+      "label": "Категория",
+      "field": null
+    },
+    {
+      "label": "Склад",
+      "field": null
+    },
+    {
+      "label": "Минимальный остаток",
+      "field": "stock"
+    },
+    {
+      "label": "Фактический остаток",
+      "field": "current_stock"
+    },
+    {
+      "label": "Разница",
+      "field": "diff"
+    },
+    {
+      "label": "Ед. изм.",
+      "field": null
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "row_count": 1
+}

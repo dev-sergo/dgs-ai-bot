@@ -1,0 +1,146 @@
+{
+  "report": "journal_entry_index",
+  "label": "",
+  "rows": [
+    {
+      "col": 1.0,
+      "occurred_on": "19 июн. 2026 г., 12:08:04",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 2.0,
+      "occurred_on": "19 июн. 2026 г., 12:02:13",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 3.0,
+      "occurred_on": "18 июн. 2026 г., 19:52:17",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 4.0,
+      "occurred_on": "18 июн. 2026 г., 19:25:34",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 5.0,
+      "occurred_on": "18 июн. 2026 г., 19:25:34",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 6.0,
+      "occurred_on": "18 июн. 2026 г., 15:01:38",
+      "sobytie": "Предприятие / Пользователь создан",
+      "informaciya": "Добавлен новый пользователь неизвестно с должностью неизвестно, логин 301bce2d-f7ff-46ea-8efd-ec4961e44d55",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 7.0,
+      "occurred_on": "18 июн. 2026 г., 13:26:39",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 8.0,
+      "occurred_on": "18 июн. 2026 г., 11:35:38",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 9.0,
+      "occurred_on": "18 июн. 2026 г., 01:56:08",
+      "sobytie": "Предприятие / Организация изменена",
+      "informaciya": "Информация об организации asd обновлена",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 10.0,
+      "occurred_on": "18 июн. 2026 г., 01:54:13",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 11.0,
+      "occurred_on": "17 июн. 2026 г., 18:35:29",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 12.0,
+      "occurred_on": "17 июн. 2026 г., 18:35:29",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 13.0,
+      "occurred_on": "16 июн. 2026 г., 16:25:02",
+      "sobytie": "Номенклатура / Товар создан",
+      "informaciya": "Добавлен новый товар Свежий огурец в категорию Овощи, стоимость 0",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 14.0,
+      "occurred_on": "16 июн. 2026 г., 16:22:39",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 15.0,
+      "occurred_on": "16 июн. 2026 г., 13:42:17",
+      "sobytie": "Номенклатура / Тег товара изменен",
+      "informaciya": "Название тега товара \"nthnbq\" изменено на \"nhtnbq\"",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 16.0,
+      "occurred_on": "16 июн. 2026 г., 13:40:52",
+      "sobytie": "Номенклатура / Тег товара изменен",
+      "informaciya": "Название тега товара \"waerwefef\" изменено на \"nthnbq\"",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 17.0,
+      "occurred_on": "16 июн. 2026 г., 13:40:03",
+      "sobytie": "Номенклатура / Тег товара изменен",
+      "informaciya": "Название тега товара \"tyjtyujtyuj\" изменено на \"waerwefef\"",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 18.0,
+      "occurred_on": "16 июн. 2026 г., 13:39:57",
+      "sobytie": "Номенклатура / Тег товара изменен",
+      "informaciya": "Название тега товара \"nhtnbq\" изменено на \"tyjtyujtyuj\"",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 19.0,
+      "occurred_on": "16 июн. 2026 г., 12:10:09",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    },
+    {
+      "col": 20.0,
+      "occurred_on": "15 июн. 2026 г., 18:48:45",
+      "sobytie": "Предприятие / Вход в систему",
+      "informaciya": "Пользователь google_test вошел в систему",
+      "polzovatel": "google_test"
+    }
+  ]
+}

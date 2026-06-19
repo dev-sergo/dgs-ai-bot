@@ -1,0 +1,18 @@
+{
+  "report": "nomenclature_combo_index",
+  "label": "Комбо",
+  "rows": [
+    {
+      "col": null,
+      "name": "Test combo (шт) Повар",
+      "product_category_id": "пицца",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "две пиццы (шт) Повар",
+      "product_category_id": "пицца",
+      "col_1": "Посмотреть"
+    }
+  ]
+}

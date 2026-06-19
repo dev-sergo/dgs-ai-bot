@@ -1,0 +1,14 @@
+{
+  "report": "cash-on-hand",
+  "label": "Наличные",
+  "rows": [
+    {
+      "name": "ТС ПИоТ",
+      "sell": 0.0,
+      "payback": 0.0,
+      "income": 1.0,
+      "outcome": 0.0,
+      "total": 1.0
+    }
+  ]
+}

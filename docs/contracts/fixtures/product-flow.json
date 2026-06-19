@@ -1,0 +1,9 @@
+{
+  "report": "product-flow",
+  "label": "Отчёт по движению",
+  "rows": [
+    {
+      "sklad": null
+    }
+  ]
+}

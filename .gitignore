@@ -1,0 +1,64 @@
+# === Go ===
+# Бинарники и сборки
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+dgs-ai-bot
+
+# Тестовое и покрытие
+*.test
+*.out
+coverage.*
+profile.*
+
+# Go workspace
+go.work
+go.work.sum
+
+# === Конфиги и секреты ===
+# Локальные конфиги/переменные окружения (коммитим только *.example)
+.env
+.env.*
+!.env.example
+config.local.yaml
+configs/config.local.yaml
+*.local.yaml
+secrets/
+*.pem
+*.key
+
+# === Логи и временное ===
+*.log
+logs/
+tmp/
+.tmp/
+
+# === Артефакты бенчмарков/eval ===
+test/eval/results/
+bench-results/
+
+# === IDE / редакторы ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# === ОС ===
+.DS_Store
+Thumbs.db
+
+# === Python (инструменты сбора фикстур) ===
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# === Docker ===
+# (compose-файлы коммитим; volume-данные — нет)
+docker-data/

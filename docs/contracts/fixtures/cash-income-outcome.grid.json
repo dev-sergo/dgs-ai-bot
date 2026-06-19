@@ -1,0 +1,53 @@
+{
+  "label": "Внесения и выплаты",
+  "columns": [
+    {
+      "label": "Торговая точка",
+      "field": "-name"
+    },
+    {
+      "label": "Дата",
+      "field": "close_date"
+    },
+    {
+      "label": "Тип",
+      "field": null
+    },
+    {
+      "label": "Сумма",
+      "field": "sum"
+    },
+    {
+      "label": "Кассир",
+      "field": "cashier_name"
+    },
+    {
+      "label": "Причина",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "57c2db82-ef46-44dd-8faf-20842aaa1ea5"
+      },
+      "cells": [
+        "ТС ПИоТ",
+        "19 июн. 2026 г.",
+        "Внесение",
+        "1,00",
+        "REDACTED",
+        "Открытие смены"
+      ]
+    }
+  ],
+  "total": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "row_count": 1
+}

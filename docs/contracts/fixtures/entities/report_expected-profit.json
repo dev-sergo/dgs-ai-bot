@@ -1,0 +1,30 @@
+{
+  "report": "report_expected-profit",
+  "label": "",
+  "rows": [
+    {
+      "date": "2026-06-15",
+      "real_count": 1.0,
+      "sum_all": 416.0,
+      "cost_price": 0.23,
+      "profit": 415.77,
+      "percent": 180769.57
+    },
+    {
+      "date": "2026-06-16",
+      "real_count": 1.0,
+      "sum_all": 115.0,
+      "cost_price": 0.23,
+      "profit": 114.77,
+      "percent": 49900.0
+    },
+    {
+      "date": "2026-06-18",
+      "real_count": 4.0,
+      "sum_all": 510.74,
+      "cost_price": 40.92,
+      "profit": 469.82,
+      "percent": 1148.14
+    }
+  ]
+}

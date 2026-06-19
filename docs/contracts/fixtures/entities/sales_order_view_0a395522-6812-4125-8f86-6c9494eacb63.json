@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_0a395522-6812-4125-8f86-6c9494eacb63",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Каштановый раф",
+      "cena": 259.0,
+      "skidka": 77.7,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 181.3
+    },
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 0.0
+    }
+  ]
+}

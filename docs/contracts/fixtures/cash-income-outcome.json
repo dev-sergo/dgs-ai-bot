@@ -1,0 +1,14 @@
+{
+  "report": "cash-income-outcome",
+  "label": "Внесения и выплаты",
+  "rows": [
+    {
+      "name": "ТС ПИоТ",
+      "close_date": "19 июн. 2026 г.",
+      "tip": "Внесение",
+      "sum": 1.0,
+      "cashier_name": "REDACTED",
+      "prichina": "Открытие смены"
+    }
+  ]
+}

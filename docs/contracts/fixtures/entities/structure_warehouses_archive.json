@@ -1,0 +1,14 @@
+{
+  "report": "structure_warehouses_archive",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Test1",
+      "col": "Восстановить"
+    },
+    {
+      "nazvanie": "sadsd",
+      "col": "Восстановить"
+    }
+  ]
+}

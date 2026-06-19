@@ -1,0 +1,69 @@
+{
+  "report": "special",
+  "label": "Акции",
+  "rows": [
+    {
+      "name": 10.0,
+      "orders_count": 14.0,
+      "orders_amount_without_discount": 14179.21,
+      "orders_amount_discount": 1418.04,
+      "orders_amount_with_discount": 13661.17
+    },
+    {
+      "name": "10% на самовывоз",
+      "orders_count": 1.0,
+      "orders_amount_without_discount": 2000.0,
+      "orders_amount_discount": 200.0,
+      "orders_amount_with_discount": 1800.0
+    },
+    {
+      "name": "30% на заказ",
+      "orders_count": 4.0,
+      "orders_amount_without_discount": 10197.0,
+      "orders_amount_discount": 3059.12,
+      "orders_amount_with_discount": 7137.88
+    },
+    {
+      "name": "Bithday bug fix",
+      "orders_count": 9.0,
+      "orders_amount_without_discount": 4591.0,
+      "orders_amount_discount": 1611.0,
+      "orders_amount_with_discount": 2980.0
+    },
+    {
+      "name": "Автоматическая на самовывоз",
+      "orders_count": 1.0,
+      "orders_amount_without_discount": 300.0,
+      "orders_amount_discount": 10.0,
+      "orders_amount_with_discount": 290.0
+    },
+    {
+      "name": "Тушёный картофель в подарок",
+      "orders_count": 2.0,
+      "orders_amount_without_discount": 615.04,
+      "orders_amount_discount": 404.04,
+      "orders_amount_with_discount": 211.0
+    },
+    {
+      "name": "еуые",
+      "orders_count": 1.0,
+      "orders_amount_without_discount": 0.0,
+      "orders_amount_discount": 0.0,
+      "orders_amount_with_discount": 0.0
+    },
+    {
+      "name": "подарок за самовывоз",
+      "orders_count": 2.0,
+      "orders_amount_without_discount": 930.0,
+      "orders_amount_discount": 600.0,
+      "orders_amount_with_discount": 330.0
+    },
+    {
+      "name": "подарок миледи",
+      "orders_count": 2.0,
+      "orders_amount_without_discount": 2351.41,
+      "orders_amount_discount": 259.36,
+      "orders_amount_with_discount": 2192.05
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "url": "/notification/item/view/a060ef43-2b01-4119-8f52-34b1a643f238",
+  "columns": [
+    {
+      "label": "Пользователь",
+      "field": "user_id"
+    },
+    {
+      "label": "Прочитано",
+      "field": "read_time"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "{\"notification_id\":\"a060ef43-2b01-4119-8f52-34b1a643f238\",\"user_id\":\"e17423c8-cdc7-43e0-9432-1e9f7c233ce7\"}"
+      },
+      "cells": [
+        "qatestProd",
+        "2 июл. 2025 г., 12:08:56"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

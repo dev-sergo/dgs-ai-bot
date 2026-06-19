@@ -1,0 +1,110 @@
+{
+  "report": "report_payment",
+  "label": "",
+  "rows": [
+    {
+      "date": "2026-06-18",
+      "kol_vo_chekov": 4.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 257.87,
+      "sum_cash": 252.87,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 510.74,
+      "sredniy_chek": 127.68,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-06-16",
+      "kol_vo_chekov": 1.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 0.0,
+      "sum_cash": 115.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 115.0,
+      "sredniy_chek": 115.0,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-06-15",
+      "kol_vo_chekov": 1.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 0.0,
+      "sum_cash": 416.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 416.0,
+      "sredniy_chek": 416.0,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-06-03",
+      "kol_vo_chekov": 1.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 0.0,
+      "sum_cash": 100.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 100.0,
+      "sredniy_chek": 100.0,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-06-02",
+      "kol_vo_chekov": 2.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 500.0,
+      "sum_cash": 500.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 1000.0,
+      "sredniy_chek": 500.0,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-06-01",
+      "kol_vo_chekov": 4.0,
+      "return_count": 0.0,
+      "return_sum": 0.0,
+      "sum_card": 270.0,
+      "sum_cash": 60.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 330.0,
+      "sredniy_chek": 82.5,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-05-25",
+      "kol_vo_chekov": 7.0,
+      "return_count": 3.0,
+      "return_sum": 149.61,
+      "sum_card": 49.87,
+      "sum_cash": 0.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 49.87,
+      "sredniy_chek": 49.87,
+      "col": "Детали"
+    },
+    {
+      "date": "2026-05-20",
+      "kol_vo_chekov": 5.0,
+      "return_count": 2.0,
+      "return_sum": 149.87,
+      "sum_card": 49.87,
+      "sum_cash": 0.0,
+      "onlayn": 0.0,
+      "sbp": 0.0,
+      "sum_all": 49.87,
+      "sredniy_chek": 49.87,
+      "col": "Детали"
+    }
+  ]
+}

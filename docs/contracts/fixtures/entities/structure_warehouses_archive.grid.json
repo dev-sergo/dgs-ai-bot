@@ -1,0 +1,35 @@
+{
+  "url": "/structure/warehouses/archive",
+  "columns": [
+    {
+      "label": "Название",
+      "field": null
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "7102902c-7e9f-4149-b804-b06a0561d7e8"
+      },
+      "cells": [
+        "Test1",
+        "Восстановить"
+      ]
+    },
+    {
+      "meta": {
+        "key": "760dda5b-ee64-4197-a481-4dc6ff145cf9"
+      },
+      "cells": [
+        "sadsd",
+        "Восстановить"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 2
+}

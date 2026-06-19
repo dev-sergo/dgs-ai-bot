@@ -1,0 +1,27 @@
+{
+  "report": "structure_organization_archive",
+  "label": "",
+  "rows": [
+    {
+      "yuridicheskoe_nazvanie": "wer",
+      "tip_sistemy_nalogooblozheniya": null,
+      "inn": null,
+      "adres": "REDACTED",
+      "col": "Восстановить"
+    },
+    {
+      "yuridicheskoe_nazvanie": "Пименова Татьяна Арсентьевна",
+      "tip_sistemy_nalogooblozheniya": null,
+      "inn": null,
+      "adres": "REDACTED",
+      "col": "Восстановить"
+    },
+    {
+      "yuridicheskoe_nazvanie": 1.0,
+      "tip_sistemy_nalogooblozheniya": null,
+      "inn": null,
+      "adres": null,
+      "col": "Восстановить"
+    }
+  ]
+}

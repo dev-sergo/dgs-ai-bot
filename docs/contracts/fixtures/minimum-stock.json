@@ -1,0 +1,9 @@
+{
+  "report": "minimum-stock",
+  "label": "Минимальные остатки",
+  "rows": [
+    {
+      "col": null
+    }
+  ]
+}

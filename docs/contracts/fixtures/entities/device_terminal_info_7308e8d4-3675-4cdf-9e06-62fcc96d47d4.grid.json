@@ -1,0 +1,33 @@
+{
+  "url": "/device/terminal/info/7308e8d4-3675-4cdf-9e06-62fcc96d47d4",
+  "columns": [
+    {
+      "label": "#",
+      "field": null
+    },
+    {
+      "label": "Название",
+      "field": null
+    },
+    {
+      "label": "Модель",
+      "field": null
+    },
+    {
+      "label": "ФФД",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

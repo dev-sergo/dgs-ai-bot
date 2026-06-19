@@ -1,0 +1,54 @@
+{
+  "report": "nomenclature_prepack",
+  "label": "Полуфабрикаты",
+  "rows": [
+    {
+      "col": null,
+      "name": "asdasd (шт) Спец.",
+      "product_category_id": "123ewfef",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "test (шт) Повар",
+      "product_category_id": "123ewfef",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "жужа (шт) Повар",
+      "product_category_id": "123ewfef",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Карнишоны (кг) Тег 2",
+      "product_category_id": "Полуфабрикаты",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Нори (кг) Тег 2",
+      "product_category_id": "Полуфабрикаты",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "Оливки (кг) Тег 2",
+      "product_category_id": "Полуфабрикаты",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "пф котлета из говядины (шт) Спец.Повар",
+      "product_category_id": "Полуфабрикаты",
+      "col_1": "Посмотреть"
+    },
+    {
+      "col": null,
+      "name": "пф креветка (кг) Спец.Повар",
+      "product_category_id": "Полуфабрикаты",
+      "col_1": "Посмотреть"
+    }
+  ]
+}

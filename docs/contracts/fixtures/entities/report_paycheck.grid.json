@@ -1,0 +1,78 @@
+{
+  "url": "/report/paycheck",
+  "columns": [
+    {
+      "label": "№ чека",
+      "field": "number"
+    },
+    {
+      "label": "№ Заказа",
+      "field": null
+    },
+    {
+      "label": "№ кассовой смены",
+      "field": "shift_number"
+    },
+    {
+      "label": "Кассир",
+      "field": "cashier_name"
+    },
+    {
+      "label": "Терминал",
+      "field": "terminal_name"
+    },
+    {
+      "label": "Тип чека",
+      "field": null
+    },
+    {
+      "label": "Закрыт",
+      "field": "close"
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Оплачено (₽)",
+      "field": "paid"
+    },
+    {
+      "label": "Скидка (₽)",
+      "field": "sell_discount"
+    },
+    {
+      "label": "Прибыль (₽)",
+      "field": "profit"
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "Всего чеков: 0 шт.",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "0,00",
+    "0,00",
+    "0,00",
+    ""
+  ],
+  "row_count": 1
+}

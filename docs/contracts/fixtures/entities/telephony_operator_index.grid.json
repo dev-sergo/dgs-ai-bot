@@ -1,0 +1,41 @@
+{
+  "url": "/telephony/operator/index",
+  "columns": [
+    {
+      "label": "Оператор",
+      "field": null
+    },
+    {
+      "label": "Подключение",
+      "field": null
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "MANGO_OFFICE"
+      },
+      "cells": [
+        "Манго Офис",
+        "Подключено",
+        "Редактировать Удалить"
+      ]
+    },
+    {
+      "meta": {
+        "key": "MEGAFON"
+      },
+      "cells": [
+        "МегаФон",
+        "Подключено",
+        "Редактировать Удалить"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 2
+}

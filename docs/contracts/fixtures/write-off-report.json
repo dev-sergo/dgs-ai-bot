@@ -1,0 +1,9 @@
+{
+  "report": "write-off-report",
+  "label": "Отчёт по списаниям",
+  "rows": [
+    {
+      "dokument": null
+    }
+  ]
+}

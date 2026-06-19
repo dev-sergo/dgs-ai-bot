@@ -1,0 +1,9 @@
+{
+  "report": "report_order-processing-time-detail",
+  "label": "",
+  "rows": [
+    {
+      "order_day": null
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "report": "structure_locality",
+  "label": "",
+  "rows": [
+    {
+      "name": "603000, Нижегородская обл, г Нижний Новгород",
+      "kratkoe_nazvanie": "НН",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "16 нояб. 2020 г., 15:04:29",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "607060, Нижегородская обл, г Выкса",
+      "kratkoe_nazvanie": "Выкса осн",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "22 авг. 2018 г., 10:25:55",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "607060, Нижегородская обл, г Выкса",
+      "kratkoe_nazvanie": "Регион франшизы",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "21 янв. 2025 г., 23:13:06",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Россия, Республика Татарстан, Казань",
+      "kratkoe_nazvanie": "Казань",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "29 дек. 2020 г., 19:37:26",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Россия, Санкт-Петербург",
+      "kratkoe_nazvanie": "СПБ",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "30 мар. 2021 г., 20:42:41",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Россия, Киров",
+      "kratkoe_nazvanie": "Киров",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "30 мар. 2021 г., 21:12:25",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Россия, Самара",
+      "kratkoe_nazvanie": "Самара",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "29 дек. 2020 г., 19:37:13",
+      "col": "Редактировать Удалить"
+    },
+    {
+      "name": "Россия, Москва",
+      "kratkoe_nazvanie": "Москва",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "29 дек. 2020 г., 19:37:01",
+      "col": "Редактировать Удалить"
+    }
+  ]
+}

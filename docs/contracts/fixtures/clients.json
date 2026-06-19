@@ -1,0 +1,206 @@
+{
+  "report": "clients",
+  "label": "Клиенты",
+  "rows": [
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": "redacted@example.com",
+      "phone": "+70000000000",
+      "registration_date": "18 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "24 июл. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "24 июл. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "21 янв. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 окт. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "24 июл. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "11 июл. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 окт. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "6 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "22 июл. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "29 июн. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "31 мая 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "5 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "8 апр. 2019 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "21 сент. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    },
+    {
+      "last_name": "REDACTED",
+      "sex": "Муж.",
+      "email": null,
+      "phone": "+70000000000",
+      "registration_date": "9 окт. 2020 г.",
+      "profile_status": "Зарегистрирована",
+      "birth_date": null,
+      "crm_status": null
+    }
+  ]
+}

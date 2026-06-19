@@ -1,0 +1,20 @@
+{
+  "report": "report_personnel",
+  "label": "",
+  "rows": [
+    {
+      "name": "REDACTED",
+      "earnings": 2471.48,
+      "profit": 1970.26,
+      "checks_count": 14.0,
+      "average_check": 176.53
+    },
+    {
+      "name": "REDACTED",
+      "earnings": 100.0,
+      "profit": 79.77,
+      "checks_count": 1.0,
+      "average_check": 100.0
+    }
+  ]
+}

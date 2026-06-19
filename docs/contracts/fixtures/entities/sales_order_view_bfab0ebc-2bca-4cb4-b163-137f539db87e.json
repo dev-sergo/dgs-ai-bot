@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_bfab0ebc-2bca-4cb4-b163-137f539db87e",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 0.0
+    },
+    {
+      "nazvanie": "Табак Сценарий 3",
+      "cena": 203.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 203.0
+    }
+  ]
+}

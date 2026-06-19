@@ -1,0 +1,166 @@
+{
+  "report": "expected-profit",
+  "label": "Ожидаемая прибыль",
+  "rows": [
+    {
+      "date": "2025-01-20",
+      "real_count": 1.0,
+      "sum_all": 20.0,
+      "cost_price": 0.0,
+      "profit": 20.0,
+      "percent": 0.0
+    },
+    {
+      "date": "2025-01-24",
+      "real_count": 1.0,
+      "sum_all": 49.0,
+      "cost_price": 20.0,
+      "profit": 29.0,
+      "percent": 145.0
+    },
+    {
+      "date": "2025-02-05",
+      "real_count": 1.0,
+      "sum_all": 50.0,
+      "cost_price": 0.0,
+      "profit": 50.0,
+      "percent": 0.0
+    },
+    {
+      "date": "2025-02-07",
+      "real_count": 1.0,
+      "sum_all": 130.0,
+      "cost_price": 30.0,
+      "profit": 100.0,
+      "percent": 333.33
+    },
+    {
+      "date": "2025-02-11",
+      "real_count": 2.0,
+      "sum_all": 371.0,
+      "cost_price": 249.0,
+      "profit": 122.0,
+      "percent": 49.0
+    },
+    {
+      "date": "2025-02-19",
+      "real_count": 1.0,
+      "sum_all": 500.0,
+      "cost_price": 179.0,
+      "profit": 321.0,
+      "percent": 179.33
+    },
+    {
+      "date": "2025-02-20",
+      "real_count": 1.0,
+      "sum_all": 75.0,
+      "cost_price": 230.0,
+      "profit": -155.0,
+      "percent": -67.39
+    },
+    {
+      "date": "2025-02-22",
+      "real_count": 0.0,
+      "sum_all": 0.0,
+      "cost_price": 0.0,
+      "profit": 0.0,
+      "percent": 0.0
+    },
+    {
+      "date": "2025-02-26",
+      "real_count": 1.0,
+      "sum_all": 300.0,
+      "cost_price": 185.2,
+      "profit": 114.8,
+      "percent": 61.99
+    },
+    {
+      "date": "2025-02-28",
+      "real_count": 1.0,
+      "sum_all": 312.0,
+      "cost_price": 185.2,
+      "profit": 126.8,
+      "percent": 68.47
+    },
+    {
+      "date": "2025-03-03",
+      "real_count": 1.0,
+      "sum_all": 1320.0,
+      "cost_price": 0.0,
+      "profit": 1320.0,
+      "percent": 0.0
+    },
+    {
+      "date": "2025-03-04",
+      "real_count": 0.0,
+      "sum_all": 0.0,
+      "cost_price": 0.0,
+      "profit": 0.0,
+      "percent": 0.0
+    },
+    {
+      "date": "2025-03-05",
+      "real_count": 5.0,
+      "sum_all": 5920.0,
+      "cost_price": 20.0,
+      "profit": 5900.0,
+      "percent": 29500.0
+    },
+    {
+      "date": "2025-03-10",
+      "real_count": 5.0,
+      "sum_all": 2348.0,
+      "cost_price": 3625.22,
+      "profit": -1277.22,
+      "percent": -35.23
+    },
+    {
+      "date": "2025-03-11",
+      "real_count": 4.0,
+      "sum_all": 1280.0,
+      "cost_price": 1102.24,
+      "profit": 177.76,
+      "percent": 16.13
+    },
+    {
+      "date": "2025-03-12",
+      "real_count": 1.0,
+      "sum_all": 320.0,
+      "cost_price": 27.46,
+      "profit": 292.54,
+      "percent": 1065.33
+    },
+    {
+      "date": "2025-03-13",
+      "real_count": 3.0,
+      "sum_all": 529.0,
+      "cost_price": 3339.63,
+      "profit": -2810.63,
+      "percent": -84.16
+    },
+    {
+      "date": "2025-03-14",
+      "real_count": 3.0,
+      "sum_all": 1699.17,
+      "cost_price": 3376.79,
+      "profit": -1677.62,
+      "percent": -49.68
+    },
+    {
+      "date": "2025-03-18",
+      "real_count": 1.0,
+      "sum_all": 60.0,
+      "cost_price": 121.0,
+      "profit": -61.0,
+      "percent": -50.41
+    },
+    {
+      "date": "2025-03-19",
+      "real_count": 1.0,
+      "sum_all": 655.08,
+      "cost_price": 3384.68,
+      "profit": -2729.6,
+      "percent": -80.65
+    }
+  ]
+}

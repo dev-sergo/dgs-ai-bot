@@ -1,0 +1,71 @@
+{
+  "url": "/sales/order/view/5d943415-bd17-4479-b172-0f15f5ec540f",
+  "columns": [
+    {
+      "label": "№ чека",
+      "field": "number"
+    },
+    {
+      "label": "№ кассовой смены",
+      "field": "shift_number"
+    },
+    {
+      "label": "Кассир",
+      "field": "cashier_name"
+    },
+    {
+      "label": "Терминал",
+      "field": "terminal_name"
+    },
+    {
+      "label": "Тип чека",
+      "field": null
+    },
+    {
+      "label": "Закрыт",
+      "field": "close"
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Оплачено (₽)",
+      "field": "paid"
+    },
+    {
+      "label": "Скидка (₽)",
+      "field": "sell_discount"
+    },
+    {
+      "label": "Прибыль (₽)",
+      "field": "profit"
+    },
+    {
+      "label": "",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "6ccf0403-9b23-4072-b402-525ea38bba20"
+      },
+      "cells": [
+        "1",
+        "102",
+        "REDACTED",
+        "WEB",
+        "Продажа",
+        "01 июн. 16:50",
+        "Картой",
+        "150,00",
+        "0,00",
+        "94,77",
+        "Подробнее"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

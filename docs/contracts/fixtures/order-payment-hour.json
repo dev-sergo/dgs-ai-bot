@@ -1,0 +1,102 @@
+{
+  "report": "order-payment-hour",
+  "label": "Часы заказов",
+  "rows": [
+    {
+      "hour": 1.0,
+      "quantity": 2.0,
+      "sales_sum": 178.87,
+      "items_sum": 178.87
+    },
+    {
+      "hour": 2.0,
+      "quantity": 4.0,
+      "sales_sum": 3490.0,
+      "items_sum": 3840.0
+    },
+    {
+      "hour": 3.0,
+      "quantity": 2.0,
+      "sales_sum": 1000.0,
+      "items_sum": 1000.0
+    },
+    {
+      "hour": 10.0,
+      "quantity": 2.0,
+      "sales_sum": 193.0,
+      "items_sum": 193.0
+    },
+    {
+      "hour": 11.0,
+      "quantity": 8.0,
+      "sales_sum": 1472.87,
+      "items_sum": 1472.87
+    },
+    {
+      "hour": 12.0,
+      "quantity": 48.0,
+      "sales_sum": 15994.14,
+      "items_sum": 16265.69
+    },
+    {
+      "hour": 13.0,
+      "quantity": 31.0,
+      "sales_sum": 8179.74,
+      "items_sum": 8627.89
+    },
+    {
+      "hour": 14.0,
+      "quantity": 32.0,
+      "sales_sum": 11278.63,
+      "items_sum": 15566.38
+    },
+    {
+      "hour": 15.0,
+      "quantity": 22.0,
+      "sales_sum": 9487.12,
+      "items_sum": 10332.61
+    },
+    {
+      "hour": 16.0,
+      "quantity": 20.0,
+      "sales_sum": 4006.3,
+      "items_sum": 4507.45
+    },
+    {
+      "hour": 17.0,
+      "quantity": 21.0,
+      "sales_sum": 4988.0,
+      "items_sum": 5110.67
+    },
+    {
+      "hour": 18.0,
+      "quantity": 19.0,
+      "sales_sum": 5363.61,
+      "items_sum": 5567.09
+    },
+    {
+      "hour": 19.0,
+      "quantity": 26.0,
+      "sales_sum": 9642.24,
+      "items_sum": 9685.45
+    },
+    {
+      "hour": 20.0,
+      "quantity": 3.0,
+      "sales_sum": 1018.0,
+      "items_sum": 1075.51
+    },
+    {
+      "hour": 21.0,
+      "quantity": 1.0,
+      "sales_sum": 122.0,
+      "items_sum": 122.0
+    },
+    {
+      "hour": 22.0,
+      "quantity": 2.0,
+      "sales_sum": 425.0,
+      "items_sum": 425.0
+    }
+  ]
+}

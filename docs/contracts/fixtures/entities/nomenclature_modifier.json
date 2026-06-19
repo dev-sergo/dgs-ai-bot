@@ -1,0 +1,166 @@
+{
+  "report": "nomenclature_modifier",
+  "label": "Модификаторы",
+  "rows": [
+    {
+      "col": null,
+      "name": "33 см (шт) Спец.Мод.Произв.ПоварКБЖУСвоё",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 0.0,
+      "price": 2.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "40 см (шт) Спец.Мод.Повар",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 0.0,
+      "price": 100.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "kjkjh (шт) Мод.Поварzv",
+      "product_category_id": "Главное",
+      "ispolzuetsya": 2.0,
+      "price": 0.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Mod1 (шт) Мод.Повар",
+      "product_category_id": "Эспрессо",
+      "ispolzuetsya": 1.0,
+      "price": 0.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Mod2 (шт) Мод.Повар",
+      "product_category_id": "Эспрессо",
+      "ispolzuetsya": 1.0,
+      "price": 0.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Васаби (шт) Мод.Повар",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 4.0,
+      "price": 30.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Влажная салфетка (шт) Мод.ПоварТег 2",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 4.0,
+      "price": 15.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Второе (шт) Мод.Повар",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 1.0,
+      "price": 0.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Грибы (шт) Мод.Повар",
+      "product_category_id": "Допы к пицце",
+      "ispolzuetsya": 3.0,
+      "price": 30.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Длинное название самой большой пиццы в мире (шт) Мод.Повар",
+      "product_category_id": "Пицца",
+      "ispolzuetsya": 0.0,
+      "price": 500.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Имбирь (шт) Мод.ПоварТег 2",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 1.0,
+      "price": 35.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Каймак (шт) Мод.Повар",
+      "product_category_id": "К плескавице",
+      "ispolzuetsya": 1.0,
+      "price": 55.55,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Оливки (шт) Мод.Повар",
+      "product_category_id": "Допы к пицце",
+      "ispolzuetsya": 2.0,
+      "price": 20.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Острая паприка (шт) Мод.Повар",
+      "product_category_id": "К плескавице",
+      "ispolzuetsya": 1.0,
+      "price": 80.08,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Первое (шт) Мод.Повар",
+      "product_category_id": "Модификаторы",
+      "ispolzuetsya": 1.0,
+      "price": 0.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Пипперони 30 см (шт) Мод.Повар",
+      "product_category_id": "Пицца",
+      "ispolzuetsya": 1.0,
+      "price": 200.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Пицца 30 см (шт) Мод.Повар",
+      "product_category_id": "Пицца",
+      "ispolzuetsya": 1.0,
+      "price": 350.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Пицца 40 см (шт) Мод.Повар",
+      "product_category_id": "Пицца",
+      "ispolzuetsya": 1.0,
+      "price": 400.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Плескавица (шт) Спец.Мод.ПоварКБЖУ",
+      "product_category_id": "Тестирую",
+      "ispolzuetsya": 0.0,
+      "price": 300.0,
+      "col_1": "Редактировать"
+    },
+    {
+      "col": null,
+      "name": "Пюре картофельное с котлеткой и соленым огурцом (шт) Спец.Мод.ПоварТег 2test1Своё",
+      "product_category_id": "Второе",
+      "ispolzuetsya": 2.0,
+      "price": 0.51,
+      "col_1": "Редактировать"
+    }
+  ]
+}

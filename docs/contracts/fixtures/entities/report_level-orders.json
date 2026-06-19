@@ -1,0 +1,41 @@
+{
+  "report": "report_level-orders",
+  "label": "",
+  "rows": [
+    {
+      "title": "Основная группа",
+      "date": "2026-06",
+      "order_count": 2.0,
+      "sredniy_chek": 500.0,
+      "vyruchka": 1000.0
+    },
+    {
+      "title": "Основная группа",
+      "date": "2026-04",
+      "order_count": 5.0,
+      "sredniy_chek": 540.06,
+      "vyruchka": 2700.28
+    },
+    {
+      "title": "Основная группа",
+      "date": "2026-03",
+      "order_count": 2.0,
+      "sredniy_chek": 325.5,
+      "vyruchka": 651.0
+    },
+    {
+      "title": "Основная группа",
+      "date": "2026-02",
+      "order_count": 1.0,
+      "sredniy_chek": 250.0,
+      "vyruchka": 250.0
+    },
+    {
+      "title": "Основная группа",
+      "date": "2026-01",
+      "order_count": 1.0,
+      "sredniy_chek": 259.0,
+      "vyruchka": 259.0
+    }
+  ]
+}

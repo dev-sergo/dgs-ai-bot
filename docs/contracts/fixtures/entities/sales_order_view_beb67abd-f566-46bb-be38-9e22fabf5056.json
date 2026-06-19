@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_beb67abd-f566-46bb-be38-9e22fabf5056",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Биолимонад \"Мед и травы\" 0.33",
+      "cena": 150.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 150.0
+    },
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": 1.0,
+      "kommentariy": null,
+      "itogo": 0.0
+    }
+  ]
+}

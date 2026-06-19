@@ -1,0 +1,9 @@
+{
+  "report": "purchase-price-dynamics",
+  "label": "Динамика закупочных цен",
+  "rows": [
+    {
+      "produkt": null
+    }
+  ]
+}

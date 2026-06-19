@@ -1,0 +1,9 @@
+{
+  "report": "report_dangerous-operations",
+  "label": "",
+  "rows": [
+    {
+      "transactions_count": null
+    }
+  ]
+}

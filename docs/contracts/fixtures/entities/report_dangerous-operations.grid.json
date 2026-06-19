@@ -1,0 +1,29 @@
+{
+  "url": "/report/dangerous-operations",
+  "columns": [
+    {
+      "label": "Кол-во транзакций",
+      "field": "transactions_count"
+    },
+    {
+      "label": "Карта",
+      "field": "card_num"
+    },
+    {
+      "label": "Владелец",
+      "field": "card_owner"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

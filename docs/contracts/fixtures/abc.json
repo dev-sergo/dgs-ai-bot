@@ -1,0 +1,126 @@
+{
+  "report": "abc",
+  "label": "ABC",
+  "rows": [
+    {
+      "category_name": "Тестирую",
+      "name": "Плескавица",
+      "quantity": 68.0,
+      "cost_price": 13549.88
+    },
+    {
+      "category_name": "Комплекты",
+      "name": "Палочки",
+      "quantity": 52.0,
+      "cost_price": 520.0
+    },
+    {
+      "category_name": "Упаковка",
+      "name": "Салфетка",
+      "quantity": 51.0,
+      "cost_price": 11.73
+    },
+    {
+      "category_name": "Заготовки",
+      "name": "fdsafdsa",
+      "quantity": 45.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Пластмасса",
+      "name": "fdsafda",
+      "quantity": 45.0,
+      "cost_price": 540.0
+    },
+    {
+      "category_name": "Модификаторы",
+      "name": "Влажная салфетка",
+      "quantity": 40.0,
+      "cost_price": 200.0
+    },
+    {
+      "category_name": "Пицца 40 см",
+      "name": "Пицца 40 см",
+      "quantity": 33.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Комплекты",
+      "name": "Одноразовая ложка",
+      "quantity": 32.0,
+      "cost_price": 1600.0
+    },
+    {
+      "category_name": "Наборы комплектаций",
+      "name": "Набор для роллов",
+      "quantity": 32.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Роллы",
+      "name": "Ролл киото 🍣",
+      "quantity": 32.0,
+      "cost_price": 36521.92
+    },
+    {
+      "category_name": "Холодные напитки: морс, лимонад, молоко",
+      "name": "Молоко",
+      "quantity": 26.0,
+      "cost_price": 520.0
+    },
+    {
+      "category_name": "Пицца",
+      "name": "Длинное название самой большой пиццы в мире",
+      "quantity": 25.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "пенза цеха изготовления",
+      "name": "Салат",
+      "quantity": 21.0,
+      "cost_price": 210.0
+    },
+    {
+      "category_name": "Фурнитура",
+      "name": "Пакет АС",
+      "quantity": 17.0,
+      "cost_price": 5.1
+    },
+    {
+      "category_name": "маркировка",
+      "name": "МОРС БРУСНИЧНЫЙ 1Л ПЭТ",
+      "quantity": 15.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "К плескавице",
+      "name": "Каймак",
+      "quantity": 14.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Пельмени",
+      "name": "Пельмени варенные из свинины 1/2 порция",
+      "quantity": 13.0,
+      "cost_price": 494.0
+    },
+    {
+      "category_name": "Сертификаты",
+      "name": "Сертификат на 1000",
+      "quantity": 13.0,
+      "cost_price": 0.0
+    },
+    {
+      "category_name": "Пельмени",
+      "name": "Пельмени варенные из ягнятины 1/2 порция",
+      "quantity": 13.0,
+      "cost_price": 514.8
+    },
+    {
+      "category_name": "Тестирую",
+      "name": "Котлета из говядины 2.0",
+      "quantity": 13.0,
+      "cost_price": 1962.0
+    }
+  ]
+}

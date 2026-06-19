@@ -1,0 +1,37 @@
+{
+  "url": "/report/special",
+  "columns": [
+    {
+      "label": "Заказы",
+      "field": "-name"
+    },
+    {
+      "label": "Количество заказов",
+      "field": "orders_count"
+    },
+    {
+      "label": "Сумма без скидок (₽)",
+      "field": "orders_amount_without_discount"
+    },
+    {
+      "label": "Сумма скидок (₽)",
+      "field": "orders_amount_discount"
+    },
+    {
+      "label": "Фактическая выручка (₽)",
+      "field": "orders_amount_with_discount"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

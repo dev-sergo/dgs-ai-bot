@@ -1,0 +1,508 @@
+{
+  "period": "01.01.2025-19.06.2026",
+  "reports": {
+    "payment": {
+      "label": "Выручка",
+      "http": 200,
+      "cols": [
+        "Дата",
+        "Кол-во чеков",
+        "Возвраты",
+        "Сумма возвратов (₽)",
+        "Карта (₽)",
+        "Наличные (₽)",
+        "Онлайн (₽)",
+        "СБП (₽)",
+        "Выручка (₽)",
+        "Средний чек (₽)",
+        ""
+      ],
+      "fields": [
+        "date",
+        "return_count",
+        "return_sum",
+        "sum_card",
+        "sum_cash",
+        "sum_all"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "expected-profit": {
+      "label": "Ожидаемая прибыль",
+      "http": 200,
+      "cols": [
+        "Дата",
+        "Кол-во чеков",
+        "Выручка, ₽",
+        "Прогнозная себестоимость, ₽",
+        "Прогнозная прибыль, ₽",
+        "Процент наценки"
+      ],
+      "fields": [
+        "-date",
+        "real_count",
+        "sum_all",
+        "cost_price",
+        "profit",
+        "percent"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "orders": {
+      "label": "Заказы",
+      "http": 200,
+      "cols": [
+        "№",
+        "Источник",
+        "Кассир",
+        "Покупатель",
+        "Торговая точка",
+        "Открыт",
+        "Доставлен",
+        "Завершен",
+        "Стоимость (₽)",
+        "Скидка (₽)",
+        "Статус",
+        "Тип заказа",
+        "Тип оплаты",
+        "Доставка ко времени",
+        "Причина возврата",
+        "ФИО",
+        "Адрес",
+        "Координаты",
+        ""
+      ],
+      "fields": [
+        "number",
+        "open",
+        "paid",
+        "discount_value"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "active-orders": {
+      "label": "Активные заказы",
+      "http": 200,
+      "grid": false,
+      "note": "no-grid"
+    },
+    "paycheck": {
+      "label": "Чеки",
+      "http": 200,
+      "cols": [
+        "№ чека",
+        "№ Заказа",
+        "№ кассовой смены",
+        "Кассир",
+        "Терминал",
+        "Тип чека",
+        "Закрыт",
+        "Тип оплаты",
+        "Оплачено (₽)",
+        "Скидка (₽)",
+        "Прибыль (₽)",
+        ""
+      ],
+      "fields": [
+        "number",
+        "shift_number",
+        "cashier_name",
+        "terminal_name",
+        "close",
+        "paid",
+        "sell_discount",
+        "profit"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "cash-on-hand": {
+      "label": "Наличные",
+      "http": 200,
+      "cols": [
+        "Торговая точка",
+        "Продажи",
+        "Возвраты",
+        "Внесения",
+        "Выплаты",
+        "Итого"
+      ],
+      "fields": [
+        "-name",
+        "sell",
+        "payback",
+        "income",
+        "outcome",
+        "total"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "cash-income-outcome": {
+      "label": "Внесения и выплаты",
+      "http": 200,
+      "cols": [
+        "Торговая точка",
+        "Дата",
+        "Тип",
+        "Сумма",
+        "Кассир",
+        "Причина"
+      ],
+      "fields": [
+        "-name",
+        "close_date",
+        "sum",
+        "cashier_name"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "products": {
+      "label": "Товары",
+      "http": 200,
+      "cols": [
+        "Название",
+        "Артикул",
+        "Кол-во",
+        "Кол-во со скидкой",
+        "Кол-во без скидки",
+        "Выручка (₽)",
+        "Выручка (₽) от товаров со скидкой",
+        "Выручка (₽) от товаров без скидки",
+        "Ожидаемая прибыль (₽)",
+        "Ожидаемая прибыль (₽) от товаров со скидкой",
+        "Ожидаемая прибыль (₽)от товаров без скидки",
+        "Сумма скидки (₽)"
+      ],
+      "fields": [
+        "-name",
+        "quantity",
+        "quantity_with_discount",
+        "quantity_without_discount",
+        "amount",
+        "amount_with_discount",
+        "amount_without_discount",
+        "profit",
+        "profit_with_discount",
+        "profit_without_discount",
+        "discount_sum"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "categories": {
+      "label": "Категории",
+      "http": 200,
+      "cols": [
+        "Категории",
+        "Кол-во",
+        "Выручка (₽)",
+        "Ожидаемая прибыль (₽)"
+      ],
+      "fields": [
+        "-name",
+        "quantity",
+        "amount",
+        "profit"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "personnel": {
+      "label": "Персонал",
+      "http": 200,
+      "cols": [
+        "ФИО",
+        "Выручка (₽)",
+        "Ожидаемая прибыль (₽)",
+        "Кол-во чеков",
+        "Средний чек (₽)"
+      ],
+      "fields": [
+        "-name",
+        "earnings",
+        "profit",
+        "checks_count",
+        "average_check"
+      ],
+      "rows": 6,
+      "grid": true
+    },
+    "clients": {
+      "label": "Клиенты",
+      "http": 200,
+      "grid": false,
+      "note": "no-grid"
+    },
+    "sales-on-map": {
+      "label": "Продажи на карте",
+      "http": 200,
+      "cols": [
+        "Торговая точка",
+        "Кол-во заказов",
+        "Кол-во водителей",
+        "Сумма заказов, ₽"
+      ],
+      "fields": [
+        "-name",
+        "count_orders",
+        "count_drivers",
+        "total"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "abc": {
+      "label": "ABC",
+      "http": 200,
+      "cols": [
+        "Категория",
+        "Товар",
+        "Продажи",
+        "Себестоимость, (₽)"
+      ],
+      "fields": [
+        "category_name",
+        "name",
+        "quantity",
+        "cost_price"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "source-order": {
+      "label": "Источники заказов",
+      "http": 200,
+      "grid": false,
+      "note": "no-grid"
+    },
+    "order-payment-hour": {
+      "label": "Часы заказов",
+      "http": 200,
+      "cols": [
+        "Час",
+        "Кол-во заказов",
+        "Сумма заказов",
+        "Сумма заказов без скидки"
+      ],
+      "fields": [
+        "-hour",
+        "quantity",
+        "sales_sum",
+        "items_sum"
+      ],
+      "rows": 16,
+      "grid": true
+    },
+    "order-processing-time": {
+      "label": "Время выполнения",
+      "http": 200,
+      "cols": [
+        "Торговая точка",
+        "Не подтвержден",
+        "Подтвержден",
+        "Готовится",
+        "Готов",
+        "Доставляется",
+        "Общее время"
+      ],
+      "fields": [
+        "-sale_point_name",
+        "not_confirmed_time",
+        "confirmed_time",
+        "cooking_time",
+        "ready_time",
+        "sent_time",
+        "processing_time"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "special": {
+      "label": "Акции",
+      "http": 200,
+      "cols": [
+        "Заказы",
+        "Количество заказов",
+        "Сумма без скидок (₽)",
+        "Сумма скидок (₽)",
+        "Фактическая выручка (₽)"
+      ],
+      "fields": [
+        "-name",
+        "orders_count",
+        "orders_amount_without_discount",
+        "orders_amount_discount",
+        "orders_amount_with_discount"
+      ],
+      "rows": 9,
+      "grid": true
+    },
+    "special-products": {
+      "label": "Товары по акции",
+      "http": 200,
+      "cols": [
+        "Акция",
+        "Товар",
+        "Сумма ₽",
+        "Скидка ₽",
+        "Количество"
+      ],
+      "fields": [
+        "-special_name",
+        "product_name",
+        "total_cost",
+        "discount",
+        "quantity"
+      ],
+      "rows": 20,
+      "grid": true
+    },
+    "level-balance": {
+      "label": "Балансы по уровням",
+      "http": 200,
+      "grid": false,
+      "note": "no-grid"
+    },
+    "warehouse-document-supply": {
+      "label": "Поступления (склад)",
+      "http": 200,
+      "grid": false,
+      "note": "no-grid"
+    },
+    "stock": {
+      "label": "Остатки по складам",
+      "http": 200,
+      "cols": [
+        "Продукт",
+        "Категория",
+        "Склад",
+        "Количество",
+        "Ед. изм.",
+        "Общ. сумма по цене себестоимости, ₽",
+        "Общ. сумма по розничной цене, ₽"
+      ],
+      "fields": [
+        "-product_name",
+        "category_name",
+        "stock",
+        "cost_sum",
+        "price_sum"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "product-flow": {
+      "label": "Отчёт по движению",
+      "http": 200,
+      "cols": [
+        "Склад",
+        "Товар",
+        "Себестоимость",
+        "Σ (Расход * себестоимость",
+        "Категория",
+        "Нач. ост.",
+        "Приход",
+        "Расход",
+        "Кон. ост.",
+        "Ед. изм."
+      ],
+      "fields": [
+        "-product_name",
+        "category_name"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "minimum-stock": {
+      "label": "Минимальные остатки",
+      "http": 200,
+      "cols": [
+        "",
+        "Товар",
+        "Категория",
+        "Склад",
+        "Минимальный остаток",
+        "Фактический остаток",
+        "Разница",
+        "Ед. изм."
+      ],
+      "fields": [
+        "-product_name",
+        "stock",
+        "current_stock",
+        "diff"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "write-off-report": {
+      "label": "Отчёт по списаниям",
+      "http": 200,
+      "cols": [
+        "Документ",
+        "Дата движения",
+        "Склад",
+        "Сотрудник",
+        "Позиция",
+        "Ед. изм.",
+        "Количество",
+        "Сумма, ₽",
+        "Статья"
+      ],
+      "fields": [
+        "date",
+        "warehouse_name",
+        "user_name",
+        "product_name",
+        "total_cost",
+        "reason_name"
+      ],
+      "rows": 1,
+      "grid": true
+    },
+    "purchase-price-dynamics": {
+      "label": "Динамика закупочных цен",
+      "http": 200,
+      "cols": [
+        "Продукт",
+        "Контрагент",
+        "Май 26г.",
+        "Июн 26г.",
+        "Средняя цена"
+      ],
+      "fields": [],
+      "rows": 1,
+      "grid": true
+    }
+  },
+  "pages": {
+    "tenant-settings": {
+      "http": 200,
+      "bytes": 89664
+    },
+    "sale-point": {
+      "http": 200,
+      "bytes": 53116
+    },
+    "organization": {
+      "http": 200,
+      "bytes": 43930
+    }
+  },
+  "meta": {
+    "tenant-id": "ed4f3d74-5c99-4fa5-894b-4c1044374e7b",
+    "tenant-domain": "google",
+    "currency-code": "RUB",
+    "currency-symbol": "₽",
+    "loyalty-type": "dooglys"
+  },
+  "json_api": {
+    "urls": [],
+    "types": []
+  }
+}

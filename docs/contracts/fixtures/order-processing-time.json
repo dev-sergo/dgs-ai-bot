@@ -1,0 +1,15 @@
+{
+  "report": "order-processing-time",
+  "label": "Время выполнения",
+  "rows": [
+    {
+      "sale_point_name": "Выкса",
+      "not_confirmed_time": "1 минута",
+      "confirmed_time": "9 минут",
+      "cooking_time": "1 минута",
+      "ready_time": "45 минут",
+      "sent_time": "28 минут",
+      "processing_time": "38 минут"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "url": "/report/customer-segmentation",
+  "columns": [
+    {
+      "label": "Клиент",
+      "field": "-fio"
+    },
+    {
+      "label": "Телефон",
+      "field": null
+    },
+    {
+      "label": "Дата рождения",
+      "field": "birth_date"
+    },
+    {
+      "label": "RFM-Группа",
+      "field": null
+    },
+    {
+      "label": "Регион",
+      "field": null
+    },
+    {
+      "label": "Торговая точка",
+      "field": null
+    },
+    {
+      "label": "Количество заказов",
+      "field": "quantity"
+    },
+    {
+      "label": "Сумма заказов",
+      "field": "amount"
+    },
+    {
+      "label": "Средний чек",
+      "field": "avg_amount"
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Тип заказа",
+      "field": null
+    },
+    {
+      "label": "Источник",
+      "field": null
+    },
+    {
+      "label": "Кол-во бонусов",
+      "field": "bonus_quantity"
+    },
+    {
+      "label": "Купон",
+      "field": null
+    },
+    {
+      "label": "Товары",
+      "field": null
+    },
+    {
+      "label": "Категории товаров",
+      "field": null
+    },
+    {
+      "label": "Дата регистрации",
+      "field": "registration_date"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "6aabf379-af51-4d90-902e-7c168fa271b7"
+      },
+      "cells": [
+        "Фамилия Имя Отчество",
+        "+70000000000",
+        "15.12.2022",
+        "",
+        "Выкса осн",
+        "Выкса",
+        "2",
+        "1 000,00",
+        "500,00",
+        "Картой, Наличные",
+        "Доставка, Самовывоз",
+        "Касса",
+        "16 015,12",
+        "",
+        "Салфетка, Длинное название самой большой пиццы в мире",
+        "Упаковка, Пицца",
+        "11.11.2022"
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

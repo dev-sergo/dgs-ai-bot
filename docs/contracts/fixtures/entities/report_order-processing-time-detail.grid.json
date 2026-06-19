@@ -1,0 +1,58 @@
+{
+  "url": "/report/order-processing-time-detail",
+  "columns": [
+    {
+      "label": "Дата",
+      "field": "-order_day"
+    },
+    {
+      "label": "Торговая точка",
+      "field": "sale_point_name"
+    },
+    {
+      "label": "Не подтвержден",
+      "field": "not_confirmed_time"
+    },
+    {
+      "label": "Подтвержден",
+      "field": "confirmed_time"
+    },
+    {
+      "label": "Готовится",
+      "field": "cooking_time"
+    },
+    {
+      "label": "Готов",
+      "field": "ready_time"
+    },
+    {
+      "label": "Доставляется",
+      "field": "sent_time"
+    },
+    {
+      "label": "Общее время",
+      "field": "processing_time"
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [
+    "Среднее время:",
+    "",
+    "—",
+    "—",
+    "—",
+    "—",
+    "—",
+    "—"
+  ],
+  "row_count": 1
+}

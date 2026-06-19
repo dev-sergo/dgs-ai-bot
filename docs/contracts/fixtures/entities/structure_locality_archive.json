@@ -1,0 +1,69 @@
+{
+  "report": "structure_locality_archive",
+  "label": "",
+  "rows": [
+    {
+      "name": "101000, г Москва",
+      "kratkoe_nazvanie": "die",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "1 сент. 2022 г., 13:39:44",
+      "col": "Восстановить"
+    },
+    {
+      "name": "101000, г Москва",
+      "kratkoe_nazvanie": "Москва",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "4 мар. 2022 г., 20:04:23",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Киргизия, Бишкек",
+      "kratkoe_nazvanie": "тест",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "30 мар. 2021 г., 21:27:56",
+      "col": "Восстановить"
+    },
+    {
+      "name": "603000, Нижегородская обл, г Нижний Новгород",
+      "kratkoe_nazvanie": "Москва",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "14 окт. 2021 г., 17:37:54",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Россия, Иркутск",
+      "kratkoe_nazvanie": "ирк",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "30 мар. 2021 г., 22:12:40",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Россия, Санкт-Петербург",
+      "kratkoe_nazvanie": "СПб",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "30 мар. 2021 г., 20:36:58",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Россия, Москва",
+      "kratkoe_nazvanie": "Москва 2",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "3 февр. 2021 г., 14:40:02",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Россия, Нижний Новгород",
+      "kratkoe_nazvanie": "Нн1",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "14 дек. 2020 г., 14:47:24",
+      "col": "Восстановить"
+    },
+    {
+      "name": "Россия, Республика Татарстан, Казань, Вахитовский район, улица Татарстан",
+      "kratkoe_nazvanie": "Выыкса",
+      "radius_poiska_adresov_km": "REDACTED",
+      "data_sozdaniya": "15 мар. 2019 г., 14:49:00",
+      "col": "Восстановить"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "report": "notification_item",
+  "label": "",
+  "rows": [
+    {
+      "title": "ewrgwerge",
+      "status": "Черновик",
+      "publish_date": null,
+      "prochitano": 0.0,
+      "col": "Копировать Редактировать Удалить"
+    },
+    {
+      "title": "title",
+      "status": "Черновик",
+      "publish_date": null,
+      "prochitano": 0.0,
+      "col": "Копировать Редактировать Удалить"
+    },
+    {
+      "title": "title",
+      "status": "Опубликовано",
+      "publish_date": "19 июл. 2021 г., 16:30:12",
+      "prochitano": 2.0,
+      "col": "Просмотр Копировать Удалить"
+    },
+    {
+      "title": "khiyiy",
+      "status": "Опубликовано",
+      "publish_date": "27 июн. 2025 г., 17:26:57",
+      "prochitano": 1.0,
+      "col": "Просмотр Копировать Удалить"
+    },
+    {
+      "title": "test",
+      "status": "Опубликовано",
+      "publish_date": "30 июн. 2025 г., 15:14:48",
+      "prochitano": 1.0,
+      "col": "Просмотр Копировать Удалить"
+    },
+    {
+      "title": "Все уволены",
+      "status": "Опубликовано",
+      "publish_date": "5 июн. 2026 г., 15:23:20",
+      "prochitano": 1.0,
+      "col": "Просмотр Копировать Удалить"
+    },
+    {
+      "title": "Test Push message",
+      "status": "Опубликовано",
+      "publish_date": "3 июн. 2025 г., 11:49:55",
+      "prochitano": 1.0,
+      "col": "Просмотр Копировать Удалить"
+    }
+  ]
+}

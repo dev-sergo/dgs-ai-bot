@@ -1,0 +1,58 @@
+{
+  "url": "/device/terminal/info/39ee1334-ac91-4c93-ad88-8899f0804725",
+  "columns": [
+    {
+      "label": "#",
+      "field": null
+    },
+    {
+      "label": "Название",
+      "field": null
+    },
+    {
+      "label": "Модель",
+      "field": null
+    },
+    {
+      "label": "ФФД",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": "0"
+      },
+      "cells": [
+        "1",
+        "Фискальный регистратор АТОЛ(5)",
+        "FiscalRegistrarAtol5",
+        ""
+      ]
+    },
+    {
+      "meta": {
+        "key": "1"
+      },
+      "cells": [
+        "2",
+        "Posiflex PP6900 Printer",
+        "SystemPrinter",
+        ""
+      ]
+    },
+    {
+      "meta": {
+        "key": "2"
+      },
+      "cells": [
+        "3",
+        "Эмулятор эк.терминала",
+        "GateEmulator",
+        ""
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 3
+}

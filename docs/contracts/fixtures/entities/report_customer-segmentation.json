@@ -1,0 +1,25 @@
+{
+  "report": "report_customer-segmentation",
+  "label": "",
+  "rows": [
+    {
+      "fio": "Фамилия Имя Отчество",
+      "telefon": "+70000000000",
+      "birth_date": "2022-12-15",
+      "rfm_gruppa": null,
+      "region": "Выкса осн",
+      "torgovaya_tochka": "Выкса",
+      "quantity": 2.0,
+      "amount": 1000.0,
+      "avg_amount": 500.0,
+      "tip_oplaty": "Картой, Наличные",
+      "tip_zakaza": "Доставка, Самовывоз",
+      "istochnik": "Касса",
+      "bonus_quantity": 16015.12,
+      "kupon": null,
+      "tovary": "Салфетка, Длинное название самой большой пиццы в мире",
+      "kategorii_tovarov": "Упаковка, Пицца",
+      "registration_date": "2022-11-11"
+    }
+  ]
+}

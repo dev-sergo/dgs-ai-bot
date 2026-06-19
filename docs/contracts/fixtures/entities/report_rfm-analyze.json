@@ -1,0 +1,30 @@
+{
+  "report": "report_rfm-analyze",
+  "label": "",
+  "rows": [
+    {
+      "fio": "Dmitry",
+      "gruppa": "В зоне потери",
+      "rfm_indeks": 133.0,
+      "last_purchase_days": 203.0,
+      "purchase_quantity": 15.0,
+      "purchase_amount": 4926.0
+    },
+    {
+      "fio": "Тестов Тест",
+      "gruppa": "Спящие",
+      "rfm_indeks": 113.0,
+      "last_purchase_days": 79.0,
+      "purchase_quantity": 1.0,
+      "purchase_amount": 430.0
+    },
+    {
+      "fio": "Фамилия Имя Отчество",
+      "gruppa": "В зоне потери",
+      "rfm_indeks": 133.0,
+      "last_purchase_days": 17.0,
+      "purchase_quantity": 25.0,
+      "purchase_amount": 8221.56
+    }
+  ]
+}

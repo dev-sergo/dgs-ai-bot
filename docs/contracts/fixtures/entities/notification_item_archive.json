@@ -1,0 +1,97 @@
+{
+  "report": "notification_item_archive",
+  "label": "",
+  "rows": [
+    {
+      "title": "Test",
+      "status": "Опубликовано",
+      "publish_date": "4 дек. 2019 г., 18:26:03",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "new notification",
+      "status": "Опубликовано",
+      "publish_date": "25 мая 2020 г., 19:09:28",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "many",
+      "status": "Опубликовано",
+      "publish_date": "28 мая 2020 г., 17:56:01",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "Test sync queue",
+      "status": "Опубликовано",
+      "publish_date": "14 мая 2020 г., 12:21:03",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "one",
+      "status": "Опубликовано",
+      "publish_date": "28 мая 2020 г., 17:12:27",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "many",
+      "status": "Черновик",
+      "publish_date": null,
+      "prochitano": 0.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "many",
+      "status": "Опубликовано",
+      "publish_date": "28 мая 2020 г., 17:12:41",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "one",
+      "status": "Опубликовано",
+      "publish_date": "28 мая 2020 г., 17:55:43",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "wergwerg",
+      "status": "Опубликовано",
+      "publish_date": "19 июл. 2021 г., 14:47:47",
+      "prochitano": 0.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "fuck",
+      "status": "Опубликовано",
+      "publish_date": "19 июл. 2021 г., 15:12:51",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "Доброе утро!",
+      "status": "Опубликовано",
+      "publish_date": "18 дек. 2019 г., 16:55:20",
+      "prochitano": 3.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "Hello",
+      "status": "Опубликовано",
+      "publish_date": "28 мая 2020 г., 12:01:50",
+      "prochitano": 2.0,
+      "col": "Восстановить"
+    },
+    {
+      "title": "werg",
+      "status": "Опубликовано",
+      "publish_date": "19 июл. 2021 г., 14:48:31",
+      "prochitano": 1.0,
+      "col": "Восстановить"
+    }
+  ]
+}

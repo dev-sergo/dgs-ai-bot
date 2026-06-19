@@ -1,0 +1,186 @@
+{
+  "report": "sales_customer",
+  "label": "",
+  "rows": [
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": 9.301635419301636e+17,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": 930163467.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": 930163469.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163265.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163267.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163263.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163261.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163266.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": 930163468.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163264.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163260.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163262.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": 930163208.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": "redacted@example.com",
+      "karty": 930163522.0,
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    },
+    {
+      "col": null,
+      "last_name": "REDACTED",
+      "telefon": "+70000000000",
+      "email": null,
+      "karty": "нет активных карт",
+      "loyalty_level_id": "Основная группа",
+      "col_1": "Редактировать Удалить"
+    }
+  ]
+}

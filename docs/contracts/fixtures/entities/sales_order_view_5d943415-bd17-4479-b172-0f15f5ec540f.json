@@ -1,0 +1,19 @@
+{
+  "report": "sales_order_view_5d943415-bd17-4479-b172-0f15f5ec540f",
+  "label": "",
+  "rows": [
+    {
+      "number": 1.0,
+      "shift_number": 102.0,
+      "cashier_name": "REDACTED",
+      "terminal_name": "WEB",
+      "tip_cheka": "Продажа",
+      "close": "01 июн. 16:50",
+      "tip_oplaty": "Картой",
+      "paid": 150.0,
+      "sell_discount": 0.0,
+      "profit": 94.77,
+      "col": "Подробнее"
+    }
+  ]
+}

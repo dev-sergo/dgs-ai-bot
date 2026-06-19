@@ -1,0 +1,146 @@
+{
+  "report": "special-products",
+  "label": "Товары по акции",
+  "rows": [
+    {
+      "special_name": 10.0,
+      "product_name": "Четыре сыра СБОРНАЯ",
+      "total_cost": 90.0,
+      "discount": 10.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Домашний торт",
+      "total_cost": 161.0,
+      "discount": 18.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Крем-суп(суп-пюре)",
+      "total_cost": 538.0,
+      "discount": 59.0,
+      "quantity": 3.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Чурчхеллалоу",
+      "total_cost": 0.0,
+      "discount": 0.0,
+      "quantity": 2.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Пицца 30 см",
+      "total_cost": 315.0,
+      "discount": 35.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Длинное название самой большой пиццы в мире",
+      "total_cost": 6751.0,
+      "discount": 749.0,
+      "quantity": 15.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Чизкейк \"Нью-Йорк\"",
+      "total_cost": 109.0,
+      "discount": 11.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Латте большой",
+      "total_cost": 1000.0,
+      "discount": 111.11,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Пипперони на толстом тесте",
+      "total_cost": 1080.0,
+      "discount": 120.0,
+      "quantity": 4.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Товар со сложной спекой",
+      "total_cost": 998.17,
+      "discount": 112.93,
+      "quantity": 2.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Ролл киото <<🍣>>",
+      "total_cost": 225.0,
+      "discount": 25.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Пипперони на тонком тесте",
+      "total_cost": 270.0,
+      "discount": 30.0,
+      "quantity": 2.0
+    },
+    {
+      "special_name": 10.0,
+      "product_name": "Пицца 40 см",
+      "total_cost": 720.0,
+      "discount": 80.0,
+      "quantity": 2.0
+    },
+    {
+      "special_name": "10% на самовывоз",
+      "product_name": "Длинное название самой большой пиццы в мире",
+      "total_cost": 1800.0,
+      "discount": 200.0,
+      "quantity": 4.0
+    },
+    {
+      "special_name": "30% на заказ",
+      "product_name": "ТЕСТ",
+      "total_cost": 7137.88,
+      "discount": 3059.12,
+      "quantity": 6.0
+    },
+    {
+      "special_name": "Bithday bug fix",
+      "product_name": "суп (финская уха со сливками)",
+      "total_cost": 0.0,
+      "discount": 1432.0,
+      "quantity": 8.0
+    },
+    {
+      "special_name": "Автоматическая на самовывоз",
+      "product_name": "Котлета из говядины",
+      "total_cost": 290.0,
+      "discount": 10.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": "Тушёный картофель в подарок",
+      "product_name": "Тушеный картофель",
+      "total_cost": 0.0,
+      "discount": 404.04,
+      "quantity": 2.0
+    },
+    {
+      "special_name": "еуые",
+      "product_name": "Набор горячий напиток",
+      "total_cost": 0.0,
+      "discount": 0.0,
+      "quantity": 1.0
+    },
+    {
+      "special_name": "подарок за самовывоз",
+      "product_name": "Пипперони тест акция",
+      "total_cost": 0.0,
+      "discount": 500.0,
+      "quantity": 1.0
+    }
+  ]
+}

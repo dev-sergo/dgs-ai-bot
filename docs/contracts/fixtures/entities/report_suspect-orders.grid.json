@@ -1,0 +1,41 @@
+{
+  "url": "/report/suspect-orders",
+  "columns": [
+    {
+      "label": "Номер заказа",
+      "field": null
+    },
+    {
+      "label": "Торговая точка",
+      "field": null
+    },
+    {
+      "label": "Кассир",
+      "field": null
+    },
+    {
+      "label": "Покупатель",
+      "field": null
+    },
+    {
+      "label": "Тип оплаты",
+      "field": null
+    },
+    {
+      "label": "Действия кассира",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}

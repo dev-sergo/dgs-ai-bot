@@ -1,0 +1,19 @@
+{
+  "report": "sales_order_view_494762c8-2a09-4f1a-83d9-f6c5dd95f464",
+  "label": "",
+  "rows": [
+    {
+      "number": 0.0,
+      "shift_number": 0.0,
+      "cashier_name": "REDACTED",
+      "terminal_name": "ТС ПИоТ",
+      "tip_cheka": "Продажа",
+      "close": "16 июн. 18:23",
+      "tip_oplaty": "Наличные",
+      "paid": 115.0,
+      "sell_discount": 0.0,
+      "profit": 114.77,
+      "col": "Подробнее"
+    }
+  ]
+}

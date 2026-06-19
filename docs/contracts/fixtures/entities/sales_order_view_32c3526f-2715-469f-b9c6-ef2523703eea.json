@@ -1,0 +1,22 @@
+{
+  "report": "sales_order_view_32c3526f-2715-469f-b9c6-ef2523703eea",
+  "label": "",
+  "rows": [
+    {
+      "nazvanie": "Салфетка комплектация",
+      "cena": 0.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 0.0
+    },
+    {
+      "nazvanie": "Табак Сценарий 8",
+      "cena": 208.0,
+      "skidka": 0.0,
+      "kolichestvo": "1 шт",
+      "kommentariy": null,
+      "itogo": 208.0
+    }
+  ]
+}

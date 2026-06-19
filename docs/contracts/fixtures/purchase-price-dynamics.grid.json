@@ -1,0 +1,37 @@
+{
+  "label": "Динамика закупочных цен",
+  "columns": [
+    {
+      "label": "Продукт",
+      "field": null
+    },
+    {
+      "label": "Контрагент",
+      "field": null
+    },
+    {
+      "label": "Май 26г.",
+      "field": null
+    },
+    {
+      "label": "Июн 26г.",
+      "field": null
+    },
+    {
+      "label": "Средняя цена",
+      "field": null
+    }
+  ],
+  "rows": [
+    {
+      "meta": {
+        "key": null
+      },
+      "cells": [
+        "Ничего не найдено."
+      ]
+    }
+  ],
+  "total": [],
+  "row_count": 1
+}
