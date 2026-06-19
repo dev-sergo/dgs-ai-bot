@@ -21,6 +21,9 @@ type LLM struct {
 	Model   string
 	APIKey  string
 	Timeout time.Duration
+	// ForceJSON включает response_format=json_object. Если билд llama.cpp
+	// не поддерживает — выставь LLM_FORCE_JSON=false (полагаемся на parse+repair).
+	ForceJSON bool
 }
 
 // Config — корневая конфигурация.
@@ -38,10 +41,11 @@ func Load() Config {
 		PlannerMode:  PlannerMode(env("PLANNER_MODE", string(PlannerLLM))),
 		FixturesPath: env("FIXTURES_PATH", "docs/contracts/fixtures"),
 		LLM: LLM{
-			BaseURL: env("LLM_BASE_URL", "http://172.20.10.2:8080"),
-			Model:   env("LLM_MODEL", "qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"),
-			APIKey:  env("LLM_API_KEY", ""),
-			Timeout: envDuration("LLM_TIMEOUT", 60*time.Second),
+			BaseURL:   env("LLM_BASE_URL", "http://172.20.10.2:8080"),
+			Model:     env("LLM_MODEL", "qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"),
+			APIKey:    env("LLM_API_KEY", ""),
+			Timeout:   envDuration("LLM_TIMEOUT", 180*time.Second),
+			ForceJSON: envBool("LLM_FORCE_JSON", true),
 		},
 	}
 }
@@ -55,6 +59,16 @@ func (c Config) Summary() string {
 func env(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
+	}
+	return def
+}
+
+func envBool(key string, def bool) bool {
+	switch os.Getenv(key) {
+	case "1", "true", "TRUE", "yes":
+		return true
+	case "0", "false", "FALSE", "no":
+		return false
 	}
 	return def
 }

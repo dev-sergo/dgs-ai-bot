@@ -82,6 +82,33 @@ func TestUnresolvedFilterAsksClarify(t *testing.T) {
 	}
 }
 
+// Модель может не вернуть group_by — оркестратор обязан подставить дефолтное измерение.
+func TestDefaultDimensionInjected(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Version: "1", Class: plan.ClassA, Report: "payment",
+		Metrics: []string{"sum_all"}, // group_by НЕ задан
+		Period: plan.Period{Kind: "relative", Token: "last_7_days"},
+		Method: "plain", Output: plan.Output{Format: "text"},
+	}
+	a := newAppWith(t, fakePlanner{p})
+	ans, err := a.Ask(context.Background(), "mock_single", "выручка за неделю")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope == nil {
+		t.Fatalf("нет envelope: %+v", ans.Validation)
+	}
+	hasDate := false
+	for _, c := range ans.Envelope.Columns {
+		if c.Key == "date" {
+			hasDate = true
+		}
+	}
+	if !hasDate {
+		t.Errorf("ожидалась колонка date (дефолтное измерение), got columns=%+v", ans.Envelope.Columns)
+	}
+}
+
 func metaStrings(v any) []string {
 	if ss, ok := v.([]string); ok {
 		return ss

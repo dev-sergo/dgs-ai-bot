@@ -45,23 +45,29 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 		rows = append(rows, out)
 	}
 
-	// Итоги — суммы числовых метрик (не измерений).
+	// Итоги — только для суммируемых полей (рубли/штуки). Средние/отношения не суммируем.
 	dim := map[string]bool{}
 	for _, g := range p.GroupBy {
 		dim[g] = true
 	}
 	summary := map[string]float64{}
 	for _, c := range cols {
-		if dim[c.Key] || !isNumeric(c.Unit) {
+		if dim[c.Key] {
 			continue
 		}
-		var sum float64
-		for _, r := range res.Rows {
-			if v, ok := toFloat(r[c.Key]); ok {
-				sum += v
+		f, ok := rep.FieldByKey(c.Key)
+		if !ok || !f.Summable() {
+			continue
+		}
+		summary[c.Key] = round2(sumField(res.Rows, c.Key))
+	}
+	// Корректный средний чек = суммарная выручка / число чеков (а не сумма средних).
+	if rev, ok := summary["sum_all"]; ok {
+		if checks, ok := summary["kol_vo_chekov"]; ok && checks > 0 {
+			if _, requested := indexOf(cols, "sredniy_chek"); requested {
+				summary["sredniy_chek"] = round2(rev / checks)
 			}
 		}
-		summary[c.Key] = round2(sum)
 	}
 
 	return envelope.Envelope{
@@ -76,8 +82,13 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 	}
 }
 
-func isNumeric(unit string) bool {
-	return unit == "RUB" || unit == "count" || unit == "percent"
+func indexOf(cols []envelope.Column, key string) (int, bool) {
+	for i, c := range cols {
+		if c.Key == key {
+			return i, true
+		}
+	}
+	return -1, false
 }
 
 func toFloat(v any) (float64, bool) {

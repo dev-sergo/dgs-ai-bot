@@ -1,0 +1,12 @@
+{"query": "покажи выручку за сегодня", "expect": {"report": "payment", "period_token": "today"}}
+{"query": "сколько заработали вчера", "expect": {"report": "payment", "period_token": "yesterday"}}
+{"query": "выручка за последнюю неделю", "expect": {"report": "payment", "period_token": "last_7_days"}}
+{"query": "покажи выручку за текущий месяц", "expect": {"report": "payment", "period_token": "this_month"}}
+{"query": "какие товары продавались за месяц", "expect": {"report": "products", "period_token": "this_month|last_30_days"}}
+{"query": "топ товаров за неделю", "expect": {"report": "products", "period_token": "last_7_days"}}
+{"query": "почему упала выручка за месяц", "expect": {"report": "payment", "class": "B", "method": "contribution", "period_token": "this_month|last_30_days"}}
+{"query": "за счёт чего изменилась выручка за последний месяц", "expect": {"report": "payment", "method": "contribution", "period_token": "last_month|last_30_days"}}
+{"query": "сравни выручку этой недели с прошлой", "expect": {"report": "payment", "method": "compare"}}
+{"query": "покажи выручку по точке Выкса за неделю", "expect": {"report": "payment", "filters": ["sale_point"], "period_token": "last_7_days"}}
+{"query": "выручка оплаченная картой за вчера", "expect": {"report": "payment", "period_token": "yesterday"}}
+{"query": "сколько чеков пробили сегодня", "expect": {"report": "payment|paycheck", "period_token": "today"}}

@@ -11,13 +11,28 @@ GO_RUN = docker run --rm \
 	-e CGO_ENABLED=0 \
 	$(GO_IMAGE)
 
-.PHONY: tidy build test vet run bench fmt sh
+# Хостовая ОС/арх — чтобы запускать нативный бинарь на маке (минуя сеть Docker-VM).
+HOST_OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+HOST_UARCH := $(shell uname -m)
+HOST_ARCH := $(if $(filter x86_64,$(HOST_UARCH)),amd64,$(if $(filter arm64 aarch64,$(HOST_UARCH)),arm64,$(HOST_UARCH)))
+
+.PHONY: tidy build build-host run-host test vet run eval-host fmt sh
 
 tidy:        ## go mod tidy
 	$(GO_RUN) go mod tidy
 
-build:       ## собрать бинарник в ./bin
+build:       ## собрать бинарник (linux, для контейнера) в ./bin
 	$(GO_RUN) go build -o bin/server ./cmd/server
+
+build-host:  ## кросс-собрать нативный бинарь под текущий мак (./bin/server-host)
+	$(GO_RUN) sh -c "GOOS=$(HOST_OS) GOARCH=$(HOST_ARCH) go build -o bin/server-host ./cmd/server"
+
+run-host: build-host  ## запустить сервис НА ХОСТЕ (использует сеть мака → видит риг)
+	PLANNER_MODE=$${PLANNER_MODE:-llm} \
+	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	FIXTURES_PATH=docs/contracts/fixtures \
+	./bin/server-host
 
 test:        ## юнит/интеграционные тесты (без GPU)
 	$(GO_RUN) go test ./...
@@ -31,8 +46,13 @@ fmt:         ## форматирование
 run:         ## поднять сервис через docker-compose
 	docker compose up --build
 
-bench:       ## eval-бенчмарк против реальной модели (нужен доступ к LLM-ригу)
-	$(GO_RUN) go test ./test/eval/... -run TestEval -v
+eval-host:   ## eval-бенчмарк планировщика против рига (НА ХОСТЕ — нужен доступ к LLM)
+	$(GO_RUN) sh -c "GOOS=$(HOST_OS) GOARCH=$(HOST_ARCH) go build -o bin/eval-host ./cmd/eval"
+	PLANNER_MODE=llm \
+	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	EVAL_PROMPTS=$${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
+	./bin/eval-host
 
 sh:          ## shell в go-контейнере
 	$(GO_RUN) sh

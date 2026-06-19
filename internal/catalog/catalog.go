@@ -16,7 +16,18 @@ type Field struct {
 	Key   string // машинный ключ (как в нормализованных фикстурах)
 	Label string // человекочитаемое имя
 	Unit  string // RUB|count|date|percent|string
+	Agg   string // как агрегировать в итог: "sum" (по умолчанию для чисел) | "avg" | "none"
 	PII   bool   // не отдаётся в LLM/ответ
+}
+
+// Summable сообщает, можно ли наивно суммировать поле в итог.
+// Средние/отношения (avg|none) суммировать нельзя — их итог не имеет смысла.
+func (f Field) Summable() bool {
+	agg := f.Agg
+	if agg == "" {
+		agg = "sum"
+	}
+	return agg == "sum" && (f.Unit == "RUB" || f.Unit == "count")
 }
 
 // Filter — поддерживаемый фильтр отчёта.
@@ -30,10 +41,11 @@ type Filter struct {
 
 // Report — описание отчёта в white-list.
 type Report struct {
-	Slug    string
-	Name    string
-	Fields  []Field
-	Filters []Filter
+	Slug       string
+	Name       string
+	DefaultDim string // измерение по умолчанию, если план его не задал (напр. date)
+	Fields     []Field
+	Filters    []Filter
 }
 
 // Catalog — набор включённых отчётов.
@@ -52,7 +64,7 @@ func Default() *Catalog {
 
 	reps := []Report{
 		{
-			Slug: "payment", Name: "Выручка",
+			Slug: "payment", Name: "Выручка", DefaultDim: "date",
 			Fields: []Field{
 				{Key: "date", Label: "Дата", Unit: "date"},
 				{Key: "kol_vo_chekov", Label: "Кол-во чеков", Unit: "count"},
@@ -63,12 +75,12 @@ func Default() *Catalog {
 				{Key: "onlayn", Label: "Онлайн", Unit: "RUB"},
 				{Key: "sbp", Label: "СБП", Unit: "RUB"},
 				{Key: "sum_all", Label: "Выручка", Unit: "RUB"},
-				{Key: "sredniy_chek", Label: "Средний чек", Unit: "RUB"},
+				{Key: "sredniy_chek", Label: "Средний чек", Unit: "RUB", Agg: "avg"},
 			},
 			Filters: common,
 		},
 		{
-			Slug: "products", Name: "Товары",
+			Slug: "products", Name: "Товары", DefaultDim: "name",
 			Fields: []Field{
 				{Key: "name", Label: "Название", Unit: "string"},
 				{Key: "quantity", Label: "Кол-во", Unit: "count"},
@@ -84,7 +96,7 @@ func Default() *Catalog {
 			),
 		},
 		{
-			Slug: "paycheck", Name: "Чеки",
+			Slug: "paycheck", Name: "Чеки", DefaultDim: "number",
 			Fields: []Field{
 				{Key: "number", Label: "№ чека", Unit: "string"},
 				{Key: "cashier_name", Label: "Кассир", Unit: "string", PII: true},
@@ -102,7 +114,7 @@ func Default() *Catalog {
 			),
 		},
 		{
-			Slug: "orders", Name: "Заказы",
+			Slug: "orders", Name: "Заказы", DefaultDim: "number",
 			Fields: []Field{
 				{Key: "number", Label: "№", Unit: "string"},
 				{Key: "istochnik", Label: "Источник", Unit: "string"},

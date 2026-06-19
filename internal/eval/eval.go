@@ -1,0 +1,157 @@
+// Package eval — бенчмарк качества планировщика: прогон набора запросов через
+// реальную модель и сверка получившегося AnalysisPlan с ожиданиями.
+//
+// Ловит системно то, что ручная проверка ловит случайно: модель не заполнила
+// group_by/method, выбрала не тот отчёт/период, потеряла фильтр и т.п.
+package eval
+
+import (
+	"context"
+	"sort"
+	"strings"
+	"time"
+
+	"dgsbot/internal/catalog"
+	"dgsbot/internal/plan"
+	"dgsbot/internal/planner"
+)
+
+// Expect — ожидаемые свойства плана (проверяются только заданные поля).
+type Expect struct {
+	Report      string   `json:"report,omitempty"`
+	Class       string   `json:"class,omitempty"`
+	Method      string   `json:"method,omitempty"`
+	PeriodToken string   `json:"period_token,omitempty"`
+	Filters     []string `json:"filters,omitempty"` // имена фильтров, которые должны присутствовать
+}
+
+// Case — один кейс набора.
+type Case struct {
+	Query  string `json:"query"`
+	Expect Expect `json:"expect"`
+}
+
+// Result — итог по кейсу.
+type Result struct {
+	Query     string
+	Plan      plan.AnalysisPlan
+	Valid     bool
+	Mismatch  []string
+	LatencyMS int64
+	Err       error
+}
+
+// Pass — кейс прошёл (нет ошибки, план валиден, нет расхождений).
+func (r Result) Pass() bool { return r.Err == nil && r.Valid && len(r.Mismatch) == 0 }
+
+// Check сверяет план с ожиданиями; возвращает список расхождений.
+func Check(p plan.AnalysisPlan, e Expect) []string {
+	var m []string
+	add := func(s string) { m = append(m, s) }
+
+	// Ожидания могут содержать альтернативы через "|" (напр. "this_month|last_30_days").
+	if e.Report != "" && !matchAlt(p.Report, e.Report) {
+		add("report=" + p.Report + " ожидался " + e.Report)
+	}
+	if e.Class != "" && !matchAlt(string(p.Class), e.Class) {
+		add("class=" + string(p.Class) + " ожидался " + e.Class)
+	}
+	if e.Method != "" && !matchAlt(p.Method, e.Method) {
+		add("method=" + p.Method + " ожидался " + e.Method)
+	}
+	if e.PeriodToken != "" && !matchAlt(p.Period.Token, e.PeriodToken) {
+		add("period=" + p.Period.Token + " ожидался " + e.PeriodToken)
+	}
+	for _, want := range e.Filters {
+		if !hasFilter(p.Filters, want) {
+			add("нет фильтра " + want)
+		}
+	}
+	return m
+}
+
+// matchAlt сверяет значение со спецификацией, где варианты разделены "|".
+func matchAlt(got, spec string) bool {
+	for _, opt := range strings.Split(spec, "|") {
+		if got == strings.TrimSpace(opt) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasFilter(fs []plan.Filter, field string) bool {
+	for _, f := range fs {
+		if f.Field == field {
+			return true
+		}
+	}
+	return false
+}
+
+// Run прогоняет все кейсы через планировщик и валидатор.
+func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case) []Result {
+	out := make([]Result, 0, len(cases))
+	for _, c := range cases {
+		start := time.Now()
+		p, err := pl.Plan(ctx, c.Query)
+		lat := time.Since(start).Milliseconds()
+
+		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
+		if err == nil {
+			val := plan.Validate(&p, cat)
+			r.Plan = p
+			r.Valid = val.OK || val.NeedClarify
+			r.Mismatch = Check(p, c.Expect)
+		}
+		out = append(out, r)
+	}
+	return out
+}
+
+// Stats — сводка по прогону.
+type Stats struct {
+	Total      int
+	Passed     int
+	Valid      int
+	Errors     int
+	LatP50     int64
+	LatP95     int64
+	LatMax     int64
+}
+
+// Summarize считает агрегаты по результатам.
+func Summarize(rs []Result) Stats {
+	s := Stats{Total: len(rs)}
+	lats := make([]int64, 0, len(rs))
+	for _, r := range rs {
+		if r.Err != nil {
+			s.Errors++
+		}
+		if r.Valid {
+			s.Valid++
+		}
+		if r.Pass() {
+			s.Passed++
+		}
+		lats = append(lats, r.LatencyMS)
+	}
+	sort.Slice(lats, func(i, j int) bool { return lats[i] < lats[j] })
+	s.LatP50 = percentile(lats, 50)
+	s.LatP95 = percentile(lats, 95)
+	if len(lats) > 0 {
+		s.LatMax = lats[len(lats)-1]
+	}
+	return s
+}
+
+func percentile(sorted []int64, p int) int64 {
+	if len(sorted) == 0 {
+		return 0
+	}
+	idx := (p * len(sorted)) / 100
+	if idx >= len(sorted) {
+		idx = len(sorted) - 1
+	}
+	return sorted[idx]
+}

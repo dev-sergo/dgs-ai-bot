@@ -13,14 +13,15 @@ import (
 
 // LLMPlanner строит AnalysisPlan через модель с guided-JSON.
 type LLMPlanner struct {
-	cli   *llm.Client
-	model string
-	cat   *catalog.Catalog
+	cli       *llm.Client
+	model     string
+	cat       *catalog.Catalog
+	forceJSON bool
 }
 
 // NewLLM создаёт планировщик поверх LLM-клиента.
-func NewLLM(cli *llm.Client, model string) *LLMPlanner {
-	return &LLMPlanner{cli: cli, model: model, cat: defaultCatalog()}
+func NewLLM(cli *llm.Client, model string, forceJSON bool) *LLMPlanner {
+	return &LLMPlanner{cli: cli, model: model, cat: defaultCatalog(), forceJSON: forceJSON}
 }
 
 func (p *LLMPlanner) Plan(ctx context.Context, query string) (plan.AnalysisPlan, error) {
@@ -28,11 +29,24 @@ func (p *LLMPlanner) Plan(ctx context.Context, query string) (plan.AnalysisPlan,
 		{Role: "system", Content: p.systemPrompt()},
 		{Role: "user", Content: query},
 	}
-	raw, err := p.cli.Chat(ctx, p.model, msgs, llm.ChatOptions{Temperature: 0, JSONObject: true})
+	raw, err := p.cli.Chat(ctx, p.model, msgs, llm.ChatOptions{Temperature: 0, MaxTokens: 512, JSONObject: p.forceJSON})
 	if err != nil {
 		return plan.AnalysisPlan{}, err
 	}
-	return parsePlan(raw)
+	pl, perr := parsePlan(raw)
+	if perr != nil {
+		// Показываем сырой ответ модели — это главный инструмент отладки реального вызова.
+		return plan.AnalysisPlan{}, fmt.Errorf("%w | raw_model_output: %s", perr, snippet(raw, 500))
+	}
+	return pl, nil
+}
+
+func snippet(s string, n int) string {
+	s = strings.TrimSpace(s)
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "…"
 }
 
 func (p *LLMPlanner) systemPrompt() string {
@@ -59,7 +73,18 @@ func (p *LLMPlanner) systemPrompt() string {
 }
 
 Правила:
-- Если период не указан явно — всё равно выбери разумный токен и снизь confidence.
+- ВСЕГДА указывай "method" (для простого отчёта — "plain").
+- ВСЕГДА заполняй "group_by": для payment — ["date"], для products — ["name"]; иначе таблица потеряет смысл.
+- "period.token" НИКОГДА не оставляй пустым. Сопоставление фраз:
+    сегодня→today; вчера→yesterday; за неделю/последнюю неделю→last_7_days;
+    эта/текущая неделя→this_week; текущий/этот месяц→this_month;
+    за месяц/последний месяц/последние 30 дней→last_30_days; прошлый месяц→last_month.
+  Если период не назван — выбери this_month и снизь confidence.
+- Выбор method для аналитики (class B):
+    "почему", "за счёт чего", "что повлияло", "из-за чего" → "contribution" (раскладка вклада);
+    "сравни", "насколько изменилось", "динамика", "относительно прошлого" → "compare".
+  Для class B всегда задавай "compare_to": {"kind":"relative","token":"prev_period"}.
+- "выручка картой/наличными" — это отчёт payment (колонки sum_card/sum_cash), фильтр не нужен.
 - В фильтрах указывай ИМЕНА точек/сотрудников/товаров, не идентификаторы.
 - Никаких полей и фильтров вне white-list. Никакого текста вне JSON.`
 }

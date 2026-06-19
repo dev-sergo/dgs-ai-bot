@@ -129,6 +129,11 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 			}
 		}
 	default:
+		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
+		// иначе таблица потеряет смысловую колонку (строки без подписи).
+		if len(p.GroupBy) == 0 && rep.DefaultDim != "" {
+			p.GroupBy = []string{rep.DefaultDim}
+		}
 		env = engine.Plain(p, rep, resNow, tenantID, currency, period)
 	}
 

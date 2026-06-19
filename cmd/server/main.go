@@ -35,7 +35,7 @@ func main() {
 		nar = narrator.NewTemplate()
 	default:
 		cli := llm.New(cfg.LLM)
-		pl = planner.NewLLM(cli, cfg.LLM.Model)
+		pl = planner.NewLLM(cli, cfg.LLM.Model, cfg.LLM.ForceJSON)
 		nar = narrator.NewLLM(cli, cfg.LLM.Model)
 	}
 
