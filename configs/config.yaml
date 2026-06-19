@@ -1,0 +1,16 @@
+# Справочный конфиг (реальные значения берутся из ENV, см. internal/config).
+# Скопируй в config.local.yaml для своих оверрайдов (он в .gitignore).
+
+http_addr: ":8088"
+
+# Режим планировщика: llm | stub
+# stub — детерминированные планы, без GPU/сети (для тестов и оффлайна).
+planner_mode: "llm"
+
+llm:
+  base_url: "http://172.20.10.2:8080"
+  model: "qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"
+  api_key: ""
+  timeout: "60s"
+
+fixtures_path: "docs/contracts/fixtures"
