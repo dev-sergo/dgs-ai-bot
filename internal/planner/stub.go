@@ -24,6 +24,29 @@ func (s *StubPlanner) Plan(_ context.Context, query string) (plan.AnalysisPlan, 
 		metrics = []string{"amount", "quantity"}
 	}
 
+	// Class B: «почему/за счёт» → contribution, «сравни/изменилась» → compare.
+	isContribution := strings.Contains(q, "почему") || strings.Contains(q, "за счёт") || strings.Contains(q, "за счет")
+	isCompare := strings.Contains(q, "сравни") || strings.Contains(q, "сравнен")
+	if (isContribution || isCompare) && report == "payment" {
+		method := "compare"
+		if isContribution {
+			method = "contribution"
+		}
+		tok := token(q)
+		if tok == "" {
+			tok = "last_30_days"
+		}
+		return plan.AnalysisPlan{
+			Version: "1", Class: plan.ClassB, Report: "payment",
+			Metrics:   []string{"sum_all"},
+			Period:    plan.Period{Kind: "relative", Token: tok},
+			CompareTo: &plan.Period{Kind: "relative", Token: "prev_period"},
+			Method:    method, TopN: 5,
+			Output:     plan.Output{Format: "text"},
+			Confidence: 0.85,
+		}, nil
+	}
+
 	p := plan.AnalysisPlan{
 		Version: "1",
 		Class:   plan.ClassA,

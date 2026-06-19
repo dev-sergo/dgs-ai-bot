@@ -9,6 +9,7 @@ import (
 
 	"dgsbot/internal/app"
 	"dgsbot/internal/dooglys"
+	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/resolver"
 	"dgsbot/internal/tenantctx"
@@ -22,7 +23,7 @@ func newAppWith(t *testing.T, pl planner.Planner) *app.App {
 	if err != nil {
 		t.Fatalf("load tenants: %v", err)
 	}
-	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir))
+	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate())
 	// Фиксированное «сейчас» для детерминизма дат: 2026-06-19 10:00 UTC.
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
 	return a

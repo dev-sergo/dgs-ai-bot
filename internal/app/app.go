@@ -12,6 +12,7 @@ import (
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/engine"
 	"dgsbot/internal/envelope"
+	"dgsbot/internal/narrator"
 	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/render"
@@ -34,6 +35,7 @@ type App struct {
 	tenants  *tenantctx.Store
 	client   dooglys.Client
 	resolver *resolver.Store
+	narrator narrator.Narrator
 	cat      *catalog.Catalog
 
 	// Now инъектируется для детерминированных тестов.
@@ -41,12 +43,13 @@ type App struct {
 }
 
 // New собирает оркестратор.
-func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store) *App {
+func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator) *App {
 	return &App{
 		planner:  pl,
 		tenants:  tenants,
 		client:   client,
 		resolver: res,
+		narrator: nar,
 		cat:      catalog.Default(),
 		Now:      time.Now,
 	}
@@ -95,18 +98,45 @@ func (a *App) Ask(ctx context.Context, tenantID, text string) (Answer, error) {
 		return ans, err
 	}
 
-	res, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
+	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
+	currency := currencyOr(t.Currency)
+	resNow, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
 	if err != nil {
 		return ans, err
 	}
 
-	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
-	env := engine.Plain(p, rep, res, tenantID, currencyOr(t.Currency), period)
-	if len(res.FiltersApplied) > 0 {
-		env.Meta["filters_applied"] = res.FiltersApplied
+	var env envelope.Envelope
+	switch p.Method {
+	case "compare", "contribution":
+		prevR, err := a.comparePeriod(p, dates.Range{From: from, To: to})
+		if err != nil {
+			return ans, err
+		}
+		periodPrev := envelope.Period{From: prevR.From, To: prevR.To, TZ: t.Timezone}
+		resPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: prevR.From, To: prevR.To, Filters: filters})
+		if err != nil {
+			return ans, err
+		}
+		metric := primaryMetric(p)
+		if p.Method == "compare" {
+			env = engine.Compare(rep, metric, resNow, resPrev, tenantID, currency, period, periodPrev)
+		} else {
+			env = engine.Contribution(rep, metric, resNow, resPrev, p.TopN, tenantID, currency, period, periodPrev)
+		}
+		if a.narrator != nil {
+			if txt, nerr := a.narrator.Narrate(ctx, env); nerr == nil && txt != "" {
+				env.Narrative = txt
+			}
+		}
+	default:
+		env = engine.Plain(p, rep, resNow, tenantID, currency, period)
 	}
-	if len(res.FiltersSkipped) > 0 {
-		env.Meta["filters_skipped"] = res.FiltersSkipped
+
+	if len(resNow.FiltersApplied) > 0 {
+		env.Meta["filters_applied"] = resNow.FiltersApplied
+	}
+	if len(resNow.FiltersSkipped) > 0 {
+		env.Meta["filters_skipped"] = resNow.FiltersSkipped
 	}
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
@@ -142,6 +172,21 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 
 func joinRu(ss []string) string {
 	return strings.Join(ss, ", ")
+}
+
+// comparePeriod определяет период сравнения: явный из плана или предыдущий равный.
+func (a *App) comparePeriod(p plan.AnalysisPlan, cur dates.Range) (dates.Range, error) {
+	if p.CompareTo != nil && p.CompareTo.Kind == "explicit" && p.CompareTo.From != "" {
+		return dates.Range{From: p.CompareTo.From, To: p.CompareTo.To}, nil
+	}
+	return dates.PrevRange(cur)
+}
+
+func primaryMetric(p plan.AnalysisPlan) string {
+	if len(p.Metrics) > 0 {
+		return p.Metrics[0]
+	}
+	return "sum_all"
 }
 
 func (a *App) resolvePeriod(p plan.Period, t tenantctx.Tenant) (from, to string, err error) {

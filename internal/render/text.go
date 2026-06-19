@@ -19,8 +19,14 @@ func Text(e envelope.Envelope) string {
 	title := reportTitle(e.Type)
 	fmt.Fprintf(&b, "%s — период %s … %s (%s)\n", title, e.Period.From, e.Period.To, e.Period.TZ)
 
+	if e.Narrative != "" {
+		b.WriteString("\n" + e.Narrative + "\n")
+	}
+
 	if len(e.Rows) == 0 {
-		b.WriteString("\nЗа выбранный период данных нет.\n")
+		if e.Narrative == "" {
+			b.WriteString("\nЗа выбранный период данных нет.\n")
+		}
 		return b.String()
 	}
 
@@ -109,6 +115,14 @@ func formatCell(v any, unit, currency string) string {
 	}
 }
 
+// Money форматирует сумму в валюте (RU-стиль). Экспортируется для нарратора.
+func Money(v float64, currency string) string {
+	return groupThousands(v, 2) + " " + currencySymbol(currency)
+}
+
+// Pct форматирует процент (RU-стиль).
+func Pct(v float64) string { return groupThousands(v, 2) + " %" }
+
 func formatNumber(v float64, unit, currency string) string {
 	switch unit {
 	case "RUB":
@@ -165,6 +179,7 @@ func currencySymbol(code string) string {
 }
 
 func reportTitle(t string) string {
+	t = strings.TrimSuffix(strings.TrimSuffix(t, "_compare"), "_contribution")
 	switch t {
 	case "payment":
 		return "Выручка"

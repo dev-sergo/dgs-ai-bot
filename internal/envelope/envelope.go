@@ -22,8 +22,9 @@ type Envelope struct {
 	TenantID string             `json:"tenant_id"`
 	Period   Period             `json:"period"`
 	Currency string             `json:"currency"`
-	Columns  []Column           `json:"columns"`
-	Rows     []map[string]any   `json:"rows"`
-	Summary  map[string]float64 `json:"summary"`
-	Meta     map[string]any     `json:"meta,omitempty"`
+	Columns   []Column           `json:"columns"`
+	Rows      []map[string]any   `json:"rows"`
+	Summary   map[string]float64 `json:"summary"`
+	Narrative string             `json:"narrative,omitempty"`
+	Meta      map[string]any     `json:"meta,omitempty"`
 }

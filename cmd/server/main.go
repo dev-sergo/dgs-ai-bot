@@ -15,6 +15,7 @@ import (
 	"dgsbot/internal/config"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/llm"
+	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/resolver"
 	"dgsbot/internal/tenantctx"
@@ -25,13 +26,17 @@ func main() {
 	cfg := config.Load()
 	log.Printf("config: %s", cfg.Summary())
 
-	// Планировщик: реальная LLM или детерминированный стаб.
+	// Планировщик и нарратор: реальная LLM или детерминированные стабы.
 	var pl planner.Planner
+	var nar narrator.Narrator
 	switch cfg.PlannerMode {
 	case config.PlannerStub:
 		pl = planner.NewStub()
+		nar = narrator.NewTemplate()
 	default:
-		pl = planner.NewLLM(llm.New(cfg.LLM), cfg.LLM.Model)
+		cli := llm.New(cfg.LLM)
+		pl = planner.NewLLM(cli, cfg.LLM.Model)
+		nar = narrator.NewLLM(cli, cfg.LLM.Model)
 	}
 
 	// Справочник тенантов.
@@ -46,7 +51,7 @@ func main() {
 	// Справочники для резолва имён в uuid.
 	res := resolver.Load(cfg.FixturesPath)
 
-	a := app.New(pl, tenants, client, res)
+	a := app.New(pl, tenants, client, res, nar)
 	srv := httpx.New(cfg, a)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
