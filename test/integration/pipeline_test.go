@@ -77,6 +77,68 @@ func TestProductsThisMonth(t *testing.T) {
 	}
 }
 
+func TestBestVsWorstProductsDiffer(t *testing.T) {
+	a := newApp(t)
+	best, err := a.Ask(context.Background(), "mock_single", "s", "какие товары продаются лучше всего за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	worst, err := a.Ask(context.Background(), "mock_single", "s2", "какие товары продаются хуже всего за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if best.Plan.Method != "top_n" || worst.Plan.Method != "top_n" {
+		t.Fatalf("ожидался метод top_n: best=%s worst=%s", best.Plan.Method, worst.Plan.Method)
+	}
+	if best.Envelope == nil || worst.Envelope == nil || len(best.Envelope.Rows) == 0 || len(worst.Envelope.Rows) == 0 {
+		t.Fatal("ожидались непустые рейтинги")
+	}
+	// Лучший по amount должен быть отсортирован убывающе, худший — возрастающе.
+	bestTop, _ := best.Envelope.Rows[0]["amount"].(float64)
+	bestSecond, _ := best.Envelope.Rows[1]["amount"].(float64)
+	if bestTop < bestSecond {
+		t.Errorf("лучшие не по убыванию: %v < %v", bestTop, bestSecond)
+	}
+	worstTop, _ := worst.Envelope.Rows[0]["amount"].(float64)
+	if worstTop > bestTop {
+		t.Errorf("худший (%v) не должен превышать лучшего (%v)", worstTop, bestTop)
+	}
+	// Первая строка «лучших» и «худших» не должна совпадать (раньше были идентичны).
+	if best.Envelope.Rows[0]["name"] == worst.Envelope.Rows[0]["name"] {
+		t.Errorf("лучший и худший товар совпали: %v", best.Envelope.Rows[0]["name"])
+	}
+}
+
+func TestProductsAggregatedByName(t *testing.T) {
+	a := newApp(t)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "топ товаров за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope == nil {
+		t.Fatal("нет envelope")
+	}
+	seen := map[string]bool{}
+	for _, r := range ans.Envelope.Rows {
+		name, _ := r["name"].(string)
+		if seen[name] {
+			t.Errorf("дубль товара после агрегации: %q", name)
+		}
+		seen[name] = true
+	}
+}
+
+func TestSingleBestProduct(t *testing.T) {
+	a := newApp(t)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "какой товар самый популярный за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope == nil || len(ans.Envelope.Rows) != 1 {
+		t.Fatalf("ожидалась ровно 1 строка (топ-1), got %d", len(ans.Envelope.Rows))
+	}
+}
+
 func TestClarifyWhenNoPeriod(t *testing.T) {
 	a := newApp(t)
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "покажи выручку")

@@ -22,6 +22,10 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 	switch {
 	case containsAny(q, "умеешь", "функ", "что ты можешь", "что можешь", "помощь", "help", "возможност"):
 		return plan.AnalysisPlan{Version: "1", Intent: "help"}, nil
+	case isMetaComplaint(q):
+		// Жалоба/реплика о самом диалоге — не строим отчёт наугад, а уточняем.
+		return plan.AnalysisPlan{Version: "1", Intent: "smalltalk",
+			Reply: "Уточните, пожалуйста: какой отчёт показать (Выручка, Товары, Чеки, Заказы) и за какой период?"}, nil
 	case containsAny(q, "привет", "здравствуй", "спасибо", "как дела"):
 		return plan.AnalysisPlan{Version: "1", Intent: "smalltalk", Reply: "Здравствуйте! Я помогаю с аналитикой вашего заведения."}, nil
 	case containsAny(q, "погод", "анекдот", "кто ты такой", "стих"):
@@ -30,9 +34,36 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 
 	report := "payment"
 	metrics := []string{"sum_all"}
-	if strings.Contains(q, "товар") || strings.Contains(q, "продукт") || strings.Contains(q, "блюд") {
+	isProducts := strings.Contains(q, "товар") || strings.Contains(q, "продукт") || strings.Contains(q, "блюд")
+	if isProducts {
 		report = "products"
 		metrics = []string{"amount", "quantity"}
+	}
+
+	// Рейтинг товаров: «лучшие/топ/самый» → desc, «худшие/меньше всего» → asc.
+	isBest := containsAny(q, "лучш", "топ", "популярн", "больше всего", "ходов")
+	isWorst := containsAny(q, "хуж", "меньше всего", "неходов", "плохо прода")
+	if isProducts && (isBest || isWorst) {
+		order := "desc"
+		if isWorst {
+			order = "asc"
+		}
+		tok := token(q)
+		if tok == "" {
+			tok = "this_month"
+		}
+		topN := 10
+		if containsAny(q, "какой товар", "какое блюдо", "самый", "один") {
+			topN = 1
+		}
+		return plan.AnalysisPlan{
+			Version: "1", Class: plan.ClassA, Report: "products",
+			Metrics: []string{"amount", "quantity"}, GroupBy: []string{"name"},
+			Period: plan.Period{Kind: "relative", Token: tok},
+			Method: "top_n", TopN: topN, SortBy: "amount", Order: order,
+			Output:     plan.Output{Format: "text"},
+			Confidence: 0.85,
+		}, nil
 	}
 
 	// Class B: «почему/за счёт» → contribution, «сравни/изменилась» → compare.
@@ -75,6 +106,16 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 	}
 	p.Confidence = 0.9
 	return p, nil
+}
+
+// isMetaComplaint распознаёт реплики о самом диалоге/ассистенте (а не запрос данных):
+// «ты меня не слышишь», «отчёты одинаковые», «почему присылаешь список» и т.п.
+func isMetaComplaint(q string) bool {
+	return containsAny(q,
+		"не слышишь", "не слышит", "ты меня не", "не понимаешь",
+		"одинаков", "одно и то же", "то же самое",
+		"приводишь список", "присылаешь", "присылаете", "выдаёшь список", "выдаешь список",
+	)
 }
 
 func containsAny(q string, subs ...string) bool {

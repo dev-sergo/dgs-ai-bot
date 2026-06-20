@@ -5,8 +5,43 @@ import (
 	"strings"
 	"testing"
 
+	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
+	"dgsbot/internal/session"
 )
+
+// fixedPlanner всегда возвращает заранее заданный план — для проверки гейтов.
+type fixedPlanner struct{ p plan.AnalysisPlan }
+
+func (f fixedPlanner) Plan(_ context.Context, _ []session.Message, _ string) (plan.AnalysisPlan, error) {
+	return f.p, nil
+}
+
+// Низкая уверенность планировщика → переспрос, а не заглушка-отчёт.
+func TestLowConfidenceAsksClarify(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Version: "1", Intent: "report", Class: plan.ClassA,
+		Report: "payment", Metrics: []string{"sum_all"},
+		GroupBy: []string{"date"},
+		Period:  plan.Period{Kind: "relative", Token: "this_month"},
+		Method:  "plain", Output: plan.Output{Format: "text"},
+		Confidence: 0.3,
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "что-то непонятное")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope != nil {
+		t.Fatal("при низкой уверенности отчёт строить нельзя")
+	}
+	if !ans.Validation.NeedClarify {
+		t.Fatalf("ожидался NeedClarify, got %+v", ans.Validation)
+	}
+	if !strings.Contains(ans.Text, "Не уверен") {
+		t.Errorf("ожидался переспрос, got: %s", ans.Text)
+	}
+}
 
 // Не-данные запросы НЕ должны превращаться в отчёт.
 func TestHelpIntentNoReport(t *testing.T) {
@@ -45,6 +80,71 @@ func TestOffTopicIntent(t *testing.T) {
 	}
 	if ans.Envelope != nil || ans.Plan.EffectiveIntent() != "off_topic" {
 		t.Fatalf("ожидался off_topic без отчёта: intent=%s", ans.Plan.EffectiveIntent())
+	}
+}
+
+// Пустой период → честный ответ, а не таблица-заглушка.
+func TestEmptyPeriodIsHonest(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Version: "1", Intent: "report", Class: plan.ClassA,
+		Report: "payment", Metrics: []string{"sum_all"}, GroupBy: []string{"date"},
+		Period: plan.Period{Kind: "explicit", From: "01.01.2000", To: "31.01.2000"},
+		Method: "plain", Output: plan.Output{Format: "text"}, Confidence: 0.9,
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(ans.Text, "данных для отчёта нет") {
+		t.Errorf("ожидался честный ответ о пустоте:\n%s", ans.Text)
+	}
+}
+
+// contribution по отчёту без раскладки понижается до compare (не выдаёт пустоту).
+func TestContributionDowngradesWhenUnsupported(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Version: "1", Intent: "report", Class: plan.ClassB,
+		Report: "products", Metrics: []string{"amount"},
+		Period:    plan.Period{Kind: "relative", Token: "this_month"},
+		CompareTo: &plan.Period{Kind: "relative", Token: "prev_period"},
+		Method:    "contribution", TopN: 5,
+		Output: plan.Output{Format: "text"}, Confidence: 0.9,
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "почему так")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope == nil {
+		t.Fatal("ожидался envelope")
+	}
+	if m, _ := ans.Envelope.Meta["method"].(string); m != "compare" {
+		t.Errorf("метод должен быть понижен до compare, got %q", m)
+	}
+}
+
+// Метажалоба о диалоге не превращается в отчёт, а уточняет запрос.
+func TestMetaComplaintAsksClarify(t *testing.T) {
+	a := newApp(t)
+	for _, q := range []string{
+		"почему ты не слышишь что я спрашиваю",
+		"мне кажется отчёты одинаковые",
+		"почему ты приводишь список а не конкретный товар",
+	} {
+		ans, err := a.Ask(context.Background(), "mock_single", "s", q)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ans.Envelope != nil {
+			t.Errorf("на метажалобу %q не должно быть отчёта", q)
+		}
+		if ans.Plan.EffectiveIntent() != "smalltalk" {
+			t.Errorf("%q: intent=%s, want smalltalk", q, ans.Plan.EffectiveIntent())
+		}
+		if !strings.Contains(ans.Text, "Уточните") {
+			t.Errorf("%q: ожидалось уточнение, got: %s", q, ans.Text)
+		}
 	}
 }
 

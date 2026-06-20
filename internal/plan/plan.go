@@ -52,9 +52,9 @@ type AnalysisPlan struct {
 	//   "smalltalk" — приветствие/болтовня → короткий ответ (см. Reply);
 	//   "off_topic" — вне компетенции → вежливый отказ.
 	// Пусто трактуется как "report" (обратная совместимость).
-	Intent string `json:"intent,omitempty"`
-	Reply  string `json:"reply,omitempty"` // текст ответа для non-report интентов
-	Class  Class  `json:"class"`
+	Intent     string   `json:"intent,omitempty"`
+	Reply      string   `json:"reply,omitempty"` // текст ответа для non-report интентов
+	Class      Class    `json:"class"`
 	Report     string   `json:"report"`
 	Metrics    []string `json:"metrics,omitempty"`
 	GroupBy    []string `json:"group_by,omitempty"`
@@ -62,6 +62,8 @@ type AnalysisPlan struct {
 	CompareTo  *Period  `json:"compare_to,omitempty"`
 	Method     string   `json:"method"` // plain|compare|contribution|top_n
 	TopN       int      `json:"top_n,omitempty"`
+	SortBy     string   `json:"sort_by,omitempty"` // ключ метрики для сортировки (top_n)
+	Order      string   `json:"order,omitempty"`   // "desc" (лучшие) | "asc" (худшие)
 	Filters    []Filter `json:"filters,omitempty"`
 	Output     Output   `json:"output"`
 	Confidence float64  `json:"confidence"`

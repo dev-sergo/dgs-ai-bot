@@ -21,6 +21,15 @@ import (
 	"dgsbot/internal/tenantctx"
 )
 
+// minConfidence — порог уверенности планировщика. Если модель явно вернула
+// confidence ниже порога, мы не угадываем отчёт, а переспрашиваем у пользователя.
+// confidence == 0 трактуется как «не указана» (stub-планировщик) и гейт не срабатывает.
+const minConfidence = 0.5
+
+// lowConfidencePrompt — переспрос при низкой уверенности планировщика.
+const lowConfidencePrompt = "Не уверен, что правильно понял запрос. " +
+	"Уточните, какой отчёт нужен (Выручка, Товары, Чеки, Заказы) и за какой период."
+
 // Answer — результат обработки запроса.
 type Answer struct {
 	TenantID   string                `json:"tenant_id"`
@@ -77,6 +86,15 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 		return ans, nil
 	}
 
+	// Низкая уверенность планировщика — не угадываем отчёт, а переспрашиваем.
+	// Иначе нераспознанный/метавопрос превратился бы в заглушку-отчёт.
+	if p.Confidence > 0 && p.Confidence < minConfidence {
+		ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: lowConfidencePrompt}
+		ans.Text = lowConfidencePrompt
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
 	ans.Validation = plan.Validate(&p, a.cat)
 	if !ans.Validation.OK {
 		// Невалидно или нужно уточнение — отдаём как есть (ветка clarify/refusal).
@@ -88,6 +106,13 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 	}
 
 	rep, _ := a.cat.Report(p.Report)
+
+	// Применимость метода: contribution возможен только для отчётов с раскладкой
+	// на компоненты (напр. payment). Иначе понижаем до compare — суммарное изменение
+	// без разбивки осмысленно для любого отчёта и честнее пустой раскладки.
+	if p.Method == "contribution" && !engine.SupportsContribution(p.Report) {
+		p.Method = "compare"
+	}
 
 	// Резолв фильтров: имена → uuid (для ref). Нерезолвнутое имя → уточнение.
 	filters, clarify := a.resolveFilters(rep, p.Filters)
@@ -137,11 +162,12 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 		} else {
 			env = engine.Contribution(rep, metric, resNow, resPrev, p.TopN, tenantID, currency, period, periodPrev)
 		}
-		if a.narrator != nil {
-			if txt, nerr := a.narrator.Narrate(ctx, env); nerr == nil && txt != "" {
-				env.Narrative = txt
-			}
+	case "top_n":
+		// Рейтинг строк по метрике. Измерение по умолчанию — как у plain.
+		if len(p.GroupBy) == 0 && rep.DefaultDim != "" {
+			p.GroupBy = []string{rep.DefaultDim}
 		}
+		env = engine.TopN(p, rep, resNow, tenantID, currency, period)
 	default:
 		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
 		// иначе таблица потеряет смысловую колонку (строки без подписи).
@@ -157,10 +183,46 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 	if len(resNow.FiltersSkipped) > 0 {
 		env.Meta["filters_skipped"] = resNow.FiltersSkipped
 	}
+
+	// Честная пустота: нет данных — отдаём прямой ответ, без болванки нарратора.
+	if isEmptyResult(p.Method, env) {
+		ans.Envelope = &env
+		ans.Text = emptyResultMessage(env)
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
+	// Нарратив — только для аналитики (class B) и только когда есть что объяснять.
+	if (p.Method == "compare" || p.Method == "contribution") && a.narrator != nil {
+		if txt, nerr := a.narrator.Narrate(ctx, env); nerr == nil && txt != "" {
+			env.Narrative = txt
+		}
+	}
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
 	a.remember(sessionID, text, ans.Text)
 	return ans, nil
+}
+
+// isEmptyResult сообщает, что результат вырожден (данных нет / разложить нечего).
+// Для class B пустой Rows у Compare — норма, поэтому смотрим на суммы периодов.
+func isEmptyResult(method string, e envelope.Envelope) bool {
+	switch method {
+	case "compare", "contribution":
+		if e.Summary["value_now"] == 0 && e.Summary["value_prev"] == 0 {
+			return true // в обоих периодах пусто — объяснять нечего
+		}
+		// Не удалось разложить метрику на компоненты (нет components у отчёта).
+		return method == "contribution" && len(e.Rows) == 0
+	default:
+		return len(e.Rows) == 0
+	}
+}
+
+// emptyResultMessage — честный ответ, когда данных для отчёта нет.
+func emptyResultMessage(e envelope.Envelope) string {
+	return "За период " + e.Period.From + " … " + e.Period.To +
+		" данных для отчёта нет. Попробуйте другой период или уточните запрос."
 }
 
 // replyForIntent формирует текстовый ответ для не-отчётных интентов.

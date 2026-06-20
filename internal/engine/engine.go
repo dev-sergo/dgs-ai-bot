@@ -3,6 +3,8 @@
 package engine
 
 import (
+	"sort"
+
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/envelope"
@@ -10,11 +12,74 @@ import (
 )
 
 // Plain строит envelope из выборки: колонки = group_by + metrics, итоги = суммы числовых метрик.
-// Все числа считаются здесь; LLM их не трогает.
+// Строки агрегируются по измерению (group_by), числа считаются здесь; LLM их не трогает.
 func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 	tenantID, currency string, period envelope.Period) envelope.Envelope {
 
-	// Порядок колонок: сначала измерения, затем метрики (без дублей и без PII).
+	cols := buildColumns(p, rep)
+	rows := buildRows(cols, p, rep, res)
+	summary := buildSummary(cols, p, rep, res)
+
+	return envelope.Envelope{
+		Type:     res.Report,
+		TenantID: tenantID,
+		Period:   period,
+		Currency: currency,
+		Columns:  cols,
+		Rows:     rows,
+		Summary:  summary,
+		Meta:     map[string]any{"method": "plain", "row_count": len(rows)},
+	}
+}
+
+// TopN строит отсортированный по метрике рейтинг строк и берёт первые N.
+// Order "asc" → худшие (по возрастанию), иначе → лучшие (по убыванию).
+// Итоги считаются по всей выборке, а не по обрезанному топу.
+func TopN(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
+	tenantID, currency string, period envelope.Period) envelope.Envelope {
+
+	cols := buildColumns(p, rep)
+	rows := buildRows(cols, p, rep, res)
+	summary := buildSummary(cols, p, rep, res)
+
+	sortKey := sortKeyFor(p, cols, rep)
+	if sortKey != "" {
+		asc := p.Order == "asc"
+		sort.SliceStable(rows, func(i, j int) bool {
+			a, _ := toFloat(rows[i][sortKey])
+			b, _ := toFloat(rows[j][sortKey])
+			if asc {
+				return a < b
+			}
+			return a > b
+		})
+	}
+
+	limit := p.TopN
+	if limit <= 0 {
+		limit = 10
+	}
+	if len(rows) > limit {
+		rows = rows[:limit]
+	}
+
+	return envelope.Envelope{
+		Type:     res.Report,
+		TenantID: tenantID,
+		Period:   period,
+		Currency: currency,
+		Columns:  cols,
+		Rows:     rows,
+		Summary:  summary,
+		Meta: map[string]any{
+			"method": "top_n", "row_count": len(rows),
+			"sort_by": sortKey, "order": orderOr(p.Order),
+		},
+	}
+}
+
+// buildColumns: сначала измерения, затем метрики (без дублей и без PII).
+func buildColumns(p plan.AnalysisPlan, rep catalog.Report) []envelope.Column {
 	var cols []envelope.Column
 	seen := map[string]bool{}
 	addCol := func(key string) {
@@ -34,25 +99,76 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 	for _, m := range p.Metrics {
 		addCol(m)
 	}
+	return cols
+}
 
-	// Строки — проекция на выбранные колонки.
-	rows := make([]map[string]any, 0, len(res.Rows))
-	for _, r := range res.Rows {
-		out := make(map[string]any, len(cols))
-		for _, c := range cols {
-			out[c.Key] = r[c.Key]
+// buildRows проецирует строки на колонки и агрегирует их по измерению (group_by):
+// суммируемые метрики складываются, иначе берётся первое значение. Без group_by — проекция.
+// Это схлопывает дубли (напр. один товар несколькими строками в выгрузке Dooglys).
+func buildRows(cols []envelope.Column, p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result) []map[string]any {
+	dims := dimKeys(cols, p)
+	if len(dims) == 0 {
+		rows := make([]map[string]any, 0, len(res.Rows))
+		for _, r := range res.Rows {
+			out := make(map[string]any, len(cols))
+			for _, c := range cols {
+				out[c.Key] = r[c.Key]
+			}
+			rows = append(rows, out)
 		}
-		rows = append(rows, out)
+		return rows
 	}
 
-	// Итоги — только для суммируемых полей (рубли/штуки). Средние/отношения не суммируем.
-	dim := map[string]bool{}
-	for _, g := range p.GroupBy {
-		dim[g] = true
+	order := make([]string, 0) // ключи групп в порядке появления
+	groups := make(map[string]map[string]any)
+	for _, r := range res.Rows {
+		key := groupKey(r, dims)
+		agg, ok := groups[key]
+		if !ok {
+			agg = make(map[string]any, len(cols))
+			for _, d := range dims {
+				agg[d] = r[d]
+			}
+			groups[key] = agg
+			order = append(order, key)
+		}
+		for _, c := range cols {
+			if isDim(c.Key, dims) {
+				continue
+			}
+			f, ok := rep.FieldByKey(c.Key)
+			if ok && f.Summable() {
+				prev, _ := toFloat(agg[c.Key])
+				add, _ := toFloat(r[c.Key])
+				agg[c.Key] = round2(prev + add)
+			} else if _, set := agg[c.Key]; !set {
+				agg[c.Key] = r[c.Key] // несуммируемое — первое значение
+			}
+		}
 	}
+
+	rows := make([]map[string]any, 0, len(order))
+	for _, key := range order {
+		agg := groups[key]
+		// Средний чек на строку = выручка/чеки (а не сумма средних).
+		if _, requested := indexOf(cols, "sredniy_chek"); requested {
+			if rev, ok := toFloat(agg["sum_all"]); ok {
+				if checks, ok := toFloat(agg["kol_vo_chekov"]); ok && checks > 0 {
+					agg["sredniy_chek"] = round2(rev / checks)
+				}
+			}
+		}
+		rows = append(rows, agg)
+	}
+	return rows
+}
+
+// buildSummary — итоги по всей выборке (суммируемые поля), с корректным средним чеком.
+func buildSummary(cols []envelope.Column, p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result) map[string]float64 {
+	dims := dimKeys(cols, p)
 	summary := map[string]float64{}
 	for _, c := range cols {
-		if dim[c.Key] {
+		if isDim(c.Key, dims) {
 			continue
 		}
 		f, ok := rep.FieldByKey(c.Key)
@@ -61,7 +177,6 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 		}
 		summary[c.Key] = round2(sumField(res.Rows, c.Key))
 	}
-	// Корректный средний чек = суммарная выручка / число чеков (а не сумма средних).
 	if rev, ok := summary["sum_all"]; ok {
 		if checks, ok := summary["kol_vo_chekov"]; ok && checks > 0 {
 			if _, requested := indexOf(cols, "sredniy_chek"); requested {
@@ -69,17 +184,82 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 			}
 		}
 	}
+	return summary
+}
 
-	return envelope.Envelope{
-		Type:     res.Report,
-		TenantID: tenantID,
-		Period:   period,
-		Currency: currency,
-		Columns:  cols,
-		Rows:     rows,
-		Summary:  summary,
-		Meta:     map[string]any{"method": "plain", "row_count": len(rows)},
+// sortKeyFor выбирает поле сортировки top_n: явный sort_by → первая метрика → первое суммируемое поле.
+func sortKeyFor(p plan.AnalysisPlan, cols []envelope.Column, rep catalog.Report) string {
+	dims := dimKeys(cols, p)
+	valid := func(key string) bool {
+		if key == "" || isDim(key, dims) {
+			return false
+		}
+		_, ok := indexOf(cols, key)
+		return ok
 	}
+	if valid(p.SortBy) {
+		return p.SortBy
+	}
+	for _, m := range p.Metrics {
+		if valid(m) {
+			return m
+		}
+	}
+	for _, c := range cols {
+		if !isDim(c.Key, dims) {
+			if f, ok := rep.FieldByKey(c.Key); ok && f.Summable() {
+				return c.Key
+			}
+		}
+	}
+	return ""
+}
+
+func dimKeys(cols []envelope.Column, p plan.AnalysisPlan) []string {
+	var dims []string
+	for _, g := range p.GroupBy {
+		if _, ok := indexOf(cols, g); ok {
+			dims = append(dims, g)
+		}
+	}
+	return dims
+}
+
+func isDim(key string, dims []string) bool {
+	for _, d := range dims {
+		if d == key {
+			return true
+		}
+	}
+	return false
+}
+
+func groupKey(r dooglys.Row, dims []string) string {
+	parts := make([]string, len(dims))
+	for i, d := range dims {
+		if s, ok := r[d].(string); ok {
+			parts[i] = s
+		}
+	}
+	return joinKey(parts)
+}
+
+func joinKey(parts []string) string {
+	out := ""
+	for i, p := range parts {
+		if i > 0 {
+			out += "\x1f"
+		}
+		out += p
+	}
+	return out
+}
+
+func orderOr(o string) string {
+	if o == "asc" {
+		return "asc"
+	}
+	return "desc"
 }
 
 func indexOf(cols []envelope.Column, key string) (int, bool) {

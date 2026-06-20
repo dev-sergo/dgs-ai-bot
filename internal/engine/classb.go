@@ -14,6 +14,13 @@ var components = map[string][]string{
 	"payment": {"sum_card", "sum_cash", "onlayn", "sbp"},
 }
 
+// SupportsContribution сообщает, можно ли разложить метрику отчёта на компоненты.
+// Для отчётов без раскладки contribution выродится в пустоту — вызывающий код
+// должен понизить метод до compare.
+func SupportsContribution(slug string) bool {
+	return len(components[slug]) > 0
+}
+
 // Compare сравнивает суммарную метрику между двумя периодами.
 func Compare(rep catalog.Report, metric string, now, prev dooglys.Result,
 	tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
