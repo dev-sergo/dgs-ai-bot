@@ -93,12 +93,20 @@ func hasFilter(fs []plan.Filter, field string) bool {
 	return false
 }
 
+// Параметры устойчивости прогона: таймаут на ОДИН запрос и ретраи на сетевой сбой.
+// Глобального дедлайна на весь набор нет — длинные прогоны не должны падать в хвосте.
+const (
+	perCallTimeout = 90 * time.Second
+	maxAttempts    = 3
+	retryBackoff   = 2 * time.Second
+)
+
 // Run прогоняет все кейсы через планировщик и валидатор.
 func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case) []Result {
 	out := make([]Result, 0, len(cases))
 	for _, c := range cases {
 		start := time.Now()
-		p, err := pl.Plan(ctx, nil, c.Query) // eval — без истории диалога
+		p, err := planWithRetry(ctx, pl, c.Query)
 		lat := time.Since(start).Milliseconds()
 
 		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
@@ -117,15 +125,40 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 	return out
 }
 
+// planWithRetry дёргает планировщик с таймаутом на запрос и ретраями на ошибку
+// (таймаут рига, разрыв сети). Между попытками — небольшой бэкофф.
+func planWithRetry(parent context.Context, pl planner.Planner, query string) (plan.AnalysisPlan, error) {
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		ctx, cancel := context.WithTimeout(parent, perCallTimeout)
+		p, err := pl.Plan(ctx, nil, query) // eval — без истории диалога
+		cancel()
+		if err == nil {
+			return p, nil
+		}
+		lastErr = err
+		if parent.Err() != nil { // родительский контекст отменён — дальше нет смысла
+			break
+		}
+		if attempt < maxAttempts {
+			select {
+			case <-time.After(retryBackoff):
+			case <-parent.Done():
+			}
+		}
+	}
+	return plan.AnalysisPlan{}, lastErr
+}
+
 // Stats — сводка по прогону.
 type Stats struct {
-	Total      int
-	Passed     int
-	Valid      int
-	Errors     int
-	LatP50     int64
-	LatP95     int64
-	LatMax     int64
+	Total  int
+	Passed int
+	Valid  int
+	Errors int
+	LatP50 int64
+	LatP95 int64
+	LatMax int64
 }
 
 // Summarize считает агрегаты по результатам.

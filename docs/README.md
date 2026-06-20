@@ -14,6 +14,7 @@
 | [02-data-contracts-and-open-questions.md](02-data-contracts-and-open-questions.md) | Что мы ждём от заказчика: endpoints, контракты, модель тенанта, mock-данные |
 | [03-testing-strategy.md](03-testing-strategy.md) | Тестирование локально без реальных запросов и без GPU: моки, фикстуры, eval-harness |
 | [04-development-plan.md](04-development-plan.md) | Итоговый план: white-list, AnalysisPlan, дерево приложения, майлстоуны, фикстуры, тесты, масштабирование |
+| [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md) | Живой чек-лист доработок качества и безопасности + журнал итераций (где мы сейчас) |
 
 ## Ключевые решения (одной строкой)
 

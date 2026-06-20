@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/config"
@@ -31,10 +30,9 @@ func main() {
 
 	fmt.Printf("eval: %d кейсов, модель=%s, эндпоинт=%s\n\n", len(cases), cfg.LLM.Model, cfg.LLM.BaseURL)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-
-	results := eval.Run(ctx, pl, catalog.Default(), cases)
+	// Без глобального потолка на весь прогон: таймаут — на каждый запрос внутри Run
+	// (иначе длинный набор упирается в общий дедлайн и хвост падает в context deadline).
+	results := eval.Run(context.Background(), pl, catalog.Default(), cases)
 
 	for _, r := range results {
 		status := "PASS"

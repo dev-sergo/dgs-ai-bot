@@ -41,6 +41,7 @@ tmp/
 # === Артефакты бенчмарков/eval ===
 test/eval/results/
 bench-results/
+eval-results*.txt
 
 # === IDE / редакторы ===
 .idea/
