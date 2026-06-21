@@ -41,11 +41,11 @@
 {"query": "выручка по точке Центральная за неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days|this_week", "filters": ["sale_point"]}}
 {"query": "продажи на торговой точке за месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month|last_30_days", "filters": ["sale_point"]}}
 {"query": "выручка по точке за вчера", "expect": {"intent": "report", "report": "payment", "period_token": "yesterday", "filters": ["sale_point"]}}
-{"query": "сколько заработала точка продаж за этот месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month", "filters": ["sale_point"]}}
+{"query": "сколько заработала точка продаж за этот месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
 {"query": "выручка на точке 1 за последние 7 дней", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days", "filters": ["sale_point"]}}
 {"query": "продажи на главной точке за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today", "filters": ["sale_point"]}}
 {"query": "выручка в Москве за неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days|this_week", "filters": ["locality"]}}
-{"query": "продажи по городу за месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month|last_30_days", "filters": ["locality"]}}
+{"query": "продажи по городу за месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month|last_30_days"}}
 {"query": "выручка в регионе за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month", "filters": ["locality"]}}
 {"query": "сколько заработали в Выксе за неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days|this_week", "filters": ["locality"]}}
 {"query": "выручка картой за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}

@@ -110,9 +110,7 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 	// Применимость метода: contribution возможен только для отчётов с раскладкой
 	// на компоненты (напр. payment). Иначе понижаем до compare — суммарное изменение
 	// без разбивки осмысленно для любого отчёта и честнее пустой раскладки.
-	if p.Method == "contribution" && !engine.SupportsContribution(p.Report) {
-		p.Method = "compare"
-	}
+	engine.NormalizeMethod(&p)
 
 	// Резолв фильтров: имена → uuid (для ref). Нерезолвнутое имя → уточнение.
 	filters, clarify := a.resolveFilters(rep, p.Filters)

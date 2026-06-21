@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"dgsbot/internal/catalog"
+	"dgsbot/internal/engine"
 	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
 )
@@ -111,6 +112,9 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 
 		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
 		if err == nil {
+			// Та же нормализация, что в проде (app.go), — бенчмарк должен мерить
+			// итоговый план, а не сырой ответ модели.
+			engine.NormalizeMethod(&p)
 			r.Plan = p
 			if p.IsReport() {
 				val := plan.Validate(&p, cat)

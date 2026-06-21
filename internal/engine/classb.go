@@ -6,6 +6,7 @@ import (
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/envelope"
+	"dgsbot/internal/plan"
 )
 
 // components — на какие слагаемые раскладывается метрика отчёта (для contribution).
@@ -19,6 +20,17 @@ var components = map[string][]string{
 // должен понизить метод до compare.
 func SupportsContribution(slug string) bool {
 	return len(components[slug]) > 0
+}
+
+// NormalizeMethod приводит method плана к выполнимому виду: contribution осмыслен
+// только для отчётов с раскладкой на компоненты (payment). Для прочих отчётов он
+// вырождается в пустоту — понижаем до compare (суммарное изменение честнее пустой
+// раскладки). Единый инвариант для прода и eval, чтобы бенчмарк мерил то, что
+// реально увидит пользователь, а не сырой ответ модели.
+func NormalizeMethod(p *plan.AnalysisPlan) {
+	if p.Method == "contribution" && !SupportsContribution(p.Report) {
+		p.Method = "compare"
+	}
 }
 
 // Compare сравнивает суммарную метрику между двумя периодами.
