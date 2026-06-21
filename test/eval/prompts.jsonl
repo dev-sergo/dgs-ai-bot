@@ -64,7 +64,7 @@
 {"query": "возвраты за текущий месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
 {"query": "сумма возвратов за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
 {"query": "количество чеков за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}
-{"query": "сколько чеков за неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days|this_week"}}
+{"query": "сколько чеков за неделю", "expect": {"intent": "report", "report": "payment|paycheck", "period_token": "last_7_days|this_week"}}
 {"query": "количество возвратов сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}
 {"query": "сколько вернули товаров за неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days|this_week"}}
 {"query": "сравни выручку с прошлой неделей", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "compare", "period_token": "last_7_days|this_week"}}
