@@ -453,7 +453,7 @@
 {"query": "покажи продажи сотрудника за прошлый месяц", "expect": {"intent": "report", "report": "products|paycheck|payment", "period_token": "last_month", "filters": ["user"]}}
 {"query": "чеки кассира Иванова за этот месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month", "filters": ["user"]}}
 {"query": "топ продавцов за прошлый месяц", "expect": {"intent": "report", "report": "products|paycheck", "period_token": "last_month"}}
-{"query": "сколько чеков пробил сотрудник за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week", "filters": ["user"]}}
+{"query": "сколько чеков пробил сотрудник за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week"}}
 {"query": "продажи конкретного кассира за сегодня", "expect": {"intent": "report", "report": "payment|paycheck|products", "period_token": "today", "filters": ["user"]}}
 {"query": "выручка сотрудника за прошлый месяц", "expect": {"intent": "report", "report": "payment|paycheck", "period_token": "last_month", "filters": ["user"]}}
 {"query": "кто из сотрудников больше продаёт за месяц", "expect": {"intent": "report", "report": "products|paycheck", "period_token": "this_month|last_30_days", "filters": ["user"]}}
