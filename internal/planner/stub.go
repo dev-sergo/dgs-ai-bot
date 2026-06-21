@@ -34,10 +34,18 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 
 	report := "payment"
 	metrics := []string{"sum_all"}
+	// Маршрут по отчётам. «чеки/чеков» (мн.) — paycheck, но «средний чек» — payment.
 	isProducts := strings.Contains(q, "товар") || strings.Contains(q, "продукт") || strings.Contains(q, "блюд")
-	if isProducts {
+	switch {
+	case isProducts:
 		report = "products"
 		metrics = []string{"amount", "quantity"}
+	case containsAny(q, "чеки", "чеков", "кассов", "транзакц"):
+		report = "paycheck"
+		metrics = []string{"paid"}
+	case containsAny(q, "заказ", "доставк", "самовывоз"):
+		report = "orders"
+		metrics = []string{"paid"}
 	}
 
 	// Рейтинг товаров: «лучшие/топ/самый» → desc, «худшие/меньше всего» → asc.
@@ -99,10 +107,14 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 		Method:  "plain",
 		Output:  plan.Output{Format: "text"},
 	}
-	if report == "payment" {
+	switch report {
+	case "payment":
 		p.GroupBy = []string{"date"}
-	} else {
+	case "products":
 		p.GroupBy = []string{"name"}
+	default:
+		// paycheck/orders — измерение по умолчанию (number) проставит оркестратор.
+		p.GroupBy = []string{}
 	}
 	p.Confidence = 0.9
 	return p, nil

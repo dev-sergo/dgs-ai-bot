@@ -1,8 +1,14 @@
-{"query": "покажи выручку за последнюю неделю", "expect": {"intent": "report", "envelope": true, "non_empty_text": true, "contains": ["Выручка"], "summary": {"sum_all": 1041.74}}}
+{"query": "выручка за вчера", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"], "summary": {"sum_all": 510.74}}}
+{"query": "покажи выручку за последнюю неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"], "summary": {"sum_all": 1041.74}}}
+{"query": "выручка за сегодня", "expect": {"intent": "report", "envelope": true, "contains": ["данных для отчёта нет"], "summary": {"sum_all": 0}}}
+{"query": "покажи чеки за неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Чеки"], "summary": {"paid": 2820.83}}}
+{"query": "покажи заказы за неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Заказы"], "summary": {"paid": 3679.09}}}
 {"query": "какие товары продавались за месяц", "expect": {"intent": "report", "envelope": true, "non_empty_text": true}}
+{"query": "топ товаров за месяц", "expect": {"intent": "report", "envelope": true, "contains": ["Длинное название самой большой пиццы в мире"], "summary": {"quantity": 98}}}
 {"query": "какой товар самый популярный за месяц", "expect": {"intent": "report", "envelope": true, "rows": 1}}
-{"query": "покажи выручку", "expect": {"clarify": true, "envelope": false, "non_empty_text": true, "contains": ["период"]}}
+{"query": "сравни выручку за этот месяц", "expect": {"intent": "report", "envelope": true, "narrative": true, "summary": {"value_now": 2471.74, "value_prev": 3304.39}}}
+{"query": "почему упала выручка за неделю", "expect": {"intent": "report", "envelope": true, "narrative": true, "contains": ["Наличные"], "summary": {"value_now": 1041.74}}}
+{"query": "покажи выручку", "expect": {"clarify": true, "envelope": false, "contains": ["период"]}}
 {"query": "что ты умеешь", "expect": {"intent": "help", "envelope": false, "non_empty_text": true}}
 {"query": "привет", "expect": {"intent": "smalltalk", "envelope": false, "non_empty_text": true}}
 {"query": "расскажи анекдот", "expect": {"intent": "off_topic", "envelope": false, "non_empty_text": true}}
-{"query": "почему упала выручка за месяц", "expect": {"intent": "report", "envelope": true, "non_empty_text": true, "narrative": true}}
