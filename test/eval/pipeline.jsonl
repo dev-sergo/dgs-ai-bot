@@ -1,0 +1,8 @@
+{"query": "покажи выручку за последнюю неделю", "expect": {"intent": "report", "envelope": true, "non_empty_text": true, "contains": ["Выручка"], "summary": {"sum_all": 1041.74}}}
+{"query": "какие товары продавались за месяц", "expect": {"intent": "report", "envelope": true, "non_empty_text": true}}
+{"query": "какой товар самый популярный за месяц", "expect": {"intent": "report", "envelope": true, "rows": 1}}
+{"query": "покажи выручку", "expect": {"clarify": true, "envelope": false, "non_empty_text": true, "contains": ["период"]}}
+{"query": "что ты умеешь", "expect": {"intent": "help", "envelope": false, "non_empty_text": true}}
+{"query": "привет", "expect": {"intent": "smalltalk", "envelope": false, "non_empty_text": true}}
+{"query": "расскажи анекдот", "expect": {"intent": "off_topic", "envelope": false, "non_empty_text": true}}
+{"query": "почему упала выручка за месяц", "expect": {"intent": "report", "envelope": true, "non_empty_text": true, "narrative": true}}
