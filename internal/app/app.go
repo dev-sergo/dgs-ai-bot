@@ -100,8 +100,12 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 		// Невалидно или нужно уточнение — отдаём как есть (ветка clarify/refusal).
 		if ans.Validation.NeedClarify {
 			ans.Text = ans.Validation.ClarifyPrompt
-			a.remember(sessionID, text, ans.Text)
+		} else {
+			// План вышел за white-list (поле/фильтр/разбивка вне каталога) —
+			// честно говорим, что так не умеем, а НЕ возвращаем пустой ответ.
+			ans.Text = a.outOfScopeMessage()
 		}
+		a.remember(sessionID, text, ans.Text)
 		return ans, nil
 	}
 
@@ -238,6 +242,14 @@ func (a *App) replyForIntent(p plan.AnalysisPlan) string {
 	default:
 		return a.helpText()
 	}
+}
+
+// outOfScopeMessage — честный ответ, когда запрос вышел за white-list
+// (запрошены поля/разбивки/фильтры, которых нет в каталоге). Не строим неверный
+// отчёт и не молчим — объясняем границы и подсказываем, что доступно.
+func (a *App) outOfScopeMessage() string {
+	return "Такой разрез я пока не умею собирать — доступны только отчёты из каталога " +
+		"и их стандартные разбивки. " + a.helpHint()
 }
 
 // helpText — список возможностей, собранный из каталога (не выдумывается моделью).

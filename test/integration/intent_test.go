@@ -101,6 +101,35 @@ func TestEmptyPeriodIsHonest(t *testing.T) {
 	}
 }
 
+// План вне white-list (разбивка по полю, которого нет в каталоге) → честное
+// «не умею», а НЕ пустой ответ. Раньше такой план возвращался с пустым Text.
+func TestOutOfScopeIsHonest(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Version: "1", Intent: "report", Class: plan.ClassA,
+		Report: "payment", Metrics: []string{"sum_all"},
+		GroupBy: []string{"product_category"}, // у payment такого измерения нет
+		Period:  plan.Period{Kind: "relative", Token: "this_month"},
+		Method:  "plain", Output: plan.Output{Format: "text"}, Confidence: 0.9,
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка по категориям")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope != nil {
+		t.Fatal("на запрос вне white-list отчёт строить нельзя")
+	}
+	if ans.Validation.OK {
+		t.Fatalf("ожидалась невалидность плана: %+v", ans.Validation)
+	}
+	if ans.Text == "" {
+		t.Fatal("ответ не должен быть пустым — нужно честное «не умею»")
+	}
+	if !strings.Contains(ans.Text, "не умею") {
+		t.Errorf("ожидалось честное объяснение границ, got: %s", ans.Text)
+	}
+}
+
 // contribution по отчёту без раскладки понижается до compare (не выдаёт пустоту).
 func TestContributionDowngradesWhenUnsupported(t *testing.T) {
 	pl := fixedPlanner{p: plan.AnalysisPlan{
