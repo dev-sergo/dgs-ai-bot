@@ -60,10 +60,12 @@ type Expect struct {
 	Rows         *int               `json:"rows,omitempty"`           // ожидаемое число строк (напр. top_n=1)
 }
 
-// Case — один кейс набора.
+// Case — один кейс набора. History — предшествующие реплики пользователя в той же
+// сессии (для проверки многоходовых сценариев, в т.ч. инъекций из истории диалога).
 type Case struct {
-	Query  string `json:"query"`
-	Expect Expect `json:"expect"`
+	History []string `json:"history,omitempty"`
+	Query   string   `json:"query"`
+	Expect  Expect   `json:"expect"`
 }
 
 // Result — итог по кейсу.
@@ -92,8 +94,23 @@ func Run(ctx context.Context, a *app.App, tenantID string, cases []Case) []Resul
 	for i, c := range cases {
 		start := time.Now()
 		sess := fmt.Sprintf("pipeval-%d", i)
+		// Проигрываем предысторию в той же сессии — она ляжет в историю диалога.
+		var setupErr error
+		for _, h := range c.History {
+			if _, err := a.Ask(ctx, tenantID, sess, h); err != nil {
+				setupErr = err
+				break
+			}
+		}
+		r := Result{Query: c.Query, LatencyMS: time.Since(start).Milliseconds()}
+		if setupErr != nil {
+			r.Err = setupErr
+			out = append(out, r)
+			continue
+		}
 		ans, err := a.Ask(ctx, tenantID, sess, c.Query)
-		r := Result{Query: c.Query, Answer: ans, LatencyMS: time.Since(start).Milliseconds(), Err: err}
+		r.Answer, r.Err = ans, err
+		r.LatencyMS = time.Since(start).Milliseconds()
 		if err == nil {
 			r.Mismatch = Check(ans, c.Expect)
 		}
