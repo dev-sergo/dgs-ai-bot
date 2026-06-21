@@ -1,0 +1,7 @@
+{"history": ["выручка за неделю"], "query": "а за прошлый месяц?", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"]}}
+{"history": ["топ товаров за месяц"], "query": "а за прошлую неделю?", "expect": {"intent": "report", "envelope": true, "contains": ["Товары"]}}
+{"history": ["покажи заказы за вчера"], "query": "а за сегодня?", "expect": {"intent": "report", "contains": ["Заказы"]}}
+{"history": ["сколько чеков за неделю"], "query": "а за прошлый месяц?", "expect": {"intent": "report", "envelope": true, "contains": ["Чеки"]}}
+{"history": ["сравни выручку за этот месяц"], "query": "а за прошлый?", "expect": {"intent": "report", "envelope": true, "narrative": true, "contains": ["Выручка"]}}
+{"history": ["выручка за неделю"], "query": "а по Москве?", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"]}}
+{"history": ["выручка за неделю", "а за прошлый месяц?"], "query": "а по карте?", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"]}}

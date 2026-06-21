@@ -65,5 +65,8 @@ pipeval-host: ## full-pipeline бенчмарк через реальный LLM 
 	PIPEVAL_CASES=$${PIPEVAL_CASES:-test/eval/pipeline.jsonl} \
 	./bin/pipeval-host
 
+pipeval-followups-host: ## follow-up (контекст диалога) через реальный LLM — host-only (Stub историю игнорирует)
+	$(MAKE) pipeval-host PIPEVAL_CASES=test/eval/pipeline-followups.jsonl
+
 sh:          ## shell в go-контейнере
 	$(GO_RUN) sh
