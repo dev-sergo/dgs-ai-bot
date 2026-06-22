@@ -170,7 +170,7 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 		if err != nil {
 			return ans, err
 		}
-		metric := primaryMetric(p)
+		metric := primaryMetric(p, rep)
 		if p.Method == "compare" {
 			env = engine.Compare(rep, metric, resNow, resPrev, tenantID, currency, period, periodPrev)
 		} else {
@@ -378,7 +378,15 @@ func (a *App) comparePeriod(p plan.AnalysisPlan, cur dates.Range) (dates.Range, 
 	return dates.PrevRange(cur)
 }
 
-func primaryMetric(p plan.AnalysisPlan) string {
+// primaryMetric выбирает метрику для compare/contribution. Предпочитает денежное
+// (RUB) поле отчёта: модель иногда ставит первым измерение (date/name), и наивный
+// Metrics[0] дал бы суммирование «date» → 0 → ложное «данных нет».
+func primaryMetric(p plan.AnalysisPlan, rep catalog.Report) string {
+	for _, m := range p.Metrics {
+		if f, ok := rep.FieldByKey(m); ok && f.Unit == "RUB" {
+			return m
+		}
+	}
 	if len(p.Metrics) > 0 {
 		return p.Metrics[0]
 	}

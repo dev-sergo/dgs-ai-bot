@@ -130,6 +130,29 @@ func TestOutOfScopeIsHonest(t *testing.T) {
 	}
 }
 
+// compare не должен суммировать измерение, если модель поставила его первым в metrics
+// (раньше primaryMetric брал Metrics[0]="date" → сумма 0 → ложное «данных нет»).
+func TestCompareIgnoresDimensionFirstMetric(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Version: "1", Intent: "report", Class: plan.ClassB,
+		Report: "payment", Metrics: []string{"date", "sum_all"}, // date первым — ловушка
+		Period:    plan.Period{Kind: "relative", Token: "last_7_days"},
+		CompareTo: &plan.Period{Kind: "relative", Token: "prev_period"},
+		Method:    "compare", Output: plan.Output{Format: "text"}, Confidence: 0.9,
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "сравни выручку с прошлой неделей")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope == nil {
+		t.Fatalf("ожидался envelope (выручка за неделю есть), got %q", ans.Text)
+	}
+	if ans.Envelope.Summary["value_now"] != 1041.74 {
+		t.Errorf("value_now=%v, ожидалась выручка 1041.74 (метрика date проигнорирована)", ans.Envelope.Summary["value_now"])
+	}
+}
+
 // contribution по отчёту без раскладки понижается до compare (не выдаёт пустоту).
 // paycheck не раскладывается ни по колонкам, ни по измерению (в отличие от payment/products).
 func TestContributionDowngradesWhenUnsupported(t *testing.T) {
