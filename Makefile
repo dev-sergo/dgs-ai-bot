@@ -54,6 +54,15 @@ eval-host:   ## eval-бенчмарк планировщика против ри
 	EVAL_PROMPTS=$${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
 	./bin/eval-host
 
+serve-host:  ## поднять сервер НА ХОСТЕ с реальной LLM (достаёт LAN-риг, как eval-host) → http://localhost:8088
+	$(GO_RUN) sh -c "GOOS=$(HOST_OS) GOARCH=$(HOST_ARCH) go build -o bin/server ./cmd/server"
+	PLANNER_MODE=llm \
+	HTTP_ADDR=$${HTTP_ADDR:-:8088} \
+	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	FIXTURES_PATH=$${FIXTURES_PATH:-docs/contracts/fixtures} \
+	./bin/server
+
 pipeval:     ## full-pipeline бенчмарк по ответу (Stub+фикстуры, детерминированно, без рига)
 	$(GO_RUN) sh -c "PLANNER_MODE=stub go run ./cmd/pipeval"
 
