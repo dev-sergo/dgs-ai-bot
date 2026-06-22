@@ -84,6 +84,9 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	if err != nil {
 		return ans, err
 	}
+	// Детерминированная маршрутизация «какой товар виноват» → products+contribution
+	// (раскладка изменения по товарам): модель такие формулировки путает с top_n/compare.
+	planner.RefineProductContribution(text, &p)
 	ans.Plan = p
 
 	// Не-данные интенты (help/smalltalk/off_topic) — отвечаем словами, без отчётов.

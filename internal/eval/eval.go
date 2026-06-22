@@ -112,8 +112,9 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 
 		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
 		if err == nil {
-			// Та же нормализация, что в проде (app.go), — бенчмарк должен мерить
-			// итоговый план, а не сырой ответ модели.
+			// Та же пост-обработка, что в проде (app.go), — бенчмарк меряет итоговый
+			// план, а не сырой ответ модели.
+			planner.RefineProductContribution(c.Query, &p)
 			engine.NormalizeMethod(&p)
 			r.Plan = p
 			if p.IsReport() {
