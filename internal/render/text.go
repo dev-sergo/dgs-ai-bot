@@ -30,10 +30,23 @@ func Text(e envelope.Envelope) string {
 		return b.String()
 	}
 
+	// При пустом предыдущем периоде колонка «Доля изменения» бессмыслена —
+	// убираем её, чтобы таблица не противоречила нарративу.
+	cols := e.Columns
+	if e.Meta["empty_prev"] == true {
+		filtered := make([]envelope.Column, 0, len(cols))
+		for _, c := range cols {
+			if c.Key != "share" {
+				filtered = append(filtered, c)
+			}
+		}
+		cols = filtered
+	}
+
 	// Заголовки и ширины колонок.
-	headers := make([]string, len(e.Columns))
-	widths := make([]int, len(e.Columns))
-	for i, c := range e.Columns {
+	headers := make([]string, len(cols))
+	widths := make([]int, len(cols))
+	for i, c := range cols {
 		headers[i] = c.Label
 		widths[i] = utf8.RuneCountInString(c.Label)
 	}
@@ -45,8 +58,8 @@ func Text(e envelope.Envelope) string {
 		shown = shown[:maxRows]
 	}
 	for _, r := range shown {
-		row := make([]string, len(e.Columns))
-		for i, c := range e.Columns {
+		row := make([]string, len(cols))
+		for i, c := range cols {
 			s := formatCell(r[c.Key], c.Unit, e.Currency)
 			row[i] = s
 			if w := utf8.RuneCountInString(s); w > widths[i] {
@@ -70,7 +83,7 @@ func Text(e envelope.Envelope) string {
 	// ключи Summary (value_now/delta…) не совпадают с колонками — иначе была бы
 	// пустая строка «Итого:» (сводка такого отчёта уже в нарративе).
 	var totals strings.Builder
-	for _, c := range e.Columns {
+	for _, c := range cols {
 		if v, ok := e.Summary[c.Key]; ok {
 			fmt.Fprintf(&totals, "  %s: %s\n", c.Label, formatNumber(v, c.Unit, e.Currency))
 		}

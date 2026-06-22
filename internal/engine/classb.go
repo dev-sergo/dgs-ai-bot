@@ -178,6 +178,16 @@ func contribEnvelope(rep catalog.Report, metric, firstColLabel string, rows []co
 		})
 	}
 
+	meta := map[string]any{
+		"method":      "contribution",
+		"metric":      metric,
+		"period_prev": periodPrev.From + "…" + periodPrev.To,
+	}
+	// Когда предыдущий период пуст, «Доля изменения» — бессмыслица (нет базы для сравнения).
+	// Флаг сигнализирует рендеру скрыть эту колонку, чтобы не противоречить нарративу.
+	if vPrev == 0 {
+		meta["empty_prev"] = true
+	}
 	return envelope.Envelope{
 		Type:     rep.Slug + "_contribution",
 		TenantID: tenantID,
@@ -191,11 +201,7 @@ func contribEnvelope(rep catalog.Report, metric, firstColLabel string, rows []co
 			"delta_abs":  round2(vNow - vPrev),
 			"delta_pct":  pct(vNow, vPrev),
 		},
-		Meta: map[string]any{
-			"method":      "contribution",
-			"metric":      metric,
-			"period_prev": periodPrev.From + "…" + periodPrev.To,
-		},
+		Meta: meta,
 	}
 }
 
