@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 	"time"
@@ -30,6 +31,11 @@ const minConfidence = 0.5
 // lowConfidencePrompt — переспрос при низкой уверенности планировщика.
 const lowConfidencePrompt = "Не уверен, что правильно понял запрос. " +
 	"Уточните, какой отчёт нужен (Выручка, Товары, Чеки, Заказы) и за какой период."
+
+// unknownPeriodPrompt — переспрос когда модель выдала токен периода вне white-list.
+// Не бросаем 500 — просто уточняем у пользователя конкретный период.
+const unknownPeriodPrompt = "Не распознал период. Уточните: сегодня, вчера, " +
+	"последние 7 или 30 дней, эта или прошлая неделя, этот или прошлый месяц."
 
 // Answer — результат обработки запроса.
 type Answer struct {
@@ -146,8 +152,17 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	}
 
 	// Резолв периода в абсолютные даты по таймзоне тенанта.
+	// Неизвестный токен — clarify, а не 500: модель иногда генерирует токены вне
+	// white-list (last_14_days, last_week и т.п.) — лучше переспросить, чем крашиться.
 	from, to, err := a.resolvePeriod(p.Period, t)
 	if err != nil {
+		var unknownTok *dates.ErrUnknownToken
+		if errors.As(err, &unknownTok) {
+			ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: unknownPeriodPrompt}
+			ans.Text = unknownPeriodPrompt
+			a.remember(sessionID, text, ans.Text)
+			return ans, nil
+		}
 		return ans, err
 	}
 

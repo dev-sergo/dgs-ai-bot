@@ -1,6 +1,7 @@
 package dates
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -27,8 +28,12 @@ func TestResolve(t *testing.T) {
 		{"today", "19.06.2026", "19.06.2026"},
 		{"yesterday", "18.06.2026", "18.06.2026"},
 		{"last_7_days", "13.06.2026", "19.06.2026"},
+		{"last_14_days", "06.06.2026", "19.06.2026"},
 		{"last_30_days", "21.05.2026", "19.06.2026"},
+		{"last_90_days", "22.03.2026", "19.06.2026"},
+		{"last_3_months", "19.03.2026", "19.06.2026"},
 		{"this_week", "15.06.2026", "19.06.2026"}, // понедельник 15-е
+		{"last_week", "08.06.2026", "14.06.2026"}, // прошлая неделя пн 8-е — вс 14-е
 		{"this_month", "01.06.2026", "19.06.2026"},
 		{"last_month", "01.05.2026", "31.05.2026"},
 	}
@@ -70,7 +75,15 @@ func TestPrevRange(t *testing.T) {
 }
 
 func TestResolveUnknown(t *testing.T) {
-	if _, err := Resolve("someday", time.UTC, time.Now()); err == nil {
+	_, err := Resolve("someday", time.UTC, time.Now())
+	if err == nil {
 		t.Error("ожидалась ошибка для неизвестного токена")
+	}
+	var e *ErrUnknownToken
+	if !errors.As(err, &e) {
+		t.Errorf("ожидался *ErrUnknownToken, got %T", err)
+	}
+	if e.Token != "someday" {
+		t.Errorf("Token=%q, want someday", e.Token)
 	}
 }

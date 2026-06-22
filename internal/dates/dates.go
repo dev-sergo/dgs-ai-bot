@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+// ErrUnknownToken возвращается когда токен периода не входит в white-list.
+// Типизированная ошибка позволяет оркестратору вернуть clarify вместо 500.
+type ErrUnknownToken struct{ Token string }
+
+func (e *ErrUnknownToken) Error() string {
+	return fmt.Sprintf("неизвестный токен периода: %q", e.Token)
+}
+
 // Range — абсолютный период (включительно), в формате DD.MM.YYYY для Dooglys.
 type Range struct {
 	From string
@@ -28,12 +36,19 @@ func Resolve(token string, loc *time.Location, now time.Time) (Range, error) {
 		return day(today.AddDate(0, 0, -1)), nil
 	case "last_7_days":
 		return Range{df(today.AddDate(0, 0, -6)), df(today)}, nil
+	case "last_14_days":
+		return Range{df(today.AddDate(0, 0, -13)), df(today)}, nil
 	case "last_30_days":
 		return Range{df(today.AddDate(0, 0, -29)), df(today)}, nil
 	case "this_week": // неделя с понедельника
 		offset := (int(today.Weekday()) + 6) % 7
 		mon := today.AddDate(0, 0, -offset)
 		return Range{df(mon), df(today)}, nil
+	case "last_week": // прошлая календарная неделя (пн–вс)
+		offset := (int(today.Weekday()) + 6) % 7
+		lastSun := today.AddDate(0, 0, -offset-1)
+		lastMon := lastSun.AddDate(0, 0, -6)
+		return Range{df(lastMon), df(lastSun)}, nil
 	case "this_month":
 		first := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc)
 		return Range{df(first), df(today)}, nil
@@ -42,8 +57,12 @@ func Resolve(token string, loc *time.Location, now time.Time) (Range, error) {
 		lastPrev := firstThis.AddDate(0, 0, -1)
 		firstPrev := time.Date(lastPrev.Year(), lastPrev.Month(), 1, 0, 0, 0, 0, loc)
 		return Range{df(firstPrev), df(lastPrev)}, nil
+	case "last_90_days":
+		return Range{df(today.AddDate(0, 0, -89)), df(today)}, nil
+	case "last_3_months":
+		return Range{df(today.AddDate(0, -3, 0)), df(today)}, nil
 	default:
-		return Range{}, fmt.Errorf("неизвестный токен периода: %q", token)
+		return Range{}, &ErrUnknownToken{Token: token}
 	}
 }
 
