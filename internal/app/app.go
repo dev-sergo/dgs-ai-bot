@@ -303,6 +303,11 @@ func (a *App) replyForIntent(p plan.AnalysisPlan) string {
 		}
 		return "Здравствуйте! Я помогаю с аналитикой вашего заведения. " + a.helpHint()
 	case "off_topic":
+		// Детерминированные пост-правила (напр. рейтинг по сотрудникам) кладут готовый
+		// честный текст в Reply — отдаём его. Иначе общий отказ вне компетенции.
+		if p.Reply != "" {
+			return p.Reply
+		}
 		return "Я отвечаю на вопросы по аналитике вашего заведения. " + a.helpHint()
 	default:
 		return a.helpText()

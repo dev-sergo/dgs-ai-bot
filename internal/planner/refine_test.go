@@ -62,3 +62,46 @@ func TestRefineProductContribution_SkipsPlainRanking(t *testing.T) {
 		t.Errorf("обычный рейтинг не должен стать contribution, got %s", p.Method)
 	}
 }
+
+// Рейтинг по сотрудникам → честный отказ (off_topic с готовым текстом).
+func TestRefineEmployeeRanking_Refuses(t *testing.T) {
+	queries := []string{
+		"топ продавцов за прошлый месяц",
+		"лучшие официанты за неделю",
+		"рейтинг кассиров",
+		"какой оператор обработал больше всего чеков",
+		"худшие сотрудники по выручке",
+		"кто из официантов продал меньше всего",
+		"самый эффективный продавец за месяц",
+	}
+	for _, q := range queries {
+		p := plan.AnalysisPlan{Intent: "report", Report: "products", Method: "top_n"}
+		RefineEmployeeRanking(q, &p)
+		if p.Intent != "off_topic" {
+			t.Errorf("%q: intent=%q, ожидался off_topic", q, p.Intent)
+		}
+		if p.Reply != EmployeeRankingReply {
+			t.Errorf("%q: Reply не выставлен", q)
+		}
+	}
+}
+
+// Легальные запросы рейтинг-по-сотрудникам НЕ трогает: фильтр по имени сотрудника,
+// рейтинг ТОВАРОВ, обычные отчёты со словом «сотрудник» без рейтинга.
+func TestRefineEmployeeRanking_SkipsLegal(t *testing.T) {
+	queries := []string{
+		"чеки сотрудника Иванова за неделю",
+		"проданные товары в чеках сотрудника за неделю",
+		"топ товаров за месяц",
+		"лучшие блюда за неделю",
+		"выручка официанта Петрова за месяц",
+		"средний чек за вчера",
+	}
+	for _, q := range queries {
+		p := plan.AnalysisPlan{Intent: "report", Report: "products", Method: "top_n"}
+		RefineEmployeeRanking(q, &p)
+		if p.Intent == "off_topic" {
+			t.Errorf("%q: ошибочно отклонён как off_topic", q)
+		}
+	}
+}
