@@ -1,0 +1,361 @@
+docker run --rm -v /Users/admin/work/dgs-ai-bot:/app -w /app -v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build -e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 golang:1.23 sh -c "GOOS=darwin GOARCH=arm64 go build -o bin/pipeval-host ./cmd/pipeval"
+PLANNER_MODE=llm PIPEVAL_DUMP=1 \
+	LLM_BASE_URL=${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	PIPEVAL_CASES=test/eval/quality.jsonl \
+	./bin/pipeval-host
+pipeval: 25 кейсов, planner=llm, данные=фикстуры(docs/contracts/fixtures)
+
+2026/06/22 12:07:02 INFO ask tenant=mock_single session=pipeval-0 intent=report outcome=answer latency_ms=3421 report=payment method=plain period=last_7_days
+2026/06/22 12:07:05 INFO ask tenant=mock_single session=pipeval-1 intent=report outcome=answer latency_ms=3271 report=payment method=plain period=yesterday
+2026/06/22 12:07:08 INFO ask tenant=mock_single session=pipeval-2 intent=report outcome=answer latency_ms=3169 report=payment method=plain period=last_30_days
+2026/06/22 12:07:12 INFO ask tenant=mock_single session=pipeval-3 intent=report outcome=answer latency_ms=3896 report=payment method=plain period=last_30_days
+2026/06/22 12:07:16 INFO ask tenant=mock_single session=pipeval-4 intent=report outcome=answer latency_ms=4225 report=products method=top_n period=last_30_days
+2026/06/22 12:07:22 INFO ask tenant=mock_single session=pipeval-5 intent=report outcome=answer latency_ms=5458 report=products method=top_n period=last_30_days
+2026/06/22 12:07:26 INFO ask tenant=mock_single session=pipeval-6 intent=report outcome=answer latency_ms=4239 report=products method=top_n period=last_30_days
+2026/06/22 12:07:31 INFO ask tenant=mock_single session=pipeval-7 intent=report outcome=answer latency_ms=5109 report=products method=top_n period=last_7_days
+2026/06/22 12:07:36 INFO ask tenant=mock_single session=pipeval-8 intent=report outcome=answer latency_ms=4976 report=products method=top_n period=last_30_days
+2026/06/22 12:07:46 INFO ask tenant=mock_single session=pipeval-9 intent=report outcome=answer latency_ms=9693 report=payment method=contribution period=last_30_days
+2026/06/22 12:07:58 INFO ask tenant=mock_single session=pipeval-10 intent=report outcome=answer latency_ms=12156 report=products method=contribution period=last_30_days
+2026/06/22 12:08:08 INFO ask tenant=mock_single session=pipeval-11 intent=report outcome=answer latency_ms=9719 report=payment method=compare period=last_7_days
+2026/06/22 12:08:17 INFO ask tenant=mock_single session=pipeval-12 intent=report outcome=answer latency_ms=8858 report=payment method=compare period=last_30_days
+2026/06/22 12:08:20 INFO ask tenant=mock_single session=pipeval-13 intent=report outcome=answer latency_ms=3805 report=paycheck method=plain period=last_7_days
+2026/06/22 12:08:25 INFO ask tenant=mock_single session=pipeval-14 intent=report outcome=answer latency_ms=4905 report=orders method=plain period=today
+2026/06/22 12:08:31 INFO ask tenant=mock_single session=pipeval-15 intent=report outcome=answer latency_ms=5812 report=orders method=plain period=last_30_days
+2026/06/22 12:08:35 INFO ask tenant=mock_single session=pipeval-16 intent=report outcome=answer latency_ms=3656 report=payment method=plain period=last_7_days
+2026/06/22 12:08:40 INFO ask tenant=mock_single session=pipeval-17 intent=report outcome=answer latency_ms=5183 report=payment method=plain period=today
+2026/06/22 12:08:45 INFO ask tenant=mock_single session=pipeval-18 intent=report outcome=clarify latency_ms=5230 report=payment method=plain period=""
+2026/06/22 12:08:45 INFO ask tenant=mock_single session=pipeval-19 intent=help outcome=help latency_ms=273
+2026/06/22 12:08:47 INFO ask tenant=mock_single session=pipeval-20 intent=smalltalk outcome=smalltalk latency_ms=1447
+2026/06/22 12:08:47 INFO ask tenant=mock_single session=pipeval-21 intent=off_topic outcome=off_topic latency_ms=0
+2026/06/22 12:08:47 INFO ask tenant=mock_single session=pipeval-22 intent=off_topic outcome=off_topic latency_ms=0
+2026/06/22 12:08:51 INFO ask tenant=mock_single session=pipeval-23 intent=report outcome=answer latency_ms=4422 report=products method=top_n period=last_30_days
+2026/06/22 12:08:55 INFO ask tenant=mock_single session=pipeval-24 intent=report outcome=answer latency_ms=3685 report=products method=plain period=last_30_days
+[PASS]  3422ms  выручка за неделю
+        план: intent=report report=payment method=plain order= period=last_7_days metrics=[date sum_all kol_vo_chekov sredniy_chek]
+        ─── ответ ───
+        | Выручка — период 13.06.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Дата        Выручка   Кол-во чеков  Средний чек
+        | ----------  --------  ------------  -----------
+        | 2026-06-18  510,74 ₽  4             127,69 ₽   
+        | 2026-06-16  115,00 ₽  1             115,00 ₽   
+        | 2026-06-15  416,00 ₽  1             416,00 ₽   
+        | 
+        | Итого:
+        |   Выручка: 1 041,74 ₽
+        |   Кол-во чеков: 6
+        |   Средний чек: 173,62 ₽
+
+[PASS]  3271ms  сколько заработали вчера
+        план: intent=report report=payment method=plain order= period=yesterday metrics=[sum_all]
+        ─── ответ ───
+        | Выручка — период 18.06.2026 … 18.06.2026 (Europe/Moscow)
+        | 
+        | Дата        Выручка 
+        | ----------  --------
+        | 2026-06-18  510,74 ₽
+        | 
+        | Итого:
+        |   Выручка: 510,74 ₽
+
+[PASS]  3169ms  средний чек за месяц
+        план: intent=report report=payment method=plain order= period=last_30_days metrics=[sredniy_chek]
+        ─── ответ ───
+        | Выручка — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Дата        Средний чек
+        | ----------  -----------
+        | 2026-06-18  127,68 ₽   
+        | 2026-06-16  115,00 ₽   
+        | 2026-06-15  416,00 ₽   
+        | 2026-06-03  100,00 ₽   
+        | 2026-06-02  500,00 ₽   
+        | 2026-06-01  82,50 ₽    
+        | 2026-05-25  49,87 ₽    
+
+[PASS]  3896ms  выручка картой за месяц
+        план: intent=report report=payment method=plain order= period=last_30_days metrics=[date sum_card sum_all]
+        ─── ответ ───
+        | Выручка — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Дата        Карта     Выручка   
+        | ----------  --------  ----------
+        | 2026-06-18  257,87 ₽  510,74 ₽  
+        | 2026-06-16  0,00 ₽    115,00 ₽  
+        | 2026-06-15  0,00 ₽    416,00 ₽  
+        | 2026-06-03  0,00 ₽    100,00 ₽  
+        | 2026-06-02  500,00 ₽  1 000,00 ₽
+        | 2026-06-01  270,00 ₽  330,00 ₽  
+        | 2026-05-25  49,87 ₽   49,87 ₽   
+        | 
+        | Итого:
+        |   Карта: 1 077,74 ₽
+        |   Выручка: 2 521,61 ₽
+
+[PASS]  4225ms  какой товар продаётся лучше всего за месяц
+        план: intent=report report=products method=top_n order=desc period=last_30_days metrics=[name quantity amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                                     Кол-во  Выручка    
+        | -------------------------------------------  ------  -----------
+        | Длинное название самой большой пиццы в мире  25      11 850,79 ₽
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+
+[PASS]  5458ms  какой товар продаётся хуже всего за месяц
+        план: intent=report report=products method=top_n order=asc period=last_30_days metrics=[name quantity amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название           Кол-во  Выручка
+        | -----------------  ------  -------
+        | Bon-Aqua 0.26 мл.  0       0,00 ₽ 
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+
+[PASS]  4239ms  топ 5 товаров за месяц
+        план: intent=report report=products method=top_n order=desc period=last_30_days metrics=[name quantity amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                                     Кол-во  Выручка    
+        | -------------------------------------------  ------  -----------
+        | Длинное название самой большой пиццы в мире  25      11 850,79 ₽
+        | Котлета из говядины 2.0                      13      3 780,00 ₽ 
+        | Васаби                                       12      779,98 ₽   
+        | Американо 250 мл.                            8       0,00 ₽     
+        | Влажная салфетка                             8       117,00 ₽   
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+
+[PASS]  5109ms  худшие товары за неделю
+        план: intent=report report=products method=top_n order=asc period=last_7_days metrics=[name quantity amount profit discount_sum]
+        ─── ответ ───
+        | Товары — период 13.06.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                              Кол-во  Выручка   Ожидаемая прибыль  Сумма скидки
+        | ------------------------------------  ------  --------  -----------------  ------------
+        | Bon-Aqua 0.26 мл.                     0       0,00 ₽    0,00 ₽             0,00 ₽      
+        | Колбаса                               0       0,00 ₽    0,00 ₽             0,00 ₽      
+        | Английский завтрак                    1       279,12 ₽  279,12 ₽           0,84 ₽      
+        | Бизнес ланч                           1       300,00 ₽  300,00 ₽           0,00 ₽      
+        | Биолимонад "Мед и травы" 0.33         1       150,00 ₽  95,00 ₽            0,00 ₽      
+        | Борщ. (300)                           1       129,00 ₽  0,00 ₽             0,00 ₽      
+        | Вода Сценарий 10, 12, 13, 14, 15, 18  1       115,00 ₽  115,00 ₽           0,00 ₽      
+        | Домашний торт                         1       161,00 ₽  -18,00 ₽           18,00 ₽     
+        | Кофе                                  3       119,88 ₽  119,88 ₽           0,12 ₽      
+        | Крем-суп(суп-пюре)                    3       538,00 ₽  -59,00 ₽           59,00 ₽     
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+        |   Ожидаемая прибыль: 15 505,77 ₽
+        |   Сумма скидки: 1 936,65 ₽
+
+[PASS]  4976ms  что не покупают за месяц
+        план: intent=report report=products method=top_n order=asc period=last_30_days metrics=[name quantity amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                              Кол-во  Выручка 
+        | ------------------------------------  ------  --------
+        | Bon-Aqua 0.26 мл.                     0       0,00 ₽  
+        | Колбаса                               0       0,00 ₽  
+        | Английский завтрак                    1       279,12 ₽
+        | Бизнес ланч                           1       300,00 ₽
+        | Биолимонад "Мед и травы" 0.33         1       150,00 ₽
+        | Борщ. (300)                           1       129,00 ₽
+        | Вода Сценарий 10, 12, 13, 14, 15, 18  1       115,00 ₽
+        | Домашний торт                         1       161,00 ₽
+        | Кофе                                  3       119,88 ₽
+        | Крем-суп(суп-пюре)                    3       538,00 ₽
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+
+[PASS]  9693ms  почему упала выручка за месяц
+        план: intent=report report=payment method=contribution order= period=last_30_days metrics=[sum_all sredniy_chek]
+        ─── ответ ───
+        | Выручка — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Общий доход кафе снизился на 4261.82 рубля или на 62.83% с 6783.43 до 2521.61 рубля. Основное падение произошло за счет снижения доходов от оплаты картой на 3313.13 рубля, наличными на 756.69 рубля и онлайн-оплат на 192 рубля.
+        | 
+        | Компонента  Изменение    Текущий     Предыдущий  Доля изменения
+        | ----------  -----------  ----------  ----------  --------------
+        | Карта       -3 313,13 ₽  1 077,74 ₽  4 390,87 ₽  77,74 %       
+        | Наличные    -756,69 ₽    1 443,87 ₽  2 200,56 ₽  17,76 %       
+        | Онлайн      -192,00 ₽    0,00 ₽      192,00 ₽    4,51 %        
+        | СБП         0,00 ₽       0,00 ₽      0,00 ₽      0,00 %        
+        | 
+        | Итого:
+
+[PASS] 12156ms  какой товар виноват в падении выручки за месяц
+        план: intent=report report=products method=contribution order= period=last_30_days metrics=[amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | За период с 21.05.2026 по 19.06.2026 выручка кафе осталась неизменной, составив 19683.77 RUB, как и в предыдущем периоде. Ни один из продуктов не изменил свой вклад в выручку, все значения продаж остались на уровне предыдущего периода.
+        | 
+        | Название                       Изменение  Текущий   Предыдущий  Доля изменения
+        | -----------------------------  ---------  --------  ----------  --------------
+        | Bon-Aqua 0.26 мл.              0,00 ₽     0,00 ₽    0,00 ₽      0,00 %        
+        | Американо 250 мл.              0,00 ₽     0,00 ₽    0,00 ₽      0,00 %        
+        | Английский завтрак             0,00 ₽     279,12 ₽  279,12 ₽    0,00 %        
+        | Бизнес ланч                    0,00 ₽     300,00 ₽  300,00 ₽    0,00 %        
+        | Биолимонад "Мед и травы" 0.33  0,00 ₽     150,00 ₽  150,00 ₽    0,00 %        
+        | Борщ. (300)                    0,00 ₽     129,00 ₽  129,00 ₽    0,00 %        
+        | Васаби                         0,00 ₽     779,98 ₽  779,98 ₽    0,00 %        
+        | Весовой                        0,00 ₽     74,02 ₽   74,02 ₽     0,00 %        
+        | Влажная салфетка               0,00 ₽     117,00 ₽  117,00 ₽    0,00 %        
+        | Вода                           0,00 ₽     80,00 ₽   80,00 ₽     0,00 %        
+        | 
+        | Итого:
+
+[PASS]  9719ms  сравни выручку с прошлой неделей
+        план: intent=report report=payment method=compare order= period=last_7_days metrics=[sum_all sredniy_chek]
+        ─── ответ ───
+        | Выручка — период 13.06.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | За период с 13.06.2026 по 19.06.2026 показатель вырос на 1041.74 RUB по сравнению с предыдущим периодом, где значение было 0 RUB, что соответствует увеличению на 100%.
+
+[PASS]  8858ms  динамика продаж за месяц
+        план: intent=report report=payment method=compare order= period=last_30_days metrics=[sum_all sredniy_chek]
+        ─── ответ ───
+        | Выручка — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | За период с 21.05.2026 по 19.06.2026 показатель снизился на 4261.82 RUB или на 62.83% по сравнению с предыдущим периодом, составив 2521.61 RUB против 6783.43 RUB ранее.
+
+[PASS]  3805ms  сколько чеков за неделю
+        план: intent=report report=paycheck method=plain order= period=last_7_days metrics=[number]
+        ─── ответ ───
+        | Чеки — период 13.06.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Терминал      № чека
+        | ------------  ------
+        | ТСПИоТ SUNMI  138,00
+        | SUNMI         137,00
+        | ANDROID       129,00
+        | ТС ПИоТ       Корп. 
+
+[PASS]  4905ms  покажи заказы за сегодня
+        план: intent=report report=orders method=plain order= period=today metrics=[number istochnik torgovaya_tochka open paid discount_value status tip_oplaty]
+        ─── ответ ───
+        | За период 19.06.2026 … 19.06.2026 данных для отчёта нет. Попробуйте другой период или уточните запрос.
+
+[PASS]  5812ms  заказы с доставкой за месяц
+        план: intent=report report=orders method=plain order= period=last_30_days metrics=[number istochnik torgovaya_tochka open paid discount_value status tip_oplaty]
+        ─── ответ ───
+        | За период 21.05.2026 … 19.06.2026 данных для отчёта нет. Попробуйте другой период или уточните запрос.
+
+[PASS]  3656ms  продажи по дням за неделю
+        план: intent=report report=payment method=plain order= period=last_7_days metrics=[date sum_all]
+        ─── ответ ───
+        | Выручка — период 13.06.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Дата        Выручка 
+        | ----------  --------
+        | 2026-06-18  510,74 ₽
+        | 2026-06-16  115,00 ₽
+        | 2026-06-15  416,00 ₽
+        | 
+        | Итого:
+        |   Выручка: 1 041,74 ₽
+
+[PASS]  5184ms  выручка за сегодня
+        план: intent=report report=payment method=plain order= period=today metrics=[date kol_vo_chekov return_count return_sum sum_card sum_cash onlayn sbp sum_all sredniy_chek]
+        ─── ответ ───
+        | За период 19.06.2026 … 19.06.2026 данных для отчёта нет. Попробуйте другой период или уточните запрос.
+
+[PASS]  5231ms  покажи выручку
+        план: intent=report report=payment method=plain order= period= metrics=[date kol_vo_chekov return_count return_sum sum_card sum_cash onlayn sbp sum_all sredniy_chek]
+        ─── ответ ───
+        | За какой период подготовить отчёт? Например: сегодня, вчера, последние 7 дней, текущий месяц.
+
+[PASS]   273ms  что ты умеешь
+        план: intent=help report= method= order= period= metrics=[]
+        ─── ответ ───
+        | Я — ассистент по аналитике вашего заведения. Могу показать отчёты: Заказы, Чеки, Выручка, Товары.
+        | Также объясняю динамику — например «почему упала выручка за месяц».
+        | Спросите, например: «выручка за неделю», «топ товаров за месяц», «сравни выручку с прошлой неделей».
+
+[PASS]  1447ms  привет
+        план: intent=smalltalk report= method= order= period= metrics=[]
+        ─── ответ ───
+        | Привет! Как могу помочь с аналитикой вашего кафе?
+
+[PASS]     0ms  расскажи анекдот
+        план: intent=off_topic report= method= order= period= metrics=[]
+        ─── ответ ───
+        | Я отвечаю на вопросы по аналитике вашего заведения. Спросите, например: «выручка за неделю», «топ товаров за месяц», «сравни выручку с прошлой неделей».
+
+[PASS]     0ms  покажи зарплаты сотрудников
+        план: intent=off_topic report= method= order= period= metrics=[]
+        ─── ответ ───
+        | Я отвечаю на вопросы по аналитике вашего заведения. Спросите, например: «выручка за неделю», «топ товаров за месяц», «сравни выручку с прошлой неделей».
+
+[PASS]  4422ms  топ товаров за месяц
+        план: intent=report report=products method=top_n order=desc period=last_30_days metrics=[name quantity amount]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                                     Кол-во  Выручка    
+        | -------------------------------------------  ------  -----------
+        | Длинное название самой большой пиццы в мире  25      11 850,79 ₽
+        | Котлета из говядины 2.0                      13      3 780,00 ₽ 
+        | Васаби                                       12      779,98 ₽   
+        | Американо 250 мл.                            8       0,00 ₽     
+        | Влажная салфетка                             8       117,00 ₽   
+        | Весовой                                      6       74,02 ₽    
+        | Грибы                                        6       173,98 ₽   
+        | Вода                                         4       80,00 ₽    
+        | Каштановый раф                               4       1 036,00 ₽ 
+        | Кофе                                         3       119,88 ₽   
+        | 
+        | Итого:
+        |   Кол-во: 98
+        |   Выручка: 19 683,77 ₽
+
+[PASS]  3685ms  прибыль по товарам за месяц
+        план: intent=report report=products method=plain order= period=last_30_days metrics=[name profit]
+        ─── ответ ───
+        | Товары — период 21.05.2026 … 19.06.2026 (Europe/Moscow)
+        | 
+        | Название                                     Ожидаемая прибыль
+        | -------------------------------------------  -----------------
+        | Bon-Aqua 0.26 мл.                            0,00 ₽           
+        | Американо 250 мл.                            0,00 ₽           
+        | Английский завтрак                           279,12 ₽         
+        | Бизнес ланч                                  300,00 ₽         
+        | Биолимонад "Мед и травы" 0.33                95,00 ₽          
+        | Борщ. (300)                                  0,00 ₽           
+        | Васаби                                       599,98 ₽         
+        | Весовой                                      74,02 ₽          
+        | Влажная салфетка                             77,00 ₽          
+        | Вода                                         80,00 ₽          
+        | Вода Сценарий 10, 12, 13, 14, 15, 18         115,00 ₽         
+        | Грибы                                        173,98 ₽         
+        | Длинное название самой большой пиццы в мире  11 850,79 ₽      
+        | Домашний торт                                -18,00 ₽         
+        | Каштановый раф                               0,00 ₽           
+        | Колбаса                                      0,00 ₽           
+        | Котлета из говядины 2.0                      1 818,00 ₽       
+        | Кофе                                         119,88 ₽         
+        | Крем-суп(суп-пюре)                           -59,00 ₽         
+        | 
+        | Итого:
+        |   Ожидаемая прибыль: 15 505,77 ₽
+
+
+— итог —
+прошло: 25/25
+ошибок: 0
+латентность: p50=4239ms p95=9719ms max=12156ms

@@ -24,7 +24,7 @@ export function summaryChips(env: Envelope): Chip[] {
   const summary = env.summary
   if (!summary) return []
 
-  const byColKey = new Map(env.columns.map((c) => [c.key, c]))
+  const byColKey = new Map((env.columns ?? []).map((c) => [c.key, c]))
 
   return Object.entries(summary).map(([key, raw]) => {
     const col = byColKey.get(key)

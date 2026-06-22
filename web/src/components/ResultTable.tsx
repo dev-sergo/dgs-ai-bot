@@ -16,8 +16,9 @@ function cellContent(col: Column, row: Row): { text: string; tone: 'pos' | 'neg'
 }
 
 export function ResultTable({ envelope }: { envelope: Envelope }) {
-  const { columns, rows } = envelope
-  if (!columns?.length || !rows?.length) return null
+  const columns = envelope.columns ?? []
+  const rows = envelope.rows ?? []
+  if (!columns.length || !rows.length) return null
 
   return (
     <div className="table-wrap">

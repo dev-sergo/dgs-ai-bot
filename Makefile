@@ -77,5 +77,13 @@ pipeval-host: ## full-pipeline бенчмарк через реальный LLM 
 pipeval-followups-host: ## follow-up (контекст диалога) через реальный LLM — host-only (Stub историю игнорирует)
 	$(MAKE) pipeval-host PIPEVAL_CASES=test/eval/pipeline-followups.jsonl
 
+pipeval-quality-host: ## КАЧЕСТВЕННЫЙ прогон: печатает план + ТЕКСТ ОТВЕТА по каждому запросу (реальная LLM)
+	$(GO_RUN) sh -c "GOOS=$(HOST_OS) GOARCH=$(HOST_ARCH) go build -o bin/pipeval-host ./cmd/pipeval"
+	PLANNER_MODE=llm PIPEVAL_DUMP=1 \
+	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	PIPEVAL_CASES=test/eval/quality.jsonl \
+	./bin/pipeval-host
+
 sh:          ## shell в go-контейнере
 	$(GO_RUN) sh

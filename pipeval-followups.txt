@@ -1,0 +1,21 @@
+/Library/Developer/CommandLineTools/usr/bin/make pipeval-host PIPEVAL_CASES=test/eval/pipeline-followups.jsonl
+docker run --rm -v /Users/admin/work/dgs-ai-bot:/app -w /app -v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build -e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 golang:1.23 sh -c "GOOS=darwin GOARCH=arm64 go build -o bin/pipeval-host ./cmd/pipeval"
+PLANNER_MODE=llm \
+	LLM_BASE_URL=${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	PIPEVAL_CASES=${PIPEVAL_CASES:-test/eval/pipeline.jsonl} \
+	./bin/pipeval-host
+pipeval: 7 кейсов, planner=llm, данные=фикстуры(docs/contracts/fixtures)
+
+[PASS] 12797ms  а за прошлый месяц?
+[PASS]  9243ms  а за прошлую неделю?
+[PASS]  9896ms  а за сегодня?
+[PASS]  7314ms  а за прошлый месяц?
+[PASS] 20433ms  а за прошлый?
+[PASS] 14609ms  а по Москве?
+[PASS] 16974ms  а по карте?
+
+— итог —
+прошло: 7/7
+ошибок: 0
+латентность: p50=12797ms p95=20433ms max=20433ms
