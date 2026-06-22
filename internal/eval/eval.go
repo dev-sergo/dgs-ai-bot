@@ -114,7 +114,7 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 		if err == nil {
 			// Та же пост-обработка, что в проде (app.go), — бенчмарк меряет итоговый
 			// план, а не сырой ответ модели.
-			planner.RefineProductContribution(c.Query, &p)
+			planner.Refine(c.Query, &p)
 			engine.NormalizeMethod(&p)
 			r.Plan = p
 			if p.IsReport() {
