@@ -49,8 +49,59 @@ var descRe = regexp.MustCompile(`лучш|^топ|\sтоп|больше\s+все
 func Refine(query string, p *plan.AnalysisPlan) {
 	RefineEmployeeRanking(query, p)
 	RefineProductContribution(query, p)
+	RefinePaymentChannelFilter(p)
 	RefineTopNOrder(query, p)
 	RefineDefaultMethod(p)
+}
+
+// paymentChannelMetric маппит канал оплаты в КОЛОНКУ отчёта payment.
+// В payment тип оплаты — это колонки (sum_card/sum_cash/onlayn/sbp), а не фильтр:
+// фильтр payment_type есть только у paycheck/orders. В follow-up «а по карте?» модель
+// иногда ставит payment_type-фильтр на payment → валидатор бракует план → ложный
+// out_of_scope на легальный запрос. Принимаем и enum-значения (card/cash/online/sbp),
+// и русские формы, которые модель порой кладёт в values.
+var paymentChannelMetric = map[string]string{
+	"card": "sum_card", "карта": "sum_card", "картой": "sum_card", "по карте": "sum_card",
+	"cash": "sum_cash", "наличные": "sum_cash", "наличными": "sum_cash",
+	"online": "onlayn", "онлайн": "onlayn",
+	"sbp": "sbp", "сбп": "sbp", "по сбп": "sbp", "через сбп": "sbp",
+}
+
+// RefinePaymentChannelFilter снимает невалидный payment_type-фильтр с отчёта payment
+// и переводит распознанный канал в выбор колонки. Без этого «а по карте?» (follow-up
+// к «выручка за неделю») выпадает в out_of_scope. Применяется только к payment —
+// у paycheck/orders payment_type легален и не трогается.
+func RefinePaymentChannelFilter(p *plan.AnalysisPlan) {
+	if p.Report != "payment" || len(p.Filters) == 0 {
+		return
+	}
+	kept := p.Filters[:0]
+	metric := ""
+	for _, f := range p.Filters {
+		if f.Field == "payment_type" {
+			for _, v := range f.Values {
+				if m, ok := paymentChannelMetric[strings.ToLower(strings.TrimSpace(v))]; ok {
+					metric = m
+					break
+				}
+			}
+			continue // фильтр payment_type у payment невалиден — снимаем
+		}
+		kept = append(kept, f)
+	}
+	p.Filters = kept
+	if metric == "" {
+		return
+	}
+	// Канал распознан: для простого отчёта показываем его колонку. Для аналитики
+	// (compare/contribution) метрику не трогаем — там канал раскладывает движок,
+	// важно лишь снять невалидный фильтр.
+	if p.Method == "" || p.Method == "plain" {
+		p.Metrics = []string{metric}
+		if len(p.GroupBy) == 0 {
+			p.GroupBy = []string{"date"}
+		}
+	}
 }
 
 // RefineDefaultMethod выставляет method=plain когда модель вернула пустой method

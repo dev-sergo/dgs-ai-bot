@@ -35,6 +35,68 @@ func TestRefineTopNOrder_SkipsNonTopN(t *testing.T) {
 	}
 }
 
+// payment + payment_type-фильтр (баг follow-up «а по карте?») → фильтр снят, выбрана
+// колонка канала, group_by=date. Без этого валидатор бракует план в out_of_scope.
+func TestRefinePaymentChannelFilter(t *testing.T) {
+	cases := []struct {
+		name, value, wantMetric string
+	}{
+		{"card→sum_card", "card", "sum_card"},
+		{"карта→sum_card", "карта", "sum_card"},
+		{"cash→sum_cash", "cash", "sum_cash"},
+		{"наличными→sum_cash", "наличными", "sum_cash"},
+		{"online→onlayn", "online", "onlayn"},
+		{"sbp→sbp", "сбп", "sbp"},
+	}
+	for _, c := range cases {
+		p := plan.AnalysisPlan{
+			Report:  "payment",
+			Method:  "plain",
+			Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{c.value}}},
+		}
+		RefinePaymentChannelFilter(&p)
+		if len(p.Filters) != 0 {
+			t.Errorf("%s: payment_type-фильтр не снят: %+v", c.name, p.Filters)
+		}
+		if len(p.Metrics) != 1 || p.Metrics[0] != c.wantMetric {
+			t.Errorf("%s: metrics=%v, want [%s]", c.name, p.Metrics, c.wantMetric)
+		}
+		if len(p.GroupBy) != 1 || p.GroupBy[0] != "date" {
+			t.Errorf("%s: group_by=%v, want [date]", c.name, p.GroupBy)
+		}
+	}
+}
+
+// На paycheck/orders payment_type легален — Refine его не трогает.
+func TestRefinePaymentChannelFilter_SkipsNonPayment(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Report:  "paycheck",
+		Method:  "plain",
+		Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{"card"}}},
+	}
+	RefinePaymentChannelFilter(&p)
+	if len(p.Filters) != 1 {
+		t.Errorf("payment_type на paycheck должен сохраниться, got %+v", p.Filters)
+	}
+}
+
+// При contribution/compare метрику не переопределяем — снимаем лишь невалидный фильтр.
+func TestRefinePaymentChannelFilter_KeepsAnalyticMetric(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Report:  "payment",
+		Method:  "contribution",
+		Metrics: []string{"sum_all"},
+		Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{"card"}}},
+	}
+	RefinePaymentChannelFilter(&p)
+	if len(p.Filters) != 0 {
+		t.Errorf("невалидный payment_type-фильтр должен быть снят, got %+v", p.Filters)
+	}
+	if len(p.Metrics) != 1 || p.Metrics[0] != "sum_all" {
+		t.Errorf("метрика contribution не должна меняться: %v", p.Metrics)
+	}
+}
+
 // «какой товар виноват» → products+contribution с ВАЛИДНЫМИ полями products
 // (иначе остаётся sum_all от модели и план не проходит валидацию).
 func TestRefineProductContribution(t *testing.T) {
