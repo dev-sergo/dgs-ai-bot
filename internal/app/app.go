@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -51,6 +52,8 @@ type App struct {
 
 	// Now инъектируется для детерминированных тестов.
 	Now func() time.Time
+	// Logger — структурный лог исходов Ask (аудит/наблюдаемость). По умолчанию slog.Default().
+	Logger *slog.Logger
 }
 
 // New собирает оркестратор.
@@ -64,12 +67,17 @@ func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, re
 		sessions: sess,
 		cat:      catalog.Default(),
 		Now:      time.Now,
+		Logger:   slog.Default(),
 	}
 }
 
 // Ask — основной вход: текст → ответ.
-func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer, error) {
-	ans := Answer{TenantID: tenantID}
+func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans Answer, err error) {
+	ans.TenantID = tenantID
+
+	// Структурный лог исхода — один раз на любой ветке возврата (аудит/наблюдаемость).
+	start := time.Now()
+	defer func() { a.logAsk(tenantID, sessionID, ans, err, time.Since(start)) }()
 
 	// История диалога — для follow-up и возобновления уточнений.
 	p, err := a.planner.Plan(ctx, a.history(sessionID), text)
@@ -204,6 +212,49 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (Answer
 	ans.Text = render.Text(env)
 	a.remember(sessionID, text, ans.Text)
 	return ans, nil
+}
+
+// logAsk пишет одну структурную строку об исходе запроса (аудит/наблюдаемость).
+// Покрывает все ветки Ask через defer: интент, отчёт/метод/период, исход, латентность.
+func (a *App) logAsk(tenantID, sessionID string, ans Answer, err error, dur time.Duration) {
+	if a.Logger == nil {
+		return
+	}
+	attrs := []any{
+		"tenant", tenantID,
+		"session", sessionID,
+		"intent", ans.Plan.EffectiveIntent(),
+		"outcome", askOutcome(ans, err),
+		"latency_ms", dur.Milliseconds(),
+	}
+	if ans.Plan.IsReport() {
+		attrs = append(attrs, "report", ans.Plan.Report, "method", ans.Plan.Method, "period", ans.Plan.Period.Token)
+	}
+	if err != nil {
+		a.Logger.Error("ask", append(attrs, "err", err.Error())...)
+		return
+	}
+	a.Logger.Info("ask", attrs...)
+}
+
+// askOutcome классифицирует исход для лога:
+// error | off_topic | help | smalltalk | clarify | out_of_scope | empty | answer.
+func askOutcome(ans Answer, err error) string {
+	switch {
+	case err != nil:
+		return "error"
+	case !ans.Plan.IsReport():
+		return ans.Plan.EffectiveIntent() // off_topic | help | smalltalk
+	case ans.Validation.NeedClarify:
+		return "clarify"
+	case !ans.Validation.OK:
+		return "out_of_scope"
+	case ans.Envelope != nil && len(ans.Envelope.Rows) == 0 &&
+		ans.Plan.Method != "compare" && ans.Plan.Method != "contribution":
+		return "empty"
+	default:
+		return "answer"
+	}
 }
 
 // isEmptyResult сообщает, что результат вырожден (данных нет / разложить нечего).
