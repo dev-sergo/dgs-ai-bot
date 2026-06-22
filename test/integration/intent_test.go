@@ -131,10 +131,11 @@ func TestOutOfScopeIsHonest(t *testing.T) {
 }
 
 // contribution по отчёту без раскладки понижается до compare (не выдаёт пустоту).
+// paycheck не раскладывается ни по колонкам, ни по измерению (в отличие от payment/products).
 func TestContributionDowngradesWhenUnsupported(t *testing.T) {
 	pl := fixedPlanner{p: plan.AnalysisPlan{
 		Version: "1", Intent: "report", Class: plan.ClassB,
-		Report: "products", Metrics: []string{"amount"},
+		Report: "paycheck", Metrics: []string{"paid"},
 		Period:    plan.Period{Kind: "relative", Token: "this_month"},
 		CompareTo: &plan.Period{Kind: "relative", Token: "prev_period"},
 		Method:    "contribution", TopN: 5,

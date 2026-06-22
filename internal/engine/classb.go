@@ -9,17 +9,23 @@ import (
 	"dgsbot/internal/plan"
 )
 
-// components — на какие слагаемые раскладывается метрика отчёта (для contribution).
+// components — раскладка метрики на ФИКСИРОВАННЫЕ колонки (для contribution).
 // Для payment выручка sum_all == сумме каналов оплаты, поэтому раскладка точная.
 var components = map[string][]string{
 	"payment": {"sum_card", "sum_cash", "onlayn", "sbp"},
 }
 
-// SupportsContribution сообщает, можно ли разложить метрику отчёта на компоненты.
-// Для отчётов без раскладки contribution выродится в пустоту — вызывающий код
-// должен понизить метод до compare.
+// contribByDim — раскладка изменения по ИЗМЕРЕНИЮ (строкам отчёта): slug → {измерение, метрика}.
+// Например, «какой товар виноват в падении выручки» = вклад по товарам (name) через выручку (amount).
+var contribByDim = map[string]struct{ dim, metric string }{
+	"products": {dim: "name", metric: "amount"},
+}
+
+// SupportsContribution сообщает, можно ли разложить изменение метрики на компоненты —
+// по фиксированным колонкам (payment) ИЛИ по измерению (products по товарам).
+// Для отчётов без раскладки contribution вырождается — вызывающий код понижает до compare.
 func SupportsContribution(slug string) bool {
-	return len(components[slug]) > 0
+	return len(components[slug]) > 0 || contribByDim[slug].dim != ""
 }
 
 // NormalizeMethod приводит method плана к выполнимому виду: contribution осмыслен
@@ -70,39 +76,96 @@ type contribRow struct {
 	share float64 // доля в общем изменении, %
 }
 
-// Contribution раскладывает изменение метрики по компонентам между периодами.
+// Contribution раскладывает изменение метрики между периодами на компоненты —
+// по фиксированным колонкам (payment) или по измерению (products по товарам).
 func Contribution(rep catalog.Report, metric string, now, prev dooglys.Result, topN int,
 	tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
 
-	comps := components[rep.Slug]
+	if comps := components[rep.Slug]; len(comps) > 0 {
+		rows := make([]contribRow, 0, len(comps))
+		vNow := sumField(now.Rows, metric)
+		vPrev := sumField(prev.Rows, metric)
+		totalDelta := vNow - vPrev
+		for _, key := range comps {
+			n := sumField(now.Rows, key)
+			p := sumField(prev.Rows, key)
+			label := key
+			if f, ok := rep.FieldByKey(key); ok {
+				label = f.Label
+			}
+			rows = append(rows, contribRow{key, label, round2(n), round2(p), round2(n - p), round2(shareOf(n-p, totalDelta))})
+		}
+		return contribEnvelope(rep, metric, "Компонента", rows, vNow, vPrev, topN, tenantID, currency, periodNow, periodPrev)
+	}
+
+	if cfg := contribByDim[rep.Slug]; cfg.dim != "" {
+		return contribByDimension(rep, cfg.metric, cfg.dim, now, prev, topN, tenantID, currency, periodNow, periodPrev)
+	}
+
+	// Раскладки нет — суммарное сравнение (NormalizeMethod сюда дойти не должен).
+	return Compare(rep, metric, now, prev, tenantID, currency, periodNow, periodPrev)
+}
+
+// contribByDimension раскладывает изменение метрики по значениям измерения (напр. по
+// товарам через name+amount): для каждого значения считает now/prev/delta и долю.
+func contribByDimension(rep catalog.Report, metric, dim string, now, prev dooglys.Result, topN int,
+	tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
+
+	type acc struct{ now, prev float64 }
+	byKey := map[string]*acc{}
+	var order []string
+	accumulate := func(rows []dooglys.Row, isNow bool) {
+		for _, r := range rows {
+			key, _ := r[dim].(string)
+			val, _ := toFloat(r[metric])
+			a := byKey[key]
+			if a == nil {
+				a = &acc{}
+				byKey[key] = a
+				order = append(order, key)
+			}
+			if isNow {
+				a.now += val
+			} else {
+				a.prev += val
+			}
+		}
+	}
+	accumulate(now.Rows, true)
+	accumulate(prev.Rows, false)
+
 	vNow := sumField(now.Rows, metric)
 	vPrev := sumField(prev.Rows, metric)
 	totalDelta := vNow - vPrev
 
-	rows := make([]contribRow, 0, len(comps))
-	for _, key := range comps {
-		n := sumField(now.Rows, key)
-		p := sumField(prev.Rows, key)
-		d := n - p
-		label := key
-		if f, ok := rep.FieldByKey(key); ok {
-			label = f.Label
-		}
-		share := 0.0
-		if totalDelta != 0 {
-			share = d / totalDelta * 100
-		}
-		rows = append(rows, contribRow{key, label, round2(n), round2(p), round2(d), round2(share)})
+	rows := make([]contribRow, 0, len(order))
+	for _, key := range order {
+		a := byKey[key]
+		rows = append(rows, contribRow{key, key, round2(a.now), round2(a.prev), round2(a.now - a.prev), round2(shareOf(a.now-a.prev, totalDelta))})
 	}
 
-	// Сортировка по модулю изменения (по убыванию).
+	dimLabel := dim
+	if f, ok := rep.FieldByKey(dim); ok {
+		dimLabel = f.Label
+	}
+	// Раскладка по товарам может быть длинной — по умолчанию показываем топ движений.
+	if topN <= 0 {
+		topN = 10
+	}
+	return contribEnvelope(rep, metric, dimLabel, rows, vNow, vPrev, topN, tenantID, currency, periodNow, periodPrev)
+}
+
+// contribEnvelope собирает envelope раскладки: сортирует по модулю изменения, режет до topN.
+func contribEnvelope(rep catalog.Report, metric, firstColLabel string, rows []contribRow,
+	vNow, vPrev float64, topN int, tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
+
 	sort.SliceStable(rows, func(i, j int) bool { return abs(rows[i].delta) > abs(rows[j].delta) })
 	if topN > 0 && len(rows) > topN {
 		rows = rows[:topN]
 	}
 
 	cols := []envelope.Column{
-		{Key: "component", Label: "Компонента", Unit: "string"},
+		{Key: "component", Label: firstColLabel, Unit: "string"},
 		{Key: "delta", Label: "Изменение", Unit: "RUB"},
 		{Key: "now", Label: "Текущий", Unit: "RUB"},
 		{Key: "prev", Label: "Предыдущий", Unit: "RUB"},
@@ -125,7 +188,7 @@ func Contribution(rep catalog.Report, metric string, now, prev dooglys.Result, t
 		Summary: map[string]float64{
 			"value_now":  round2(vNow),
 			"value_prev": round2(vPrev),
-			"delta_abs":  round2(totalDelta),
+			"delta_abs":  round2(vNow - vPrev),
 			"delta_pct":  pct(vNow, vPrev),
 		},
 		Meta: map[string]any{
@@ -134,6 +197,14 @@ func Contribution(rep catalog.Report, metric string, now, prev dooglys.Result, t
 			"period_prev": periodPrev.From + "…" + periodPrev.To,
 		},
 	}
+}
+
+// shareOf — доля изменения d в общем изменении total, % (0 при нулевом total).
+func shareOf(d, total float64) float64 {
+	if total == 0 {
+		return 0
+	}
+	return d / total * 100
 }
 
 func sumField(rows []dooglys.Row, key string) float64 {
