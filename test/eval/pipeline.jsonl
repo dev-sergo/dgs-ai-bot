@@ -1,7 +1,7 @@
 {"query": "выручка за вчера", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"], "summary": {"sum_all": 510.74}}}
 {"query": "покажи выручку за последнюю неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Выручка"], "summary": {"sum_all": 1041.74}}}
 {"query": "выручка за сегодня", "expect": {"intent": "report", "envelope": false, "non_empty_text": true, "contains": ["данных для отчёта нет"]}}
-{"query": "покажи чеки за неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Чеки"], "summary": {"paid": 2820.83}}}
+{"query": "покажи чеки за неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Чеки"], "summary": {"paid": 1041.74}}}
 {"query": "покажи заказы за неделю", "expect": {"intent": "report", "envelope": true, "contains": ["Заказы"], "summary": {"paid": 3679.09}}}
 {"query": "какие товары продавались за месяц", "expect": {"intent": "report", "envelope": true, "non_empty_text": true}}
 {"query": "топ товаров за месяц", "expect": {"intent": "report", "envelope": true, "contains": ["Длинное название самой большой пиццы в мире"], "summary": {"quantity": 98}}}

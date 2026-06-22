@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -113,9 +114,11 @@ func filterByPeriod(rows []Row, from, to string) []Row {
 	if err1 != nil || err2 != nil {
 		return rows
 	}
+	// Если ни в одной строке нет распознаваемой даты (напр. products — агрегат без дат) —
+	// фильтровать не по чему, возвращаем как есть.
 	hasDate := false
 	for _, r := range rows {
-		if _, ok := r["date"]; ok {
+		if _, ok := rowDate(r, fromT.Year()); ok {
 			hasDate = true
 			break
 		}
@@ -126,12 +129,8 @@ func filterByPeriod(rows []Row, from, to string) []Row {
 
 	out := make([]Row, 0, len(rows))
 	for _, r := range rows {
-		ds, ok := r["date"].(string)
+		d, ok := rowDate(r, fromT.Year())
 		if !ok {
-			continue
-		}
-		d, err := time.Parse(isoLayout, ds)
-		if err != nil {
 			continue
 		}
 		if !d.Before(fromT) && !d.After(toT) {
@@ -139,4 +138,45 @@ func filterByPeriod(rows []Row, from, to string) []Row {
 		}
 	}
 	return out
+}
+
+// ruMonths — сокращения месяцев в display-датах Dooglys («18 июн. 19:37»).
+var ruMonths = map[string]time.Month{
+	"янв": 1, "фев": 2, "мар": 3, "апр": 4, "мая": 5, "май": 5, "июн": 6,
+	"июл": 7, "авг": 8, "сен": 9, "окт": 10, "ноя": 11, "дек": 12,
+}
+
+// rowDate извлекает дату строки: ISO-поле "date" (payment) либо display-поля
+// "open"/"close" (orders/paycheck, формат «18 июн. 19:37» — без года, берём из периода).
+func rowDate(r Row, year int) (time.Time, bool) {
+	if ds, ok := r["date"].(string); ok {
+		if d, err := time.Parse(isoLayout, ds); err == nil {
+			return d, true
+		}
+	}
+	for _, key := range []string{"open", "close"} {
+		if ds, ok := r[key].(string); ok {
+			if d, ok := parseRuDate(ds, year); ok {
+				return d, true
+			}
+		}
+	}
+	return time.Time{}, false
+}
+
+// parseRuDate разбирает display-дату «18 июн. 19:37» (год задаётся извне — в строке его нет).
+func parseRuDate(s string, year int) (time.Time, bool) {
+	f := strings.Fields(s)
+	if len(f) < 2 {
+		return time.Time{}, false
+	}
+	day, err := strconv.Atoi(f[0])
+	if err != nil {
+		return time.Time{}, false
+	}
+	mon, ok := ruMonths[strings.TrimSuffix(strings.ToLower(f[1]), ".")]
+	if !ok {
+		return time.Time{}, false
+	}
+	return time.Date(year, mon, day, 0, 0, 0, 0, time.UTC), true
 }
