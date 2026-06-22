@@ -200,6 +200,15 @@ func sortKeyFor(p plan.AnalysisPlan, cols []envelope.Column, rep catalog.Report)
 	if valid(p.SortBy) {
 		return p.SortBy
 	}
+	// Без явного sort_by предпочитаем денежную метрику (выручку), а не количество:
+	// «топ товаров» по смыслу — это рейтинг по деньгам, а не по числу позиций.
+	for _, m := range p.Metrics {
+		if valid(m) {
+			if f, ok := rep.FieldByKey(m); ok && f.Unit == "RUB" {
+				return m
+			}
+		}
+	}
 	for _, m := range p.Metrics {
 		if valid(m) {
 			return m

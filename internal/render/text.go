@@ -66,14 +66,18 @@ func Text(e envelope.Envelope) string {
 		fmt.Fprintf(&b, "… ещё %d строк\n", len(e.Rows)-maxRows)
 	}
 
-	// Итоги.
-	if len(e.Summary) > 0 {
-		b.WriteString("\nИтого:\n")
-		for _, c := range e.Columns {
-			if v, ok := e.Summary[c.Key]; ok {
-				fmt.Fprintf(&b, "  %s: %s\n", c.Label, formatNumber(v, c.Unit, e.Currency))
-			}
+	// Итоги. Печатаем заголовок только если есть что показать: у contribution
+	// ключи Summary (value_now/delta…) не совпадают с колонками — иначе была бы
+	// пустая строка «Итого:» (сводка такого отчёта уже в нарративе).
+	var totals strings.Builder
+	for _, c := range e.Columns {
+		if v, ok := e.Summary[c.Key]; ok {
+			fmt.Fprintf(&totals, "  %s: %s\n", c.Label, formatNumber(v, c.Unit, e.Currency))
 		}
+	}
+	if totals.Len() > 0 {
+		b.WriteString("\nИтого:\n")
+		b.WriteString(totals.String())
 	}
 	return b.String()
 }
