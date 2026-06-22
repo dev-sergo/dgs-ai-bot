@@ -50,6 +50,30 @@ func Refine(query string, p *plan.AnalysisPlan) {
 	RefineEmployeeRanking(query, p)
 	RefineProductContribution(query, p)
 	RefineTopNOrder(query, p)
+	RefineDefaultMethod(p)
+}
+
+// RefineDefaultMethod выставляет method=plain когда модель вернула пустой method
+// при уже заданном отчёте и периоде. Это происходит в follow-up запросах («а по карте?»):
+// движок обработал бы method="" как plain через default-ветку, но валидатор сначала
+// отбрасывает такой план как out_of_scope — пользователь получает «не умею» на
+// легальный запрос. Если период не задан — не трогаем (модель сигнализирует
+// неопределённость → clarify по периоду сработает нормально).
+func RefineDefaultMethod(p *plan.AnalysisPlan) {
+	if p.Method != "" {
+		return
+	}
+	if p.Intent != "" && p.Intent != "report" {
+		return
+	}
+	if p.Report == "" {
+		return
+	}
+	// Период не задан → оставляем пустой method: clarify спросит период.
+	if p.Period.Token == "" && (p.Period.Kind != "explicit" || p.Period.From == "") {
+		return
+	}
+	p.Method = "plain"
 }
 
 // EmployeeRankingReply — честный отказ на рейтинг по сотрудникам. Объясняем границу

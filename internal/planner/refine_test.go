@@ -105,3 +105,36 @@ func TestRefineEmployeeRanking_SkipsLegal(t *testing.T) {
 		}
 	}
 }
+
+// method="" + period задан → plain (follow-up «а по карте?»).
+func TestRefineDefaultMethod_SetsPlain(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Intent: "report", Report: "payment",
+		Period: plan.Period{Kind: "relative", Token: "last_7_days"},
+	}
+	RefineDefaultMethod(&p)
+	if p.Method != "plain" {
+		t.Errorf("method=%q, ожидался plain", p.Method)
+	}
+}
+
+// method="" + period пустой → не трогаем (clarify спросит период).
+func TestRefineDefaultMethod_SkipsEmptyPeriod(t *testing.T) {
+	p := plan.AnalysisPlan{Intent: "report", Report: "payment"}
+	RefineDefaultMethod(&p)
+	if p.Method != "" {
+		t.Errorf("method не должен меняться при пустом периоде, got %q", p.Method)
+	}
+}
+
+// method уже задан → не трогаем.
+func TestRefineDefaultMethod_SkipsExistingMethod(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Intent: "report", Report: "payment", Method: "compare",
+		Period: plan.Period{Kind: "relative", Token: "last_7_days"},
+	}
+	RefineDefaultMethod(&p)
+	if p.Method != "compare" {
+		t.Errorf("метод не должен меняться, got %q", p.Method)
+	}
+}
