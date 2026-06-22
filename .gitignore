@@ -43,6 +43,9 @@ test/eval/results/
 bench-results/
 eval-results*.txt
 
+# === Сырой HTML из харвестера (живые данные, не коммитим) ===
+docs/contracts/fixtures/raw/
+
 # === IDE / редакторы ===
 .idea/
 .vscode/

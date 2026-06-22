@@ -46,8 +46,18 @@ func main() {
 		log.Fatalf("tenants: %v", err)
 	}
 
-	// Источник данных: фикстуры (M1). На M4 заменится на реальный клиент за тем же интерфейсом.
-	client := dooglys.NewFixtureClient(cfg.FixturesPath)
+	// Источник данных: fixture (по умолчанию, детерминированный) или http (реальный Dooglys).
+	// Переключается через DGS_CLIENT=http + DGS_BASE + DGS_COOKIE.
+	var client dooglys.Client
+	if cfg.Dooglys.Mode == config.DooglysHTTP {
+		if cfg.Dooglys.Cookie == "" {
+			log.Fatal("DGS_CLIENT=http requires DGS_COOKIE to be set")
+		}
+		log.Printf("dooglys: using HTTP client → %s", cfg.Dooglys.Base)
+		client = dooglys.NewHTMLClient(cfg.Dooglys.Base, cfg.Dooglys.Cookie)
+	} else {
+		client = dooglys.NewFixtureClient(cfg.FixturesPath)
+	}
 
 	// Справочники для резолва имён в uuid.
 	res := resolver.Load(cfg.FixturesPath)
