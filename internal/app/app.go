@@ -194,9 +194,10 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 		env.Meta["filters_skipped"] = resNow.FiltersSkipped
 	}
 
-	// Честная пустота: нет данных — отдаём прямой ответ, без болванки нарратора.
+	// Честная пустота: нет данных — отдаём прямой текстовый ответ БЕЗ envelope.
+	// Вырожденный (нулевой/пустой) envelope не отдаём намеренно: иначе UI рисует
+	// бесполезную таблицу нулей с заголовком-болванкой вместо честного «данных нет».
 	if isEmptyResult(p.Method, env) {
-		ans.Envelope = &env
 		ans.Text = emptyResultMessage(env)
 		a.remember(sessionID, text, ans.Text)
 		return ans, nil

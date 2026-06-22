@@ -3,6 +3,8 @@ package integration
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -28,6 +30,8 @@ func newAppStore(t *testing.T, pl planner.Planner) (*app.App, *session.Store) {
 	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate(), store)
 	// Фиксированное «сейчас» для детерминизма дат: 2026-06-19 10:00 UTC.
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
+	// Тихий логгер — чтобы аудит-строки Ask не зашумляли вывод тестов.
+	a.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	return a, store
 }
 
@@ -158,7 +162,9 @@ func TestClarifyWhenNoPeriod(t *testing.T) {
 
 func TestTenantTimezoneInPeriod(t *testing.T) {
 	a := newApp(t)
-	ans, err := a.Ask(context.Background(), "mock_tz", "s", "выручка сегодня")
+	// Период с данными (за неделю) — чтобы envelope сформировался и можно было
+	// проверить таймзону. «сегодня» в фикстурах пусто → envelope не отдаётся.
+	ans, err := a.Ask(context.Background(), "mock_tz", "s", "выручка за неделю")
 	if err != nil {
 		t.Fatal(err)
 	}
