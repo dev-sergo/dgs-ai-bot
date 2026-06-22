@@ -1,16 +1,30 @@
 services:
+  # Go API + детерминированная аналитика. Наружу НЕ публикуется —
+  # доступен только из сети compose, через nginx (сервис web).
   bot:
     build: .
-    ports:
-      - "8088:8088"
+    expose:
+      - "8088"
     environment:
       HTTP_ADDR: ":8088"
-      # LLM-риг пользователя (llama.cpp, OpenAI-совместимый).
-      LLM_BASE_URL: "${LLM_BASE_URL:-http://172.20.10.2:8080}"
+      # LLM-риг (llama.cpp, OpenAI-совместимый). На риге модель живёт на хосте —
+      # из контейнера достаём через host.docker.internal. Если модель слушает
+      # только 127.0.0.1, забиндь её на 0.0.0.0 ИЛИ укажи LAN-IP в .env.
+      LLM_BASE_URL: "${LLM_BASE_URL:-http://host.docker.internal:8080}"
       LLM_MODEL: "${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07}"
       # planner=stub → работа без GPU/сети (детерминированные планы).
       PLANNER_MODE: "${PLANNER_MODE:-llm}"
       FIXTURES_PATH: "/app/docs/contracts/fixtures"
-    # LLM-риг в LAN — даём контейнеру доступ к сети хоста при необходимости.
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  # nginx: отдаёт собранный фронт (web/dist) и проксирует /api → bot:8088.
+  # Единственная точка, публикуемая наружу → сюда смотрит Cloudflare Tunnel.
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "8090:80"
+    depends_on:
+      - bot
