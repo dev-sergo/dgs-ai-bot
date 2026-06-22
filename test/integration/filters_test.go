@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"dgsbot/internal/plan"
@@ -66,6 +67,29 @@ func TestPIINotExposed(t *testing.T) {
 		if _, ok := r["kassir"]; ok {
 			t.Error("PII-поле kassir есть в строке результата")
 		}
+	}
+}
+
+// Фильтр построен, но отчёт не поддерживает такой разрез (у payment нет колонки точки) —
+// честный отказ, а НЕ полный отчёт под видом отфильтрованного.
+func TestSkippedFilterIsHonest(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Version: "1", Class: plan.ClassA, Report: "payment",
+		Metrics: []string{"sum_all"}, GroupBy: []string{"date"},
+		Period: plan.Period{Kind: "relative", Token: "last_30_days"},
+		Method: "plain", Output: plan.Output{Format: "text"},
+		Filters: []plan.Filter{{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}},
+	}
+	a := newAppWith(t, fakePlanner{p})
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка по точке Выкса за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Envelope != nil {
+		t.Fatal("при непримененном фильтре отчёт показывать нельзя")
+	}
+	if !strings.Contains(ans.Text, "не поддерживает разрез") || !strings.Contains(ans.Text, "точка") {
+		t.Errorf("ожидался честный отказ про разрез по точке, got: %q", ans.Text)
 	}
 }
 

@@ -158,6 +158,15 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 		return ans, err
 	}
 
+	// Запрошенный фильтр построен, но отчёт его не поддерживает (нет такого разреза) —
+	// честно говорим об этом, а НЕ показываем полный отчёт как будто это ответ на запрос.
+	if len(resNow.FiltersSkipped) > 0 {
+		ans.Validation = plan.ValidationResult{OK: false}
+		ans.Text = a.skippedFilterMessage(rep, resNow.FiltersSkipped)
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
 	var env envelope.Envelope
 	switch p.Method {
 	case "compare", "contribution":
@@ -298,6 +307,33 @@ func (a *App) replyForIntent(p plan.AnalysisPlan) string {
 	default:
 		return a.helpText()
 	}
+}
+
+// filterLabels — человеческие имена фильтров для честного сообщения о недоступном разрезе.
+var filterLabels = map[string]string{
+	"sale_point":       "точка",
+	"locality":         "город",
+	"product_category": "категория",
+	"product":          "товар",
+	"user":             "сотрудник",
+	"payment_type":     "тип оплаты",
+	"source":           "источник",
+}
+
+// skippedFilterMessage — честный ответ, когда запрошенный разрез отчёт не поддерживает
+// (фильтр построен, но в отчёте нет такой колонки и он был отброшен). Лучше прямо сказать,
+// чем показать полный отчёт как будто это ответ на отфильтрованный запрос.
+func (a *App) skippedFilterMessage(rep catalog.Report, skipped []string) string {
+	labels := make([]string, 0, len(skipped))
+	for _, f := range skipped {
+		if l, ok := filterLabels[f]; ok {
+			labels = append(labels, l)
+		} else {
+			labels = append(labels, f)
+		}
+	}
+	return "Отчёт «" + rep.Name + "» не поддерживает разрез по: " + strings.Join(labels, ", ") +
+		". Уберите этот фильтр или выберите другой отчёт. " + a.helpHint()
 }
 
 // outOfScopeMessage — честный ответ, когда запрос вышел за white-list
