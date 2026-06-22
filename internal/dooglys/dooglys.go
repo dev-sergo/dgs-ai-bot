@@ -41,3 +41,11 @@ type Result struct {
 type Client interface {
 	Fetch(ctx context.Context, q Query) (Result, error)
 }
+
+// SelectOption — одна запись <select>-фильтра HTML-формы отчёта: живой uuid и его имя.
+// Источник актуальных идентификаторов справочников (locality/sale_point/...) прямо из
+// разметки Dooglys — в отличие от офлайн-снимков grid-фикстур, которые устаревают.
+type SelectOption struct {
+	UUID string
+	Name string
+}

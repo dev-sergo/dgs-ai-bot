@@ -48,19 +48,28 @@ func main() {
 
 	// Источник данных: fixture (по умолчанию, детерминированный) или http (реальный Dooglys).
 	// Переключается через DGS_CLIENT=http + DGS_BASE + DGS_COOKIE.
+	// Резолвер имя→uuid: при http берём живые uuid из HTML-формы отчёта, при fixture —
+	// офлайн grid-снимки (детерминированный путь CI/eval).
 	var client dooglys.Client
+	var res *resolver.Store
 	if cfg.Dooglys.Mode == config.DooglysHTTP {
 		if cfg.Dooglys.Cookie == "" {
 			log.Fatal("DGS_CLIENT=http requires DGS_COOKIE to be set")
 		}
 		log.Printf("dooglys: using HTTP client → %s", cfg.Dooglys.Base)
-		client = dooglys.NewHTMLClient(cfg.Dooglys.Base, cfg.Dooglys.Cookie)
+		hc := dooglys.NewHTMLClient(cfg.Dooglys.Base, cfg.Dooglys.Cookie)
+		client = hc
+		if live, err := resolver.NewLiveStore(context.Background(), hc); err != nil {
+			log.Printf("resolver: live store unavailable (%v) — fallback to fixtures", err)
+			res = resolver.Load(cfg.FixturesPath)
+		} else {
+			log.Printf("resolver: using live UUIDs from Dooglys HTML form")
+			res = live
+		}
 	} else {
 		client = dooglys.NewFixtureClient(cfg.FixturesPath)
+		res = resolver.Load(cfg.FixturesPath)
 	}
-
-	// Справочники для резолва имён в uuid.
-	res := resolver.Load(cfg.FixturesPath)
 
 	a := app.New(pl, tenants, client, res, nar, session.NewStore())
 	srv := httpx.New(cfg, a)

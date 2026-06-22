@@ -82,6 +82,10 @@ var (
 	reTagStrip = regexp.MustCompile(`<[^>]+>`)
 	reSpace    = regexp.MustCompile(`\s+`)
 	reDateDMY  = regexp.MustCompile(`^(\d{2})\.(\d{2})\.(\d{4})$`)
+	// Парсинг <select>-фильтров формы отчёта: имя параметра BaseReportForm[<param>][]
+	// и его <option value="uuid">Имя</option>. Источник живых uuid справочников.
+	reSelectBlock = regexp.MustCompile(`(?is)<select[^>]*\bname="BaseReportForm\[([a-z_]+)\][^"]*"[^>]*>(.*?)</select>`)
+	reOptionVal   = regexp.MustCompile(`(?is)<option[^>]*\bvalue="([^"]*)"[^>]*>(.*?)</option>`)
 	reNumeric  = regexp.MustCompile(`^-?[\d  ]+(?:[.,]\d+)?\s*[₽%]?\s*$`)
 )
 
@@ -124,6 +128,48 @@ func (c *HTMLClient) Fetch(ctx context.Context, q Query) (Result, error) {
 		FiltersApplied: filtersApplied,
 		FiltersSkipped: filtersSkipped,
 	}, nil
+}
+
+// FetchSelects возвращает живые справочники из <select>-фильтров HTML-формы отчёта.
+// Ключ карты — имя параметра (locality_id, sale_point_id, ...), значение — список
+// {UUID, Name} из <option>. Используется resolver.NewLiveStore вместо офлайн grid-снимков.
+func (c *HTMLClient) FetchSelects(ctx context.Context, report string) (map[string][]SelectOption, error) {
+	html, err := c.fetchHTML(ctx, c.base+"/report/"+report)
+	if err != nil {
+		return nil, fmt.Errorf("dooglys htmlclient selects: %w", err)
+	}
+	if strings.Contains(html, "site/login") || strings.Contains(html, "LoginForm") {
+		return nil, fmt.Errorf("dooglys htmlclient selects: session expired, re-login required")
+	}
+	sel := parseSelects(html)
+	if len(sel) == 0 {
+		return nil, fmt.Errorf("dooglys htmlclient selects: no filter <select> found in report %q", report)
+	}
+	return sel, nil
+}
+
+// parseSelects извлекает справочники из <select name="BaseReportForm[<param>][]">-блоков.
+// Пустые option-значения (плейсхолдеры «Все»/«—») пропускаются.
+func parseSelects(html string) map[string][]SelectOption {
+	out := map[string][]SelectOption{}
+	for _, sm := range reSelectBlock.FindAllStringSubmatch(html, -1) {
+		param, body := sm[1], sm[2]
+		var opts []SelectOption
+		seen := map[string]bool{}
+		for _, om := range reOptionVal.FindAllStringSubmatch(body, -1) {
+			uuid := strings.TrimSpace(om[1])
+			name := cellText(om[2])
+			if uuid == "" || name == "" || seen[uuid] {
+				continue
+			}
+			seen[uuid] = true
+			opts = append(opts, SelectOption{UUID: uuid, Name: name})
+		}
+		if len(opts) > 0 {
+			out[param] = opts
+		}
+	}
+	return out
 }
 
 // buildURL строит URL отчёта с параметрами периода и фильтров.

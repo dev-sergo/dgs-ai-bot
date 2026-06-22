@@ -5,12 +5,15 @@
 package resolver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"dgsbot/internal/dooglys"
 )
 
 // Entry — запись справочника: один uuid и его возможные имена.
@@ -50,6 +53,52 @@ func Load(dir string) *Store {
 		}
 	}
 	return s
+}
+
+// SelectSource — источник живых справочников из HTML-формы отчёта Dooglys.
+// Реализуется *dooglys.HTMLClient (метод FetchSelects).
+type SelectSource interface {
+	FetchSelects(ctx context.Context, report string) (map[string][]dooglys.SelectOption, error)
+}
+
+// NewLiveStore строит Store из <select>-данных живой HTML-формы Dooglys: uuid берутся
+// прямо из разметки (locality_id/sale_point_id/...), а не из офлайн-снимков grid-фикстур,
+// которые устаревают. Используется при DGS_CLIENT=http; для CI/eval остаётся Load (фикстуры).
+//
+// reports — какие отчёты опросить; по умолчанию payment (его формы достаточно для
+// locality+sale_point). kind выводится из имени параметра: locality_id→locality и т.п.
+func NewLiveStore(ctx context.Context, src SelectSource, reports ...string) (*Store, error) {
+	if len(reports) == 0 {
+		reports = []string{"payment"}
+	}
+	s := &Store{byKind: map[string][]Entry{}}
+	seen := map[string]map[string]bool{} // kind → uuid → добавлен
+	for _, rep := range reports {
+		sel, err := src.FetchSelects(ctx, rep)
+		if err != nil {
+			return nil, err
+		}
+		for param, opts := range sel {
+			kind := strings.TrimSuffix(param, "_id")
+			if _, ok := specs[kind]; !ok {
+				continue // вид, который resolver не использует
+			}
+			if seen[kind] == nil {
+				seen[kind] = map[string]bool{}
+			}
+			for _, o := range opts {
+				if o.UUID == "" || o.Name == "" || seen[kind][o.UUID] {
+					continue
+				}
+				seen[kind][o.UUID] = true
+				s.byKind[kind] = append(s.byKind[kind], Entry{UUID: o.UUID, Names: []string{o.Name}})
+			}
+		}
+	}
+	if len(s.byKind) == 0 {
+		return nil, fmt.Errorf("resolver: живая HTML-форма не дала ни одного справочника")
+	}
+	return s, nil
 }
 
 type gridFile struct {
