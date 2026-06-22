@@ -59,9 +59,10 @@ func Compare(rep catalog.Report, metric string, now, prev dooglys.Result,
 			"delta_pct":  pct(vNow, vPrev),
 		},
 		Meta: map[string]any{
-			"method":      "compare",
-			"metric":      metric,
-			"period_prev": periodPrev.From + "…" + periodPrev.To,
+			"method":       "compare",
+			"metric":       metric,
+			"metric_label": metricLabel(rep, metric),
+			"period_prev":  periodPrev.From + "…" + periodPrev.To,
 		},
 	}
 }
@@ -179,9 +180,10 @@ func contribEnvelope(rep catalog.Report, metric, firstColLabel string, rows []co
 	}
 
 	meta := map[string]any{
-		"method":      "contribution",
-		"metric":      metric,
-		"period_prev": periodPrev.From + "…" + periodPrev.To,
+		"method":       "contribution",
+		"metric":       metric,
+		"metric_label": metricLabel(rep, metric),
+		"period_prev":  periodPrev.From + "…" + periodPrev.To,
 	}
 	// Когда предыдущий период пуст, «Доля изменения» — бессмыслица (нет базы для сравнения).
 	// Флаг сигнализирует рендеру скрыть эту колонку, чтобы не противоречить нарративу.
@@ -203,6 +205,16 @@ func contribEnvelope(rep catalog.Report, metric, firstColLabel string, rows []co
 		},
 		Meta: meta,
 	}
+}
+
+// metricLabel — человекочитаемое имя метрики из каталога (напр. sum_all → «Выручка»).
+// Кладётся в Meta, чтобы LLM-нарратор называл показатель точно, а не угадывал из
+// названия (баг: contribution выручки описывался как «средний чек»).
+func metricLabel(rep catalog.Report, metric string) string {
+	if f, ok := rep.FieldByKey(metric); ok && f.Label != "" {
+		return f.Label
+	}
+	return metric
 }
 
 // shareOf — доля изменения d в общем изменении total, % (0 при нулевом total).
