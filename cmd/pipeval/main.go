@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "time/tzdata"
@@ -61,6 +62,8 @@ func main() {
 
 	fmt.Printf("pipeval: %d кейсов, planner=%s, данные=фикстуры(%s)\n\n", len(cases), cfg.PlannerMode, cfg.FixturesPath)
 
+	dump := os.Getenv("PIPEVAL_DUMP") != "" // показать план + текст ответа (качественная оценка)
+
 	results := pipeval.Run(context.Background(), a, tenantID, cases)
 	for _, r := range results {
 		status := "PASS"
@@ -77,6 +80,16 @@ func main() {
 		}
 		for _, m := range r.Mismatch {
 			fmt.Printf("        ✗ %s\n", m)
+		}
+		if dump {
+			pl := r.Answer.Plan
+			fmt.Printf("        план: intent=%s report=%s method=%s order=%s period=%s metrics=%v\n",
+				pl.EffectiveIntent(), pl.Report, pl.Method, pl.Order, pl.Period.Token, pl.Metrics)
+			fmt.Printf("        ─── ответ ───\n")
+			for _, line := range strings.Split(strings.TrimRight(r.Answer.Text, "\n"), "\n") {
+				fmt.Printf("        | %s\n", line)
+			}
+			fmt.Println()
 		}
 	}
 
