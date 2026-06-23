@@ -284,18 +284,49 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
 	periodPrev := envelope.Period{From: prev.From, To: prev.To, TZ: t.Timezone}
 
+	// Фильтры плана (точка/категория) прокидываем в срез: каждый отчёт берёт только те
+	// фильтры, что есть в его white-list (resolveFilters молча отсекает чужие), поэтому
+	// «что улучшить на точке X» считает снимок по точке, а не по всему заведению.
+	// Категория есть только у products, точка — у обоих.
+	payRep, _ := a.cat.Report("payment")
+	prodRep, _ := a.cat.Report("products")
+	payFilters, clarify := a.resolveFilters(payRep, p.Filters)
+	prodFilters, clarify2 := a.resolveFilters(prodRep, p.Filters)
+	if clarify == "" {
+		clarify = clarify2
+	}
+	if clarify != "" {
+		ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: clarify}
+		ans.Text = clarify
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
 	// Снимок собирается из нескольких детерминированных выборок.
-	payNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to})
+	payNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to, Filters: payFilters})
 	if err != nil {
 		return ans, err
 	}
-	payPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To})
+	payPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To, Filters: payFilters})
 	if err != nil {
 		return ans, err
 	}
-	prodNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to})
+	prodNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to, Filters: prodFilters})
 	if err != nil {
 		return ans, err
+	}
+
+	// Запрошенный фильтр построен, но отчёт его не поддерживает (нет такого разреза) —
+	// честный отказ, а НЕ снимок по всему заведению под видом среза по точке/категории.
+	if skipped := append(append([]string{}, payNow.FiltersSkipped...), prodNow.FiltersSkipped...); len(skipped) > 0 {
+		rep := payRep
+		if len(payNow.FiltersSkipped) == 0 {
+			rep = prodRep
+		}
+		ans.Validation = plan.ValidationResult{OK: false}
+		ans.Text = a.skippedFilterMessage(rep, dedupStrings(skipped))
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
 	}
 
 	bundle := engine.BuildInsightBundle(payNow, payPrev, prodNow, currency, period, periodPrev)
@@ -500,6 +531,21 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 
 func joinRu(ss []string) string {
 	return strings.Join(ss, ", ")
+}
+
+// dedupStrings убирает повторы, сохраняя порядок (один фильтр пропущен в нескольких
+// отчётах снимка → одно имя в сообщении об отказе, а не дубль).
+func dedupStrings(ss []string) []string {
+	seen := map[string]bool{}
+	out := ss[:0:0]
+	for _, s := range ss {
+		if seen[s] {
+			continue
+		}
+		seen[s] = true
+		out = append(out, s)
+	}
+	return out
 }
 
 // comparePeriod определяет период сравнения: явный из плана или предыдущий равный.

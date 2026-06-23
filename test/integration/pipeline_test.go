@@ -13,6 +13,7 @@ import (
 	"dgsbot/internal/app"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/narrator"
+	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
 	"dgsbot/internal/resolver"
 	"dgsbot/internal/session"
@@ -194,6 +195,29 @@ func TestAdviceLosses(t *testing.T) {
 	// Детерминированный Compose (stub-режим) называет драйверы потерь.
 	if !strings.Contains(ans.Text, "Выручка") {
 		t.Errorf("в совете нет контекста выручки:\n%s", ans.Text)
+	}
+}
+
+// Консультация с фильтром по точке: фильтр прокидывается в снимок, но фикстуры
+// payment/products не несут колонку точки → честный отказ, а НЕ снимок по всему
+// заведению под видом среза. Так advice наследует safety главного пути (Этап A).
+func TestAdviceFilterUnsupportedScopeIsHonest(t *testing.T) {
+	pl := fixedPlanner{p: plan.AnalysisPlan{
+		Intent: "advice", Report: "payment", Method: "plain",
+		Metrics: []string{"sum_all"},
+		Period:  plan.Period{Kind: "relative", Token: "this_month"},
+		Filters: []plan.Filter{{Field: "sale_point", Op: "in", Values: []string{"Казанский вокзал"}}},
+	}}
+	a := newAppWith(t, pl)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "что улучшить на точке Казанский вокзал за месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Validation.OK {
+		t.Fatalf("ожидался честный отказ по неподдержанному разрезу, got OK; текст: %q", ans.Text)
+	}
+	if !strings.Contains(ans.Text, "не поддерживает разрез") {
+		t.Errorf("ожидалось сообщение о неподдержанном разрезе, got: %q", ans.Text)
 	}
 }
 
