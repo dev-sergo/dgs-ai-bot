@@ -110,6 +110,20 @@ func aggregatePayment(orders []order, fromISO, toISO string, filters []QueryFilt
 		if isReturn {
 			a.returnCount++
 			a.returnSum += amount
+			// Возврат уменьшает свой канал оплаты, чтобы сумма каналов сходилась
+			// с чистой выручкой (нал+карта+онлайн+СБП = sum_all).
+			if rule.SubtractReturns {
+				switch channelColumn[o.PaymentType] {
+				case "sum_cash":
+					a.sumCash -= amount
+				case "sum_card":
+					a.sumCard -= amount
+				case "onlayn":
+					a.onlayn -= amount
+				case "sbp":
+					a.sbp -= amount
+				}
+			}
 			continue
 		}
 

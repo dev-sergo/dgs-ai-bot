@@ -64,6 +64,17 @@ func TestAggregatePayment_Basic(t *testing.T) {
 	}
 }
 
+// Каналы оплаты после вычета возвратов сходятся с чистой выручкой строки.
+func TestAggregatePayment_ChannelsReconcile(t *testing.T) {
+	rows, _, _ := aggregatePayment(sampleOrders(), "2025-05-06", "2025-05-07", nil, DefaultPaymentRule())
+	for _, r := range rows {
+		channels := r["sum_cash"].(float64) + r["sum_card"].(float64) + r["onlayn"].(float64) + r["sbp"].(float64)
+		if round2(channels) != r["sum_all"].(float64) {
+			t.Errorf("день %v: каналы %.2f != выручка %.2f", r["date"], channels, r["sum_all"])
+		}
+	}
+}
+
 func TestAggregatePayment_PeriodCutoff(t *testing.T) {
 	rows, _, _ := aggregatePayment(sampleOrders(), "2025-05-06", "2025-05-06", nil, DefaultPaymentRule())
 	if len(rows) != 1 || rows[0]["date"] != "2025-05-06" {
