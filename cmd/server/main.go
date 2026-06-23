@@ -61,9 +61,15 @@ func main() {
 		if cfg.Dooglys.Login == "" || cfg.Dooglys.Password == "" {
 			log.Fatal("DGS_CLIENT=api requires DGS_LOGIN and DGS_PASSWORD to be set")
 		}
-		log.Printf("dooglys: using JSON API client → %s (domain=%s)", cfg.Dooglys.Base, cfg.Dooglys.Domain)
-		client = dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
-		// Payment-данные идут из API; резолвер имя→uuid пока из офлайн grid-снимков.
+		log.Printf("dooglys: using JSON API client → %s (domain=%s); payment via API, прочие отчёты — фикстуры",
+			cfg.Dooglys.Base, cfg.Dooglys.Domain)
+		api := dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
+		// Гибрид: payment — живой API, products/paycheck/orders — фикстуры (товары/персонал
+		// ещё не на API). Иначе консультант и «топ товаров» падали бы на неподдержанном отчёте.
+		client = dooglys.NewComposite(
+			map[string]dooglys.Client{"payment": api},
+			dooglys.NewFixtureClient(cfg.FixturesPath),
+		)
 		res = resolver.Load(cfg.FixturesPath)
 	case config.DooglysHTTP:
 		if cfg.Dooglys.Cookie == "" {
