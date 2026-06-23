@@ -4,6 +4,7 @@ package engine
 
 import (
 	"sort"
+	"strings"
 
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/dooglys"
@@ -116,7 +117,7 @@ func buildRows(cols []envelope.Column, p plan.AnalysisPlan, rep catalog.Report, 
 			}
 			rows = append(rows, out)
 		}
-		return rows
+		return dropZeroRows(rows, cols, dims)
 	}
 
 	order := make([]string, 0) // ключи групп в порядке появления
@@ -160,7 +161,36 @@ func buildRows(cols []envelope.Column, p plan.AnalysisPlan, rep catalog.Report, 
 		}
 		rows = append(rows, agg)
 	}
-	return rows
+	return dropZeroRows(rows, cols, dims)
+}
+
+// dropZeroRows убирает строки-пустышки: где все числовые метрики = 0 (день/позиция без
+// движения — шум в отчёте). Строка остаётся, если есть хоть одна ненулевая метрика или
+// непустое неразмерное значение. Отчёты вовсе без числовых колонок не трогаются.
+func dropZeroRows(rows []map[string]any, cols []envelope.Column, dims []string) []map[string]any {
+	out := make([]map[string]any, 0, len(rows))
+	for _, r := range rows {
+		keep, hasNumeric := false, false
+		for _, c := range cols {
+			if isDim(c.Key, dims) {
+				continue
+			}
+			if f, ok := toFloat(r[c.Key]); ok {
+				hasNumeric = true
+				if f != 0 {
+					keep = true
+					break
+				}
+			} else if s, ok := r[c.Key].(string); ok && strings.TrimSpace(s) != "" {
+				keep = true // непустое неразмерное значение — строка содержательна
+				break
+			}
+		}
+		if keep || !hasNumeric {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // buildSummary — итоги по всей выборке (суммируемые поля), с корректным средним чеком.
