@@ -37,9 +37,9 @@ func TestCheckMissingFilter(t *testing.T) {
 
 func TestSummarize(t *testing.T) {
 	rs := []Result{
-		{Valid: true, LatencyMS: 100},                 // pass
+		{Valid: true, LatencyMS: 100},                          // pass
 		{Valid: true, Mismatch: []string{"x"}, LatencyMS: 200}, // fail
-		{Err: errFake{}, LatencyMS: 300},              // err
+		{Err: errFake{}, LatencyMS: 300},                       // err
 	}
 	s := Summarize(rs)
 	if s.Total != 3 || s.Passed != 1 || s.Errors != 1 || s.Valid != 2 {

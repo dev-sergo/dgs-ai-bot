@@ -17,7 +17,9 @@ func paymentReport(t *testing.T) catalog.Report {
 	return r
 }
 
-func per() envelope.Period { return envelope.Period{From: "01.06.2026", To: "07.06.2026", TZ: "Europe/Moscow"} }
+func per() envelope.Period {
+	return envelope.Period{From: "01.06.2026", To: "07.06.2026", TZ: "Europe/Moscow"}
+}
 
 func TestCompare(t *testing.T) {
 	rep := paymentReport(t)

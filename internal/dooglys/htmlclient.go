@@ -20,11 +20,11 @@ import (
 // scalarParams — фильтры, которые Dooglys принимает как одиночное значение
 // (без [] в имени параметра). Все остальные — массивы.
 var scalarParams = map[string]bool{
-	"order_number":        true,
-	"cost_from":           true,
-	"cost_to":             true,
-	"include_zero_price":  true,
-	"phone_number":        true,
+	"order_number":       true,
+	"cost_from":          true,
+	"cost_to":            true,
+	"include_zero_price": true,
+	"phone_number":       true,
 }
 
 // fieldOverrides задаёт machine-ключи для колонок, у которых нет атрибута data-sort
@@ -86,7 +86,7 @@ var (
 	// и его <option value="uuid">Имя</option>. Источник живых uuid справочников.
 	reSelectBlock = regexp.MustCompile(`(?is)<select[^>]*\bname="BaseReportForm\[([a-z_]+)\][^"]*"[^>]*>(.*?)</select>`)
 	reOptionVal   = regexp.MustCompile(`(?is)<option[^>]*\bvalue="([^"]*)"[^>]*>(.*?)</option>`)
-	reNumeric  = regexp.MustCompile(`^-?[\d  ]+(?:[.,]\d+)?\s*[₽%]?\s*$`)
+	reNumeric     = regexp.MustCompile(`^-?[\d  ]+(?:[.,]\d+)?\s*[₽%]?\s*$`)
 )
 
 // HTMLClient реализует Client через HTTP + Cookie-сессию.
@@ -282,9 +282,15 @@ func extractColumns(chunk, report string) []string {
 		// Нет thead — возвращаем ключи по позиционной карте если есть
 		if overrides != nil {
 			max := 0
-			for k := range overrides { if k > max { max = k } }
+			for k := range overrides {
+				if k > max {
+					max = k
+				}
+			}
 			cols := make([]string, max+1)
-			for k, v := range overrides { cols[k] = v }
+			for k, v := range overrides {
+				cols[k] = v
+			}
 			return cols
 		}
 		return nil

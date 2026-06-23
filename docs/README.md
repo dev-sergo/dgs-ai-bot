@@ -10,6 +10,7 @@
 
 | Документ | О чём |
 |---|---|
+| [00-pilot-vision.md](00-pilot-vision.md) | Продуктовое видение пилота: идеология, граница MVP, демо-сценарий, план месяц1/2/3 — то, что показываем заказчику |
 | [01-architecture.md](01-architecture.md) | Архитектура: слои, диаграммы, путь запроса, логика планирования, конструктор, безопасность, шаблонизация |
 | [02-data-contracts-and-open-questions.md](02-data-contracts-and-open-questions.md) | Что мы ждём от заказчика: endpoints, контракты, модель тенанта, mock-данные |
 | [03-testing-strategy.md](03-testing-strategy.md) | Тестирование локально без реальных запросов и без GPU: моки, фикстуры, eval-harness |

@@ -18,10 +18,10 @@ type Period struct {
 // Envelope — нормализованный результат любого отчёта/анализа.
 // Числа в Summary/Rows — источник истины; нарратив и рендер берут значения отсюда.
 type Envelope struct {
-	Type     string             `json:"type"`
-	TenantID string             `json:"tenant_id"`
-	Period   Period             `json:"period"`
-	Currency string             `json:"currency"`
+	Type      string             `json:"type"`
+	TenantID  string             `json:"tenant_id"`
+	Period    Period             `json:"period"`
+	Currency  string             `json:"currency"`
 	Columns   []Column           `json:"columns"`
 	Rows      []map[string]any   `json:"rows"`
 	Summary   map[string]float64 `json:"summary"`

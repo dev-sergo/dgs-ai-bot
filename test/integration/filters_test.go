@@ -114,8 +114,8 @@ func TestDefaultDimensionInjected(t *testing.T) {
 	p := plan.AnalysisPlan{
 		Version: "1", Class: plan.ClassA, Report: "payment",
 		Metrics: []string{"sum_all"}, // group_by НЕ задан
-		Period: plan.Period{Kind: "relative", Token: "last_7_days"},
-		Method: "plain", Output: plan.Output{Format: "text"},
+		Period:  plan.Period{Kind: "relative", Token: "last_7_days"},
+		Method:  "plain", Output: plan.Output{Format: "text"},
 	}
 	a := newAppWith(t, fakePlanner{p})
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка за неделю")
