@@ -49,7 +49,7 @@ type InsightBundle struct {
 	ReturnCount    float64     `json:"return_count"`    // число возвратов за текущий период
 	ReturnRate     float64     `json:"return_rate"`     // % возвратов: return_sum / выручка текущего периода
 	Discounts      float64     `json:"discounts"`       // сумма выданных скидок (products.discount_sum)
-	DiscountShare  float64     `json:"discount_share"`  // доля скидок: discounts / выручка текущего периода, %
+	DiscountShare  float64     `json:"discount_share"`  // доля скидок: discounts / выручка ТОВАРОВ (products.amount), %
 	ChannelMix     []Component `json:"channel_mix"`     // каналы оплаты по убыванию суммы (только ненулевые)
 	TopProducts    []NamedRow  `json:"top_products"`    // топ позиций по выручке, N=5
 	BottomProducts []NamedRow  `json:"bottom_products"` // аутсайдеры по выручке (ненулевые продажи), N=5
@@ -72,6 +72,10 @@ func BuildInsightBundle(paymentNow, paymentPrev, productsNow dooglys.Result,
 	revenuePrev := sumField(paymentPrev.Rows, "sum_all")
 	returnsNow := sumField(paymentNow.Rows, "return_sum")
 	discountsNow := sumField(productsNow.Rows, "discount_sum")
+	// Скидки и выручка товаров — из ОДНОГО источника (products). Доля скидок к выручке
+	// товаров, а не к payment-выручке: иначе в гибридном режиме (payment=API, products=фикстура)
+	// знаменатель из другой вселенной даёт абсурдные проценты.
+	productRevenueNow := sumField(productsNow.Rows, "amount")
 
 	return InsightBundle{
 		Period:      period,
@@ -84,7 +88,7 @@ func BuildInsightBundle(paymentNow, paymentPrev, productsNow dooglys.Result,
 		// Относительные метрики потерь — к выручке ТЕКУЩЕГО периода (shareOf guard на revenue=0 → 0).
 		ReturnRate:     round2(shareOf(returnsNow, revenueNow)),
 		Discounts:      round2(discountsNow),
-		DiscountShare:  round2(shareOf(discountsNow, revenueNow)),
+		DiscountShare:  round2(shareOf(discountsNow, productRevenueNow)),
 		ChannelMix:     channelMix(paymentNow.Rows, revenueNow),
 		TopProducts:    productsByAmount(productsNow.Rows, topProductsN, false),
 		BottomProducts: productsByAmount(productsNow.Rows, bottomProductsN, true),

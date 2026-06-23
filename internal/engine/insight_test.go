@@ -51,13 +51,14 @@ func TestBuildInsightBundle(t *testing.T) {
 		t.Errorf("Discounts = %v, want 105", b.Discounts)
 	}
 
-	// Относительные метрики к выручке текущего периода (1500):
-	// ReturnRate = 200/1500*100 = 13.33; DiscountShare = 105/1500*100 = 7
+	// ReturnRate — к payment-выручке: 200/1500*100 = 13.33.
 	if b.ReturnRate != 13.33 {
 		t.Errorf("ReturnRate = %v, want 13.33", b.ReturnRate)
 	}
-	if b.DiscountShare != 7 {
-		t.Errorf("DiscountShare = %v, want 7", b.DiscountShare)
+	// DiscountShare — к выручке ТОВАРОВ (products.amount = 5150): 105/5150*100 = 2.04.
+	// Один источник со скидками → корректно и в гибридном режиме (payment=API, products=фикстура).
+	if b.DiscountShare != 2.04 {
+		t.Errorf("DiscountShare = %v, want 2.04", b.DiscountShare)
 	}
 
 	// ChannelMix: Карта 1200 (80%), Наличные 300 (20%); нулевые каналы отброшены
