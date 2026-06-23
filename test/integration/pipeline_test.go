@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"dgsbot/internal/advisor"
 	"dgsbot/internal/app"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/narrator"
@@ -27,7 +28,7 @@ func newAppStore(t *testing.T, pl planner.Planner) (*app.App, *session.Store) {
 		t.Fatalf("load tenants: %v", err)
 	}
 	store := session.NewStore()
-	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate(), store)
+	a := app.New(pl, tenants, dooglys.NewFixtureClient(fixturesDir), resolver.Load(fixturesDir), narrator.NewTemplate(), advisor.NewTemplate(), store)
 	// Фиксированное «сейчас» для детерминизма дат: 2026-06-19 10:00 UTC.
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
 	// Тихий логгер — чтобы аудит-строки Ask не зашумляли вывод тестов.
@@ -173,5 +174,40 @@ func TestTenantTimezoneInPeriod(t *testing.T) {
 	}
 	if ans.Envelope.Period.TZ != "Asia/Yekaterinburg" {
 		t.Errorf("tz = %s, want Asia/Yekaterinburg", ans.Envelope.Period.TZ)
+	}
+}
+
+// Консультационный запрос («на чём теряю») → режим advice: текст-разбор без envelope,
+// с числами потерь (возвраты/скидки). Stub проставляет период, RefineAdvice — intent=advice.
+func TestAdviceLosses(t *testing.T) {
+	a := newApp(t)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "на чём я теряю деньги за прошлый месяц")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Plan.Intent != "advice" {
+		t.Fatalf("intent = %q, want advice", ans.Plan.Intent)
+	}
+	if ans.Text == "" {
+		t.Fatal("ожидался текст совета")
+	}
+	// Детерминированный Compose (stub-режим) называет драйверы потерь.
+	if !strings.Contains(ans.Text, "Выручка") {
+		t.Errorf("в совете нет контекста выручки:\n%s", ans.Text)
+	}
+}
+
+// Консультация без периода → переспрос периода, а не угадывание.
+func TestAdviceNeedsPeriod(t *testing.T) {
+	a := newApp(t)
+	ans, err := a.Ask(context.Background(), "mock_single", "s", "на чём я теряю деньги")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ans.Plan.Intent != "advice" {
+		t.Fatalf("intent = %q, want advice", ans.Plan.Intent)
+	}
+	if !ans.Validation.NeedClarify {
+		t.Errorf("ожидался переспрос периода, got: %q", ans.Text)
 	}
 }

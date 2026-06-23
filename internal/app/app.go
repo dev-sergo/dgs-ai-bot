@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"dgsbot/internal/advisor"
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/dates"
 	"dgsbot/internal/dooglys"
@@ -53,6 +54,7 @@ type App struct {
 	client   dooglys.Client
 	resolver *resolver.Store
 	narrator narrator.Narrator
+	advisor  advisor.Advisor
 	sessions *session.Store
 	cat      *catalog.Catalog
 
@@ -63,13 +65,14 @@ type App struct {
 }
 
 // New собирает оркестратор.
-func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator, sess *session.Store) *App {
+func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator, adv advisor.Advisor, sess *session.Store) *App {
 	return &App{
 		planner:  pl,
 		tenants:  tenants,
 		client:   client,
 		resolver: res,
 		narrator: nar,
+		advisor:  adv,
 		sessions: sess,
 		cat:      catalog.Default(),
 		Now:      time.Now,
@@ -95,6 +98,12 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	// то, что модель делает нестабильно.
 	planner.Refine(text, &p)
 	ans.Plan = p
+
+	// Консультационный запрос («на чём теряю», «что улучшить») — отдельный режим:
+	// детерминированный снимок бизнеса (несколько выборок) + advisor поверх чисел.
+	if p.Intent == "advice" {
+		return a.advise(ctx, tenantID, sessionID, text, p)
+	}
 
 	// Не-данные интенты (help/smalltalk/off_topic) — отвечаем словами, без отчётов.
 	if !p.IsReport() {
@@ -239,6 +248,73 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	}
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
+	a.remember(sessionID, text, ans.Text)
+	return ans, nil
+}
+
+// advicePeriodPrompt — переспрос периода для консультации (совет без срока бессмыслен).
+const advicePeriodPrompt = "За какой период подготовить разбор? " +
+	"Например: последние 7 дней, последние 30 дней, этот или прошлый месяц."
+
+// advise — режим консультанта: собирает детерминированный снимок бизнеса за период
+// (выручка/возвраты/скидки/аутсайдеры из нескольких выборок) и формулирует совет через
+// advisor поверх готовых чисел. Тонкий срез фокусируется на «на чём теряю / что улучшить».
+func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
+	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
+
+	t, ok := a.tenants.Lookup(tenantID)
+	if !ok {
+		t = tenantctx.Tenant{Timezone: "Europe/Moscow", Currency: "RUB", CurrencyPrecision: 2}
+	}
+
+	// Период обязателен: пустой/неизвестный токен → уточняем, а не угадываем.
+	from, to, err := a.resolvePeriod(p.Period, t)
+	if err != nil {
+		ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: advicePeriodPrompt}
+		ans.Text = advicePeriodPrompt
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+	prev, err := dates.PrevRange(dates.Range{From: from, To: to})
+	if err != nil {
+		return ans, err
+	}
+
+	currency := currencyOr(t.Currency)
+	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
+	periodPrev := envelope.Period{From: prev.From, To: prev.To, TZ: t.Timezone}
+
+	// Снимок собирается из нескольких детерминированных выборок.
+	payNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to})
+	if err != nil {
+		return ans, err
+	}
+	payPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To})
+	if err != nil {
+		return ans, err
+	}
+	prodNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to})
+	if err != nil {
+		return ans, err
+	}
+
+	bundle := engine.BuildInsightBundle(payNow, payPrev, prodNow, currency, period, periodPrev)
+
+	// Нет данных за период — честный текст, без выдуманного совета.
+	if bundle.Revenue.Now == 0 && len(bundle.BottomProducts) == 0 {
+		ans.Text = "За период " + from + " … " + to + " данных для разбора нет. Попробуйте другой период."
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
+	// Совет: LLM-консультант поверх чисел снимка, с детерминированным fallback.
+	txt := advisor.Compose(bundle)
+	if a.advisor != nil {
+		if out, aerr := a.advisor.Advise(ctx, bundle); aerr == nil && out != "" {
+			txt = out
+		}
+	}
+	ans.Text = txt
 	a.remember(sessionID, text, ans.Text)
 	return ans, nil
 }

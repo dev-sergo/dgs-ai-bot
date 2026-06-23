@@ -16,6 +16,7 @@ import (
 
 	_ "time/tzdata"
 
+	"dgsbot/internal/advisor"
 	"dgsbot/internal/app"
 	"dgsbot/internal/config"
 	"dgsbot/internal/dooglys"
@@ -41,14 +42,17 @@ func main() {
 
 	var pl planner.Planner
 	var nar narrator.Narrator
+	var adv advisor.Advisor
 	switch cfg.PlannerMode {
 	case config.PlannerStub:
 		pl = planner.NewStub()
 		nar = narrator.NewTemplate()
+		adv = advisor.NewTemplate()
 	default:
 		cli := llm.New(cfg.LLM)
 		pl = planner.NewLLM(cli, cfg.LLM.Model, cfg.LLM.ForceJSON)
 		nar = narrator.NewLLM(cli, cfg.LLM.Model)
+		adv = advisor.NewLLM(cli, cfg.LLM.Model)
 	}
 
 	tenants, err := tenantctx.Load(filepath.Join(cfg.FixturesPath, "tenants.example.json"))
@@ -56,7 +60,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "tenants: %v\n", err)
 		os.Exit(1)
 	}
-	a := app.New(pl, tenants, dooglys.NewFixtureClient(cfg.FixturesPath), resolver.Load(cfg.FixturesPath), nar, session.NewStore())
+	a := app.New(pl, tenants, dooglys.NewFixtureClient(cfg.FixturesPath), resolver.Load(cfg.FixturesPath), nar, adv, session.NewStore())
 	// Фиксированное «сейчас» — под даты фикстур (как в интеграционных тестах).
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
 

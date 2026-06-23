@@ -11,6 +11,7 @@ import (
 
 	_ "time/tzdata" // встроенная база таймзон — чтобы работало в distroless без системного tzdata
 
+	"dgsbot/internal/advisor"
 	"dgsbot/internal/app"
 	"dgsbot/internal/config"
 	"dgsbot/internal/dooglys"
@@ -27,17 +28,20 @@ func main() {
 	cfg := config.Load()
 	log.Printf("config: %s", cfg.Summary())
 
-	// Планировщик и нарратор: реальная LLM или детерминированные стабы.
+	// Планировщик, нарратор, консультант: реальная LLM или детерминированные стабы.
 	var pl planner.Planner
 	var nar narrator.Narrator
+	var adv advisor.Advisor
 	switch cfg.PlannerMode {
 	case config.PlannerStub:
 		pl = planner.NewStub()
 		nar = narrator.NewTemplate()
+		adv = advisor.NewTemplate()
 	default:
 		cli := llm.New(cfg.LLM)
 		pl = planner.NewLLM(cli, cfg.LLM.Model, cfg.LLM.ForceJSON)
 		nar = narrator.NewLLM(cli, cfg.LLM.Model)
+		adv = advisor.NewLLM(cli, cfg.LLM.Model)
 	}
 
 	// Справочник тенантов.
@@ -71,7 +75,7 @@ func main() {
 		res = resolver.Load(cfg.FixturesPath)
 	}
 
-	a := app.New(pl, tenants, client, res, nar, session.NewStore())
+	a := app.New(pl, tenants, client, res, nar, adv, session.NewStore())
 	srv := httpx.New(cfg, a)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

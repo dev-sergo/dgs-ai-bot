@@ -35,6 +35,40 @@ func TestRefineTopNOrder_SkipsNonTopN(t *testing.T) {
 	}
 }
 
+// Консультационные запросы про ЭТО заведение → intent="advice"; generic-советы → не трогаем.
+func TestRefineAdvice(t *testing.T) {
+	advice := []string{
+		"на чём я теряю деньги?",
+		"какие товары убрать из меню?",
+		"как поднять выручку за месяц",
+		"что мне улучшить в продажах?",
+		"дай совет что убрать из меню",
+		"на чём можно сэкономить за прошлый месяц",
+	}
+	for _, q := range advice {
+		p := plan.AnalysisPlan{Intent: "off_topic"} // модель часто кладёт сюда off_topic
+		RefineAdvice(q, &p)
+		if p.Intent != "advice" {
+			t.Errorf("%q: intent=%q, want advice", q, p.Intent)
+		}
+	}
+
+	// Generic-советы без привязки к данным остаются как есть (off_topic).
+	notAdvice := []string{
+		"дай совет по развитию бизнеса",
+		"посоветуй как развивать бизнес в целом",
+		"выручка за неделю",
+		"топ товаров за месяц",
+	}
+	for _, q := range notAdvice {
+		p := plan.AnalysisPlan{Intent: "off_topic"}
+		RefineAdvice(q, &p)
+		if p.Intent == "advice" {
+			t.Errorf("%q: ошибочно помечен advice", q)
+		}
+	}
+}
+
 // payment + payment_type-фильтр (баг follow-up «а по карте?») → фильтр снят, выбрана
 // колонка канала, group_by=date. Без этого валидатор бракует план в out_of_scope.
 func TestRefinePaymentChannelFilter(t *testing.T) {
