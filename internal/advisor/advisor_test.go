@@ -6,15 +6,18 @@ import (
 
 	"dgsbot/internal/engine"
 	"dgsbot/internal/envelope"
+	"dgsbot/internal/llm"
 )
 
 func TestCompose(t *testing.T) {
 	b := engine.InsightBundle{
-		Currency: "RUB",
-		Revenue:  engine.Trend{Now: 1500, Prev: 2000, DeltaAbs: -500, DeltaPct: -25},
-		ReturnsSum: engine.Trend{Now: 200},
-		ReturnCount: 3,
-		Discounts:   105,
+		Currency:      "RUB",
+		Revenue:       engine.Trend{Now: 1500, Prev: 2000, DeltaAbs: -500, DeltaPct: -25},
+		ReturnsSum:    engine.Trend{Now: 200},
+		ReturnCount:   3,
+		ReturnRate:    13.33,
+		Discounts:     105,
+		DiscountShare: 7,
 		BottomProducts: []engine.NamedRow{
 			{Name: "Вода", Amount: 150, Quantity: 5, Profit: -15},
 			{Name: "Кофе", Amount: 300, Quantity: 4, Profit: 120},
@@ -22,8 +25,10 @@ func TestCompose(t *testing.T) {
 	}
 	out := Compose(b)
 
-	// Совет должен опираться на числа и называть драйверы потерь + аутсайдеры.
-	for _, want := range []string{"Выручка", "снижение", "возвраты", "скидки", "Вода", "в минусе"} {
+	// Совет должен опираться на числа и называть драйверы потерь + аутсайдеры,
+	// в т.ч. относительную тяжесть потерь (доля выручки).
+	for _, want := range []string{"Выручка", "снижение", "возвраты", "скидки", "Вода", "в минусе",
+		"13.33% выручки", "7% выручки"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("в совете нет %q:\n%s", want, out)
 		}
@@ -47,12 +52,13 @@ func TestCompose_EmptyPrev(t *testing.T) {
 	}
 }
 
-// hasNonRussian отбраковывает срыв в китайский (roadmap 5.5), но пропускает нормальный текст с ₽/%.
-func TestHasNonRussian(t *testing.T) {
-	if hasNonRussian("Выручка снизилась на 500 ₽ (−25 %), возвраты — 200 ₽.") {
-		t.Error("нормальный русский текст ошибочно отбракован")
+// Advisor падает на детерминированный Compose, когда модель сорвалась в китайский
+// (общий детектор llm.HasNonRussian, roadmap 5.5).
+func TestAdvisorRejectsNonRussian(t *testing.T) {
+	if llm.HasNonRussian("Выручка снизилась на 500 ₽ (−25 %), возвраты — 200 ₽.") {
+		t.Error("нормальный русский текст совета ошибочно отбракован")
 	}
-	if !hasNonRussian("Прирост выручки主要是由信用卡支付增加3461 RUB驱动") {
-		t.Error("текст с китайским не отбракован")
+	if !llm.HasNonRussian("Прирост выручки主要是由信用卡支付增加3461 RUB驱动") {
+		t.Error("совет с китайским не отбракован")
 	}
 }

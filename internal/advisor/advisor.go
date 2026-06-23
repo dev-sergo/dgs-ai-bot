@@ -65,13 +65,21 @@ func Compose(b engine.InsightBundle) string {
 		fmt.Fprintf(&sb, "Все расчёты через %s. ", ch.Label)
 	}
 
-	// 3. Драйверы потерь: возвраты и скидки в деньгах.
+	// 3. Драйверы потерь: возвраты и скидки в деньгах И в долях выручки (относительная тяжесть).
 	var losses []string
 	if b.ReturnsSum.Now > 0 {
-		losses = append(losses, fmt.Sprintf("возвраты — %s (%g шт.)", render.Money(b.ReturnsSum.Now, cur), b.ReturnCount))
+		detail := fmt.Sprintf("%g шт.", b.ReturnCount)
+		if b.ReturnRate > 0 {
+			detail = fmt.Sprintf("%g%% выручки, %s", b.ReturnRate, detail)
+		}
+		losses = append(losses, fmt.Sprintf("возвраты — %s (%s)", render.Money(b.ReturnsSum.Now, cur), detail))
 	}
 	if b.Discounts > 0 {
-		losses = append(losses, fmt.Sprintf("скидки — %s", render.Money(b.Discounts, cur)))
+		s := fmt.Sprintf("скидки — %s", render.Money(b.Discounts, cur))
+		if b.DiscountShare > 0 {
+			s += fmt.Sprintf(" (%g%% выручки)", b.DiscountShare)
+		}
+		losses = append(losses, s)
 	}
 	if len(losses) > 0 {
 		sb.WriteString("На чём уходят деньги: " + strings.Join(losses, ", ") + ". ")

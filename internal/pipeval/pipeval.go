@@ -49,17 +49,37 @@ func LoadCases(path string) ([]Case, error) {
 
 // Expect — ожидаемые свойства ОТВЕТА (проверяются только заданные поля).
 type Expect struct {
-	Intent       string             `json:"intent,omitempty"`         // report|help|smalltalk|off_topic
-	Clarify      *bool              `json:"clarify,omitempty"`        // ожидается переспрос (NeedClarify)
-	Envelope     *bool              `json:"envelope,omitempty"`       // должен ли быть построен envelope
-	NonEmptyText bool               `json:"non_empty_text,omitempty"` // текст ответа не пустой
-	Contains     []string           `json:"contains,omitempty"`       // подстроки, которые ДОЛЖНЫ быть в тексте (все)
-	ContainsAny  []string           `json:"contains_any,omitempty"`   // хотя бы одна из подстрок (must-mention для совета)
+	Intent       string             `json:"intent,omitempty"`          // report|help|smalltalk|off_topic
+	Clarify      *bool              `json:"clarify,omitempty"`         // ожидается переспрос (NeedClarify)
+	Envelope     *bool              `json:"envelope,omitempty"`        // должен ли быть построен envelope
+	NonEmptyText bool               `json:"non_empty_text,omitempty"`  // текст ответа не пустой
+	Contains     []string           `json:"contains,omitempty"`        // подстроки, которые ДОЛЖНЫ быть в тексте (все)
+	ContainsAny  AnyGroups          `json:"contains_any,omitempty"`    // OR-группы must-mention (между группами — И)
 	MentionsNum  *bool              `json:"mentions_number,omitempty"` // в тексте есть цифра (совет подкреплён числом)
-	NotContains  []string           `json:"not_contains,omitempty"`   // подстроки, которых быть НЕ должно (утечки)
-	Summary      map[string]float64 `json:"summary,omitempty"`        // точные значения envelope.Summary
-	Narrative    *bool              `json:"narrative,omitempty"`      // наличие нарратива (class B)
-	Rows         *int               `json:"rows,omitempty"`           // ожидаемое число строк (напр. top_n=1)
+	NotContains  []string           `json:"not_contains,omitempty"`    // подстроки, которых быть НЕ должно (утечки)
+	Summary      map[string]float64 `json:"summary,omitempty"`         // точные значения envelope.Summary
+	Narrative    *bool              `json:"narrative,omitempty"`       // наличие нарратива (class B)
+	Rows         *int               `json:"rows,omitempty"`            // ожидаемое число строк (напр. top_n=1)
+}
+
+// AnyGroups — одна или несколько OR-групп подстрок: для КАЖДОЙ группы хотя бы одна подстрока
+// должна встретиться в тексте (внутри группы — ИЛИ, между группами — И). Это позволяет в одном
+// кейсе требовать сразу нескольких независимых упоминаний (напр. драйвер потерь И относительную
+// метрику). В JSON принимает и плоский ["a","b"] (одна группа), и вложенный [["a","b"],["c"]] формат.
+type AnyGroups [][]string
+
+func (g *AnyGroups) UnmarshalJSON(b []byte) error {
+	var nested [][]string
+	if err := json.Unmarshal(b, &nested); err == nil {
+		*g = nested
+		return nil
+	}
+	var flat []string
+	if err := json.Unmarshal(b, &flat); err != nil {
+		return err
+	}
+	*g = AnyGroups{flat}
+	return nil
 }
 
 // Case — один кейс набора. History — предшествующие реплики пользователя в той же
@@ -152,16 +172,19 @@ func Check(ans app.Answer, e Expect) []string {
 			add("в тексте нет %q", sub)
 		}
 	}
-	if len(e.ContainsAny) > 0 {
+	for _, group := range e.ContainsAny {
+		if len(group) == 0 {
+			continue
+		}
 		hit := false
-		for _, sub := range e.ContainsAny {
+		for _, sub := range group {
 			if strings.Contains(ans.Text, sub) {
 				hit = true
 				break
 			}
 		}
 		if !hit {
-			add("в тексте нет ни одной из %v", e.ContainsAny)
+			add("в тексте нет ни одной из %v", group)
 		}
 	}
 	if e.MentionsNum != nil {

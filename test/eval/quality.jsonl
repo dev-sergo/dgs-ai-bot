@@ -80,7 +80,7 @@
 {"query": "сравни выручку с позапрошлой неделей", "expect": {"not_contains": ["+100%", "119%"]}}
 {"query": "за счёт чего изменилась выручка относительно прошлой недели", "expect": {"narrative": true, "not_contains": ["средний чек", "Средний чек", "среднего чека"]}}
 {"history": ["выручка за неделю"], "query": "а по карте?", "expect": {"intent": "report", "not_contains": ["не умею", "вне"]}}
-{"query": "на чём я теряю деньги за прошлый месяц", "expect": {"intent": "advice", "non_empty_text": true, "contains_any": ["возврат", "скидк"], "mentions_number": true, "not_contains": ["主", "信用卡", "недоступ"]}}
+{"query": "на чём я теряю деньги за прошлый месяц", "expect": {"intent": "advice", "non_empty_text": true, "contains_any": [["возврат", "скидк"], ["доля", "выручк"]], "mentions_number": true, "not_contains": ["主", "信用卡", "недоступ"]}}
 {"query": "какие товары убрать из меню за прошлый месяц", "expect": {"intent": "advice", "non_empty_text": true, "contains_any": ["позиц", "меню"], "mentions_number": true}}
 {"query": "что мне улучшить в продажах за месяц", "expect": {"intent": "advice", "non_empty_text": true, "contains_any": ["средн", "чек", "канал", "карт", "налич"], "mentions_number": true}}
 {"query": "дай совет по развитию бизнеса", "expect": {"intent": "off_topic"}}

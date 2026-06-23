@@ -47,7 +47,9 @@ type InsightBundle struct {
 	AvgCheck       Trend       `json:"avg_check"`       // взвешенный средний чек (sum_all / kol_vo_chekov)
 	ReturnsSum     Trend       `json:"returns_sum"`     // деньги, ушедшие в возвраты
 	ReturnCount    float64     `json:"return_count"`    // число возвратов за текущий период
+	ReturnRate     float64     `json:"return_rate"`     // % возвратов: return_sum / выручка текущего периода
 	Discounts      float64     `json:"discounts"`       // сумма выданных скидок (products.discount_sum)
+	DiscountShare  float64     `json:"discount_share"`  // доля скидок: discounts / выручка текущего периода, %
 	ChannelMix     []Component `json:"channel_mix"`     // каналы оплаты по убыванию суммы (только ненулевые)
 	TopProducts    []NamedRow  `json:"top_products"`    // топ позиций по выручке, N=5
 	BottomProducts []NamedRow  `json:"bottom_products"` // аутсайдеры по выручке (ненулевые продажи), N=5
@@ -68,16 +70,21 @@ func BuildInsightBundle(paymentNow, paymentPrev, productsNow dooglys.Result,
 
 	revenueNow := sumField(paymentNow.Rows, "sum_all")
 	revenuePrev := sumField(paymentPrev.Rows, "sum_all")
+	returnsNow := sumField(paymentNow.Rows, "return_sum")
+	discountsNow := sumField(productsNow.Rows, "discount_sum")
 
 	return InsightBundle{
-		Period:         period,
-		PrevPeriod:     periodPrev,
-		Currency:       currency,
-		Revenue:        trendOf(revenueNow, revenuePrev),
-		AvgCheck:       trendOf(avgCheckOf(paymentNow.Rows), avgCheckOf(paymentPrev.Rows)),
-		ReturnsSum:     trendOf(sumField(paymentNow.Rows, "return_sum"), sumField(paymentPrev.Rows, "return_sum")),
-		ReturnCount:    round2(sumField(paymentNow.Rows, "return_count")),
-		Discounts:      round2(sumField(productsNow.Rows, "discount_sum")),
+		Period:      period,
+		PrevPeriod:  periodPrev,
+		Currency:    currency,
+		Revenue:     trendOf(revenueNow, revenuePrev),
+		AvgCheck:    trendOf(avgCheckOf(paymentNow.Rows), avgCheckOf(paymentPrev.Rows)),
+		ReturnsSum:  trendOf(returnsNow, sumField(paymentPrev.Rows, "return_sum")),
+		ReturnCount: round2(sumField(paymentNow.Rows, "return_count")),
+		// Относительные метрики потерь — к выручке ТЕКУЩЕГО периода (shareOf guard на revenue=0 → 0).
+		ReturnRate:     round2(shareOf(returnsNow, revenueNow)),
+		Discounts:      round2(discountsNow),
+		DiscountShare:  round2(shareOf(discountsNow, revenueNow)),
 		ChannelMix:     channelMix(paymentNow.Rows, revenueNow),
 		TopProducts:    productsByAmount(productsNow.Rows, topProductsN, false),
 		BottomProducts: productsByAmount(productsNow.Rows, bottomProductsN, true),

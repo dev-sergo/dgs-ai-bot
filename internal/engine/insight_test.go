@@ -51,6 +51,15 @@ func TestBuildInsightBundle(t *testing.T) {
 		t.Errorf("Discounts = %v, want 105", b.Discounts)
 	}
 
+	// Относительные метрики к выручке текущего периода (1500):
+	// ReturnRate = 200/1500*100 = 13.33; DiscountShare = 105/1500*100 = 7
+	if b.ReturnRate != 13.33 {
+		t.Errorf("ReturnRate = %v, want 13.33", b.ReturnRate)
+	}
+	if b.DiscountShare != 7 {
+		t.Errorf("DiscountShare = %v, want 7", b.DiscountShare)
+	}
+
 	// ChannelMix: Карта 1200 (80%), Наличные 300 (20%); нулевые каналы отброшены
 	if len(b.ChannelMix) != 2 {
 		t.Fatalf("ChannelMix len=%d, want 2: %+v", len(b.ChannelMix), b.ChannelMix)
@@ -90,6 +99,32 @@ func TestBuildInsightBundle_EmptyPrev(t *testing.T) {
 	}
 	if !b.AvgCheck.EmptyPrev {
 		t.Errorf("AvgCheck.EmptyPrev должен быть true при пустом prev, got %+v", b.AvgCheck)
+	}
+}
+
+// TestRelativeLossMetrics — guard'ы относительных метрик: деление на ноль и нулевые потери.
+func TestRelativeLossMetrics(t *testing.T) {
+	// revenue=0 → доли не считаем (защита от деления на ноль), даже если возвраты/скидки есть.
+	zeroRev := BuildInsightBundle(
+		dooglys.Result{Rows: []dooglys.Row{{"sum_all": 0.0, "return_sum": 50.0}}},
+		dooglys.Result{},
+		dooglys.Result{Rows: []dooglys.Row{{"name": "X", "quantity": 1.0, "amount": 0.0, "discount_sum": 20.0}}},
+		"RUB", envelope.Period{}, envelope.Period{})
+	if zeroRev.ReturnRate != 0 || zeroRev.DiscountShare != 0 {
+		t.Errorf("при revenue=0 ждём ReturnRate=0 DiscountShare=0, got %v/%v", zeroRev.ReturnRate, zeroRev.DiscountShare)
+	}
+
+	// Возвраты=0 → ReturnRate=0; скидки идут долей от выручки.
+	noReturns := BuildInsightBundle(
+		dooglys.Result{Rows: []dooglys.Row{{"sum_all": 1000.0, "return_sum": 0.0}}},
+		dooglys.Result{},
+		dooglys.Result{Rows: []dooglys.Row{{"name": "X", "quantity": 1.0, "amount": 1000.0, "discount_sum": 250.0}}},
+		"RUB", envelope.Period{}, envelope.Period{})
+	if noReturns.ReturnRate != 0 {
+		t.Errorf("при нулевых возвратах ждём ReturnRate=0, got %v", noReturns.ReturnRate)
+	}
+	if noReturns.DiscountShare != 25 {
+		t.Errorf("DiscountShare = %v, want 25 (250/1000)", noReturns.DiscountShare)
 	}
 }
 

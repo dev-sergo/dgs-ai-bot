@@ -34,8 +34,9 @@ func (n *LLM) Narrate(ctx context.Context, e envelope.Envelope) (string, error) 
 		{Role: "user", Content: string(facts)},
 	}
 	out, err := n.cli.Chat(ctx, n.model, msgs, llm.ChatOptions{Temperature: 0.2, MaxTokens: 300})
-	if err != nil || out == "" {
-		// Fallback: детерминированная формулировка из тех же чисел.
+	if err != nil || out == "" || llm.HasNonRussian(out) {
+		// Fallback: детерминированная формулировка из тех же чисел (в т.ч. если модель сорвалась
+		// в другой язык — qwen иногда вставляет китайский в нарратив, см. roadmap 5.5).
 		return Compose(e), nil
 	}
 	return out, nil
