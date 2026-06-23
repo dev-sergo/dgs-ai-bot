@@ -53,7 +53,9 @@ type Expect struct {
 	Clarify      *bool              `json:"clarify,omitempty"`        // ожидается переспрос (NeedClarify)
 	Envelope     *bool              `json:"envelope,omitempty"`       // должен ли быть построен envelope
 	NonEmptyText bool               `json:"non_empty_text,omitempty"` // текст ответа не пустой
-	Contains     []string           `json:"contains,omitempty"`       // подстроки, которые ДОЛЖНЫ быть в тексте
+	Contains     []string           `json:"contains,omitempty"`       // подстроки, которые ДОЛЖНЫ быть в тексте (все)
+	ContainsAny  []string           `json:"contains_any,omitempty"`   // хотя бы одна из подстрок (must-mention для совета)
+	MentionsNum  *bool              `json:"mentions_number,omitempty"` // в тексте есть цифра (совет подкреплён числом)
 	NotContains  []string           `json:"not_contains,omitempty"`   // подстроки, которых быть НЕ должно (утечки)
 	Summary      map[string]float64 `json:"summary,omitempty"`        // точные значения envelope.Summary
 	Narrative    *bool              `json:"narrative,omitempty"`      // наличие нарратива (class B)
@@ -87,6 +89,9 @@ func (r Result) Pass() bool { return r.Err == nil && len(r.Mismatch) == 0 }
 var piiPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`[\w.+-]+@[\w-]+\.[\w.-]+`), // email
 }
+
+// digitRe — детект «совет подкреплён числом»: любая цифра в тексте ответа.
+var digitRe = regexp.MustCompile(`[0-9]`)
 
 // Run прогоняет кейсы через готовый App (сессия на каждый кейс — без утечки истории).
 func Run(ctx context.Context, a *app.App, tenantID string, cases []Case) []Result {
@@ -145,6 +150,24 @@ func Check(ans app.Answer, e Expect) []string {
 	for _, sub := range e.Contains {
 		if !strings.Contains(ans.Text, sub) {
 			add("в тексте нет %q", sub)
+		}
+	}
+	if len(e.ContainsAny) > 0 {
+		hit := false
+		for _, sub := range e.ContainsAny {
+			if strings.Contains(ans.Text, sub) {
+				hit = true
+				break
+			}
+		}
+		if !hit {
+			add("в тексте нет ни одной из %v", e.ContainsAny)
+		}
+	}
+	if e.MentionsNum != nil {
+		has := digitRe.MatchString(ans.Text)
+		if has != *e.MentionsNum {
+			add("mentions_number=%v ожидался %v", has, *e.MentionsNum)
 		}
 	}
 	for _, sub := range e.NotContains {

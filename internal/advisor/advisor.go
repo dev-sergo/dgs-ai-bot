@@ -29,12 +29,12 @@ func (Template) Advise(_ context.Context, b engine.InsightBundle) (string, error
 }
 
 // Compose — детерминированная сборка совета из снимка (и fallback для LLM-консультанта).
-// Структура: контекст выручки → драйверы потерь (возвраты/скидки) → аутсайдеры меню → вывод.
+// Структура: выручка + средний чек → каналы → потери (возвраты/скидки) → топ → аутсайдеры.
 func Compose(b engine.InsightBundle) string {
 	cur := b.Currency
 	var sb strings.Builder
 
-	// 1. Контекст: куда движется выручка.
+	// 1. Контекст: выручка и средний чек.
 	if b.Revenue.EmptyPrev {
 		fmt.Fprintf(&sb, "Выручка за период: %s (сравнить не с чем — за предыдущий период данных нет). ",
 			render.Money(b.Revenue.Now, cur))
@@ -44,8 +44,28 @@ func Compose(b engine.InsightBundle) string {
 			directionWord(b.Revenue.DeltaAbs),
 			render.Money(b.Revenue.DeltaAbs, cur))
 	}
+	if !b.AvgCheck.EmptyPrev && b.AvgCheck.Now > 0 {
+		fmt.Fprintf(&sb, "Средний чек: %s (был %s, %s). ",
+			render.Money(b.AvgCheck.Now, cur),
+			render.Money(b.AvgCheck.Prev, cur),
+			formatDeltaPct(b.AvgCheck.DeltaPct))
+	} else if b.AvgCheck.Now > 0 {
+		fmt.Fprintf(&sb, "Средний чек: %s. ", render.Money(b.AvgCheck.Now, cur))
+	}
 
-	// 2. Драйверы потерь: возвраты и скидки в деньгах.
+	// 2. Каналы оплаты (если их больше одного — показываем расклад).
+	if len(b.ChannelMix) > 1 {
+		parts := make([]string, 0, len(b.ChannelMix))
+		for _, ch := range b.ChannelMix {
+			parts = append(parts, fmt.Sprintf("%s %s (%.0f%%)", ch.Label, render.Money(ch.Now, cur), ch.Share))
+		}
+		sb.WriteString("Каналы оплаты: " + strings.Join(parts, ", ") + ". ")
+	} else if len(b.ChannelMix) == 1 {
+		ch := b.ChannelMix[0]
+		fmt.Fprintf(&sb, "Все расчёты через %s. ", ch.Label)
+	}
+
+	// 3. Драйверы потерь: возвраты и скидки в деньгах.
 	var losses []string
 	if b.ReturnsSum.Now > 0 {
 		losses = append(losses, fmt.Sprintf("возвраты — %s (%g шт.)", render.Money(b.ReturnsSum.Now, cur), b.ReturnCount))
@@ -57,9 +77,18 @@ func Compose(b engine.InsightBundle) string {
 		sb.WriteString("На чём уходят деньги: " + strings.Join(losses, ", ") + ". ")
 	}
 
-	// 3. Аутсайдеры меню: позиции с низкой выручкой (убыточные помечаем явно).
+	// 4. Лидеры продаж (топ по выручке) — на что опираться.
+	if len(b.TopProducts) > 0 {
+		parts := make([]string, 0, len(b.TopProducts))
+		for _, p := range b.TopProducts {
+			parts = append(parts, fmt.Sprintf("%s (%s)", p.Name, render.Money(p.Amount, cur)))
+		}
+		sb.WriteString("Ключевые позиции: " + strings.Join(parts, ", ") + ". ")
+	}
+
+	// 5. Аутсайдеры меню: позиции с низкой выручкой (убыточные помечаем явно).
 	if len(b.BottomProducts) > 0 {
-		var parts []string
+		parts := make([]string, 0, len(b.BottomProducts))
 		for _, p := range b.BottomProducts {
 			s := fmt.Sprintf("%s (%s", p.Name, render.Money(p.Amount, cur))
 			if p.Profit < 0 {
@@ -81,6 +110,17 @@ func directionWord(delta float64) string {
 		return "рост"
 	case delta < 0:
 		return "снижение"
+	default:
+		return "без изменений"
+	}
+}
+
+func formatDeltaPct(pct float64) string {
+	switch {
+	case pct > 0:
+		return fmt.Sprintf("+%.1f%%", pct)
+	case pct < 0:
+		return fmt.Sprintf("%.1f%%", pct)
 	default:
 		return "без изменений"
 	}

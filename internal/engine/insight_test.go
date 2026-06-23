@@ -9,41 +9,70 @@ import (
 
 func TestBuildInsightBundle(t *testing.T) {
 	paymentNow := dooglys.Result{Rows: []dooglys.Row{
-		{"sum_all": 1000.0, "return_sum": 150.0, "return_count": 2.0},
-		{"sum_all": 500.0, "return_sum": 50.0, "return_count": 1.0},
+		{"sum_all": 1000.0, "return_sum": 150.0, "return_count": 2.0, "kol_vo_chekov": 4.0,
+			"sum_card": 700.0, "sum_cash": 300.0, "onlayn": 0.0, "sbp": 0.0},
+		{"sum_all": 500.0, "return_sum": 50.0, "return_count": 1.0, "kol_vo_chekov": 2.0,
+			"sum_card": 500.0, "sum_cash": 0.0, "onlayn": 0.0, "sbp": 0.0},
 	}}
 	paymentPrev := dooglys.Result{Rows: []dooglys.Row{
-		{"sum_all": 2000.0, "return_sum": 100.0, "return_count": 1.0},
+		{"sum_all": 2000.0, "return_sum": 100.0, "return_count": 1.0, "kol_vo_chekov": 8.0},
 	}}
 	productsNow := dooglys.Result{Rows: []dooglys.Row{
 		{"name": "Пицца", "quantity": 10.0, "amount": 5000.0, "profit": 3000.0, "discount_sum": 100.0},
 		{"name": "Вода", "quantity": 3.0, "amount": 90.0, "profit": -10.0, "discount_sum": 5.0},
-		{"name": "Вода", "quantity": 2.0, "amount": 60.0, "profit": -5.0, "discount_sum": 0.0}, // дубль — агрегируется
-		{"name": "Салфетка", "quantity": 0.0, "amount": 0.0, "profit": 0.0, "discount_sum": 0.0}, // не продавалось — выкидываем
+		{"name": "Вода", "quantity": 2.0, "amount": 60.0, "profit": -5.0, "discount_sum": 0.0},
+		{"name": "Салфетка", "quantity": 0.0, "amount": 0.0, "profit": 0.0, "discount_sum": 0.0},
 	}}
 
 	period := envelope.Period{From: "2026-06-01", To: "2026-06-07"}
 	prev := envelope.Period{From: "2026-05-25", To: "2026-05-31"}
 	b := BuildInsightBundle(paymentNow, paymentPrev, productsNow, "RUB", period, prev)
 
-	// Выручка: 1500 текущий vs 2000 предыдущий → -500, -25%
+	// Выручка: 1500 vs 2000 → -500, -25%
 	if b.Revenue.Now != 1500 || b.Revenue.Prev != 2000 || b.Revenue.DeltaAbs != -500 {
 		t.Errorf("Revenue = %+v, want now=1500 prev=2000 delta=-500", b.Revenue)
 	}
 	if b.Revenue.DeltaPct != -25 {
 		t.Errorf("Revenue.DeltaPct = %v, want -25", b.Revenue.DeltaPct)
 	}
+
+	// AvgCheck: now = 1500/6 = 250; prev = 2000/8 = 250 → delta=0
+	if b.AvgCheck.Now != 250 || b.AvgCheck.Prev != 250 || b.AvgCheck.DeltaAbs != 0 {
+		t.Errorf("AvgCheck = %+v, want now=250 prev=250 delta=0", b.AvgCheck)
+	}
+
 	// Возвраты: 200 текущий, 3 штуки
 	if b.ReturnsSum.Now != 200 || b.ReturnCount != 3 {
 		t.Errorf("Returns: sum=%v count=%v, want 200/3", b.ReturnsSum.Now, b.ReturnCount)
 	}
+
 	// Скидки: 105
 	if b.Discounts != 105 {
 		t.Errorf("Discounts = %v, want 105", b.Discounts)
 	}
-	// Аутсайдеры: «Вода» (агрегат 150₽, 5 шт, прибыль -15) первой; «Салфетка» отброшена (0 продаж)
+
+	// ChannelMix: Карта 1200 (80%), Наличные 300 (20%); нулевые каналы отброшены
+	if len(b.ChannelMix) != 2 {
+		t.Fatalf("ChannelMix len=%d, want 2: %+v", len(b.ChannelMix), b.ChannelMix)
+	}
+	if b.ChannelMix[0].Label != "Карта" || b.ChannelMix[0].Now != 1200 {
+		t.Errorf("ChannelMix[0] = %+v, want Карта 1200", b.ChannelMix[0])
+	}
+	if b.ChannelMix[1].Label != "Наличные" || b.ChannelMix[1].Now != 300 {
+		t.Errorf("ChannelMix[1] = %+v, want Наличные 300", b.ChannelMix[1])
+	}
+
+	// TopProducts: Пицца первая (5000), Вода вторая (150)
+	if len(b.TopProducts) < 2 {
+		t.Fatalf("TopProducts len=%d, want >=2: %+v", len(b.TopProducts), b.TopProducts)
+	}
+	if b.TopProducts[0].Name != "Пицца" || b.TopProducts[0].Amount != 5000 {
+		t.Errorf("TopProducts[0] = %+v, want Пицца 5000", b.TopProducts[0])
+	}
+
+	// BottomProducts: Вода первая (150, убыточная); Салфетка отброшена (0 продаж)
 	if len(b.BottomProducts) != 2 {
-		t.Fatalf("BottomProducts: %d, want 2 (Салфетка с 0 продаж исключена): %+v", len(b.BottomProducts), b.BottomProducts)
+		t.Fatalf("BottomProducts: %d, want 2 (Салфетка исключена): %+v", len(b.BottomProducts), b.BottomProducts)
 	}
 	water := b.BottomProducts[0]
 	if water.Name != "Вода" || water.Amount != 150 || water.Quantity != 5 || water.Profit != -15 {
@@ -51,12 +80,46 @@ func TestBuildInsightBundle(t *testing.T) {
 	}
 }
 
-// Пустой предыдущий период → EmptyPrev=true, проценты не считаются.
+// TestBuildInsightBundle_EmptyPrev — пустой предыдущий период.
 func TestBuildInsightBundle_EmptyPrev(t *testing.T) {
 	paymentNow := dooglys.Result{Rows: []dooglys.Row{{"sum_all": 1000.0}}}
 	b := BuildInsightBundle(paymentNow, dooglys.Result{}, dooglys.Result{}, "RUB",
 		envelope.Period{}, envelope.Period{})
 	if !b.Revenue.EmptyPrev || b.Revenue.DeltaPct != 0 {
 		t.Errorf("при пустом prev ждём EmptyPrev=true и DeltaPct=0, got %+v", b.Revenue)
+	}
+	if !b.AvgCheck.EmptyPrev {
+		t.Errorf("AvgCheck.EmptyPrev должен быть true при пустом prev, got %+v", b.AvgCheck)
+	}
+}
+
+// TestAvgCheckWeighted — взвешенный средний чек корректнее наивного.
+func TestAvgCheckWeighted(t *testing.T) {
+	// Два дня: 1000/1 и 100/10 → наивное среднее ≠ взвешенное
+	// Взвешенное: (1000+100)/(1+10) = 1100/11 = 100
+	rows := []dooglys.Row{
+		{"sum_all": 1000.0, "kol_vo_chekov": 1.0},
+		{"sum_all": 100.0, "kol_vo_chekov": 10.0},
+	}
+	got := round2(avgCheckOf(rows))
+	if got != 100 {
+		t.Errorf("avgCheckOf = %v, want 100", got)
+	}
+}
+
+// TestChannelMix — нулевые каналы отброшены, сортировка по убыванию суммы.
+func TestChannelMix(t *testing.T) {
+	rows := []dooglys.Row{
+		{"sum_card": 300.0, "sum_cash": 100.0, "onlayn": 0.0, "sbp": 0.0},
+	}
+	mix := channelMix(rows, 400)
+	if len(mix) != 2 {
+		t.Fatalf("channelMix len=%d, want 2", len(mix))
+	}
+	if mix[0].Label != "Карта" || mix[0].Share != 75 {
+		t.Errorf("mix[0] = %+v, want Карта 75%%", mix[0])
+	}
+	if mix[1].Label != "Наличные" || mix[1].Share != 25 {
+		t.Errorf("mix[1] = %+v, want Наличные 25%%", mix[1])
 	}
 }

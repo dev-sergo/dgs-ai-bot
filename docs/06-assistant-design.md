@@ -8,8 +8,10 @@
 все детерминированные расчёты в одном месте), `planner.RefineAdvice` (§4), `internal/advisor`
 (LLM + детерминированный Compose, §5), ветка `app.advise` (§2). +4 advice-кейса в quality.jsonl (§6).
 Тонкий срез фокусируется на «на чём теряю / что улучшить»: bundle{Revenue, Returns, Discounts,
-BottomProducts}. TODO следующих итераций: derived-метрики (взвеш. средний чек), ChannelMix/TopProducts
-в bundle, advisor-eval на риге, фильтры (точка/категория) в снимке.
+BottomProducts}. Advice-eval (§6) реализован: `pipeval.Expect` получил `contains_any` +
+`mentions_number`, 3 advice-кейса в quality.jsonl усилены must-mention-ассертами против снимка
+фикстуры (детерминированно, проходят в stub). TODO следующих итераций: derived-метрики
+(взвеш. средний чек), ChannelMix/TopProducts в bundle, фильтры (точка/категория) в снимке.
 
 ## 1. Зачем
 
@@ -125,10 +127,15 @@ type InsightBundle struct {
  "expect": {"intent": "advice",
             "contains_any": ["возврат", "скидк"],   // реальный драйвер потерь в фикстуре
             "mentions_number": true,                  // совет подкреплён цифрой
-            "not_contains": ["средний чек составил"]}}// не подменяет тему
+            "not_contains": ["主", "信用卡", "недоступ"]}}// без китайского/«данные недоступны»
 ```
 
-Это даёт регрессионную защиту без LLM-judge. Опционально позже — LLM-judge по рубрике
+**Реализовано** (`internal/pipeval`): `Expect.ContainsAny` (хотя бы одна подстрока),
+`Expect.MentionsNum` (`digitRe` — цифра в тексте). 3 advice-кейса
+([quality.jsonl:83-85](../test/eval/quality.jsonl)) усилены must-mention-ассертами; снимок
+детерминирован (возвраты есть только в мае; скидки/аутсайдеры из products не фильтруются по
+периоду → всегда в bundle), поэтому ассерты стабильны и в stub-режиме. Покрыто юнит-тестами
+`pipeval_test.go`. Это даёт регрессионную защиту без LLM-judge. Опционально позже — LLM-judge по рубрике
 (связность/тон/уместность) для качественной оценки, но не как gate.
 
 ## 7. Явно вне скоупа консультанта
