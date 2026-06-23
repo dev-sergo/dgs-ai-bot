@@ -56,7 +56,16 @@ func main() {
 	// офлайн grid-снимки (детерминированный путь CI/eval).
 	var client dooglys.Client
 	var res *resolver.Store
-	if cfg.Dooglys.Mode == config.DooglysHTTP {
+	switch cfg.Dooglys.Mode {
+	case config.DooglysAPI:
+		if cfg.Dooglys.Login == "" || cfg.Dooglys.Password == "" {
+			log.Fatal("DGS_CLIENT=api requires DGS_LOGIN and DGS_PASSWORD to be set")
+		}
+		log.Printf("dooglys: using JSON API client → %s (domain=%s)", cfg.Dooglys.Base, cfg.Dooglys.Domain)
+		client = dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
+		// Payment-данные идут из API; резолвер имя→uuid пока из офлайн grid-снимков.
+		res = resolver.Load(cfg.FixturesPath)
+	case config.DooglysHTTP:
 		if cfg.Dooglys.Cookie == "" {
 			log.Fatal("DGS_CLIENT=http requires DGS_COOKIE to be set")
 		}
@@ -70,7 +79,7 @@ func main() {
 			log.Printf("resolver: using live UUIDs from Dooglys HTML form")
 			res = live
 		}
-	} else {
+	default:
 		client = dooglys.NewFixtureClient(cfg.FixturesPath)
 		res = resolver.Load(cfg.FixturesPath)
 	}

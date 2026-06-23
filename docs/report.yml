@@ -1,0 +1,4070 @@
+openapi: 3.0.0
+info:
+  title: Report
+  description: Отвечает за отчеты dooglys
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://dooglys.com
+    email: info@dooglys.com
+servers:
+  - url: http://localhost:60028/api/v1
+    description: Local
+    variables: {}
+  - url: https://report.stage.dgs/api/v1
+    description: Stage
+    variables: {}
+  - url: https://report.production.dgs/api/v1
+    description: Production
+    variables: {}
+security:
+  - XContextHeader: []
+paths:
+  /report/rfm:
+    get:
+      tags:
+        - Report
+      summary: РФМ анализ покупателей
+      description: ' Отчет строится по трем показателям (количество дней с последней покупки, количество покупок, сумма покупок), по каждому из них покупателю присваевается ценка от 1 до 3, в зависимости от того, в какой диапазон значений попадает покупатель.</br> Если покупатель попадает в диапазон от 0 до первой границы включительно присваевается оценка «1» ( для количества дней с последней покупки «3») </br> Если покупатель попадает в диапазон от первой границы до второй границы включительно присваевается оценка «2»</br> Клиентам, которые попали в диапазон от второй границы присваивается Оценка «3» ( для количества дней с последней покупки «1») </br> '
+      operationId: ReportRFM
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/recencyFirstBound'
+        - $ref: '#/components/parameters/recencySecondBound'
+        - $ref: '#/components/parameters/frequencyFirstBound'
+        - $ref: '#/components/parameters/frequencySecondBound'
+        - $ref: '#/components/parameters/monetaryFirstBound'
+        - $ref: '#/components/parameters/monetarySecondBound'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=fio last_purchase_days purchase_quantity purchase_amount
+          schema:
+            type: string
+            enum:
+              - fio
+              - last_purchase_days
+              - purchase_quantity
+              - purchase_amount
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/groups'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RFMReportCustomer'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/rfm/groups:
+    get:
+      tags:
+        - Report
+      summary: Количество покупателей в рфм группах
+      description: ''
+      operationId: ReportRFMGroups
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/recencyFirstBound'
+        - $ref: '#/components/parameters/recencySecondBound'
+        - $ref: '#/components/parameters/frequencyFirstBound'
+        - $ref: '#/components/parameters/frequencySecondBound'
+        - $ref: '#/components/parameters/monetaryFirstBound'
+        - $ref: '#/components/parameters/monetarySecondBound'
+        - $ref: '#/components/parameters/groups'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RFMReportGroup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/rfm/summary:
+    get:
+      tags:
+        - Report
+      summary: Резюме по РФМ анализу со средниими значениями по покупателям
+      description: ''
+      operationId: ReportRFMSummary
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/recencyFirstBound'
+        - $ref: '#/components/parameters/recencySecondBound'
+        - $ref: '#/components/parameters/frequencyFirstBound'
+        - $ref: '#/components/parameters/frequencySecondBound'
+        - $ref: '#/components/parameters/monetaryFirstBound'
+        - $ref: '#/components/parameters/monetarySecondBound'
+        - $ref: '#/components/parameters/groups'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFMReportSummary'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/type-order:
+    get:
+      tags:
+        - Report
+      summary: Отчет по типам заказов
+      description: Отчет группирует продажи по дням и торговым точкам, считает суммы по типам оплаты для каждого типа заказа
+      operationId: ReportTypeOrder
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=shift_date region_name sale_point_name quantity sales_sum
+          schema:
+            type: string
+            enum:
+              - shift_date
+              - region_name
+              - sale_point_name
+              - quantity
+              - sales_sum
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportTypeOrder'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/customer-segmentation:
+    post:
+      tags:
+        - Report
+      summary: Отчет для сегментации покупателей по показателям
+      description: Отчет собирает показатели покупателей на основе их покупок и т.д.
+      operationId: ReportCustomerSegmentation
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=fio birth_date sex registration_date bonus_quantity quantity avg_amount amount
+          schema:
+            type: string
+            enum:
+              - fio
+              - birth_date
+              - sex
+              - registration_date
+              - bonus_quantity
+              - quantity
+              - avg_amount
+              - amount
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCustomerSegmentationFilter'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportCustomerSegmentation'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/customer-list:
+    post:
+      tags:
+        - Report
+      summary: Отчет выбирает покупателей по указанным условиям
+      description: В ответе будет список покупателей, которые соответствуют условиям, используется для динамических групп покупателей
+      operationId: ReportCustomerList
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCustomerListFilter'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/payment:
+    get:
+      tags:
+        - Report
+      summary: Выручка
+      description: Суммирует выручку по дням
+      operationId: ReportPayment
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=date count return_count return_sum sum_card sum_cash sum_online sum_sbp sum_all revenue average_sum average_revenue revenue_card revenue_cash revenue_online revenue_sbp
+          schema:
+            type: string
+            enum:
+              - date
+              - count
+              - return_count
+              - return_sum
+              - sum_card
+              - sum_cash
+              - sum_online
+              - sum_sbp
+              - sum_all
+              - revenue
+              - average_sum
+              - revenue_card
+              - revenue_cash
+              - revenue_online
+              - revenue_sbp
+              - average_revenue
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: group
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=YYYY-MM-DD YYYY-WW YYYY-MM ID
+          schema:
+            type: string
+            default: YYYY-MM-DD
+            enum:
+              - YYYY-MM-DD
+              - YYYY-WW
+              - YYYY-MM
+              - ID
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPayment'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/payment/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета по выручке
+      description: ''
+      operationId: ReportPaymentTotal
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPaymentTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/payment/details:
+    get:
+      tags:
+        - Report
+      summary: Отчет по выручке детализированный по терминалам
+      description: ''
+      operationId: ReportPaymentDetails
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=sale_point_name
+          schema:
+            type: string
+            enum:
+              - sale_point_name
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPaymentSalePoint'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/expected-profit:
+    get:
+      tags:
+        - Report
+      summary: Ожидаемая прибыль
+      description: ''
+      operationId: ReportExpectedProfit
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=date revenue sum_all cost_price profit total_count real_count percent markup_percent
+          schema:
+            type: string
+            enum:
+              - date
+              - revenue
+              - sum_all
+              - cost_price
+              - profit
+              - real_count
+              - total_count
+              - markup_percent
+              - percent
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportExpectedProfit'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/expected-profit/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета Персонал
+      description: ''
+      operationId: ReportExpectedProfitTotal
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportExpectedProfitTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/personnel:
+    get:
+      tags:
+        - Report
+      summary: Персонал
+      description: Выручка каждого сотрудника
+      operationId: ReportPersonnel
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name earnings profit checks_count average_check revenue total_count average_revenue
+          schema:
+            type: string
+            enum:
+              - name
+              - earnings
+              - revenue
+              - profit
+              - checks_count
+              - total_count
+              - average_check
+              - average_revenue
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/userIDs'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPersonnel'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/personnel/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета Персонал
+      description: ''
+      operationId: ReportPersonnelTotal
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPersonnelTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/paycheck:
+    get:
+      tags:
+        - Report
+      summary: Список чеков
+      description: ''
+      operationId: ReportPaycheck
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/paymentTypes'
+        - $ref: '#/components/parameters/productIDs'
+        - $ref: '#/components/parameters/orderID'
+        - name: order_number
+          in: query
+          description: Номер заказа (пока не работает)
+          required: false
+          schema:
+            type: string
+        - name: types[]
+          description: Типы чека
+          in: query
+          required: false
+          x-go-type-skip-optional-pointer: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SalesDocumentTradeType'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=number shift_number close_user_name cashier_name terminal_name close_date close paid total_cost sell_discount discount profit
+          schema:
+            type: string
+            enum:
+              - number
+              - shift_number
+              - close_user_name
+              - cashier_name
+              - terminal_name
+              - close_date
+              - close
+              - paid
+              - total_cost
+              - sell_discount
+              - discount
+              - profit
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPaycheck'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/paycheck/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета Список чеков
+      description: ''
+      operationId: ReportPaycheckTotal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/paymentTypes'
+        - $ref: '#/components/parameters/productIDs'
+        - $ref: '#/components/parameters/orderID'
+        - name: order_number
+          in: query
+          description: Номер заказа (пока не работает)
+          required: false
+          schema:
+            type: string
+        - name: types[]
+          description: Типы чека
+          in: query
+          required: false
+          x-go-type-skip-optional-pointer: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SalesDocumentTradeType'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPaycheckTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/products:
+    get:
+      tags:
+        - Report
+      summary: Продажи товаров
+      description: ''
+      operationId: ReportProducts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - $ref: '#/components/parameters/productIDs'
+        - name: include_zero_price
+          description: Включать ли товары с нулевой ценой
+          in: query
+          required: false
+          x-go-type-skip-optional-pointer: true
+          schema:
+            type: boolean
+            default: false
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name article quantity quantity_with_discount quantity_without_discount amount amount_with_discount  amount_without_discount revenue revenue_with_discount revenue_without_discount profit profit_with_discount profit_without_discount discount_sum
+          schema:
+            type: string
+            enum:
+              - name
+              - article
+              - quantity
+              - quantity_with_discount
+              - quantity_without_discount
+              - amount
+              - amount_with_discount
+              - amount_without_discount
+              - revenue
+              - revenue_with_discount
+              - revenue_without_discount
+              - profit
+              - profit_with_discount
+              - profit_without_discount
+              - discount_sum
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportProduct'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/products/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета по товарам
+      description: ''
+      operationId: ReportProductsTotal
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - $ref: '#/components/parameters/productIDs'
+        - name: include_zero_price
+          description: Включать ли товары с нулевой ценой
+          in: query
+          required: false
+          x-go-type-skip-optional-pointer: true
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportProductsTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/categories:
+    get:
+      tags:
+        - Report
+      summary: Продажи товаров по категориям
+      description: ''
+      operationId: ReportCategories
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name quantity amount revenue profit
+          schema:
+            type: string
+            enum:
+              - name
+              - quantity
+              - amount
+              - revenue
+              - profit
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportCategory'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/cash-income-outcome:
+    get:
+      tags:
+        - Report
+      summary: Внесения и выплаты
+      description: ''
+      operationId: ReportCashIncomeOutcome
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/closeUserIDs'
+        - name: types[]
+          in: query
+          required: false
+          x-go-type-skip-optional-pointer: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SalesDocumentCashType'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name sale_point_name cashier_name close_user_name close_date sum
+          schema:
+            type: string
+            enum:
+              - name
+              - sale_point_name
+              - cashier_name
+              - close_user_name
+              - close_date
+              - sum
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportCashIncomeOutcome'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/cash-on-hand:
+    get:
+      tags:
+        - Report
+      summary: Наличные
+      description: ''
+      operationId: ReportCashOnHand
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name sale_point_name sell payback income outcome total
+          schema:
+            type: string
+            enum:
+              - name
+              - sale_point_name
+              - sell
+              - payback
+              - income
+              - outcome
+              - total
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportCashOnHand'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/sales-on-map:
+    get:
+      tags:
+        - Report
+      summary: Продажи на карте
+      description: ''
+      operationId: ReportSalesOnMap
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name count_orders count_drivers total orders_count drivers_count
+          schema:
+            type: string
+            enum:
+              - name
+              - count_orders
+              - count_drivers
+              - total
+              - orders_count
+              - drivers_count
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportSalesOnMap'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/sales-on-map/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета продажи на карте
+      description: ''
+      operationId: ReportSalesOnMapTotal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSalesOnMapTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/sales-on-map/data:
+    get:
+      tags:
+        - Report
+      summary: продажи, сгруппированные по областям на карте
+      description: ''
+      operationId: ReportSalesOnMapData
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportSalesOnMapData'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/order-payment-hour:
+    get:
+      tags:
+        - Report
+      summary: Часы заказов
+      description: ''
+      operationId: ReportOrderPaymentHour
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/orderTypes'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=hour quantity revenue revenue_without_discount sales_sum items_sum
+          schema:
+            type: string
+            enum:
+              - hour
+              - quantity
+              - revenue
+              - revenue_without_discount
+              - sales_sum
+              - items_sum
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportOrderPaymentHour'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/order-payment-hour/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета часы заказов
+      description: ''
+      operationId: ReportOrderPaymentHourTotal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/orderTypes'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOrderPaymentHourTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/special:
+    get:
+      tags:
+        - Report
+      summary: Акции
+      description: ''
+      operationId: ReportSpecial
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name orders_count revenue orders_amount_with_discount revenue_without_discount orders_amount_without_discount orders_amount_discount discount
+          schema:
+            type: string
+            enum:
+              - name
+              - orders_count
+              - revenue
+              - orders_amount_with_discount
+              - revenue_without_discount
+              - orders_amount_without_discount
+              - orders_amount_discount
+              - discount
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportSpecial'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/special-products:
+    get:
+      tags:
+        - Report
+      summary: Товары по акции
+      description: ''
+      operationId: ReportSpecialProducts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/productIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - $ref: '#/components/parameters/specialIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=special_name product_name quantity total_cost revenue discount
+          schema:
+            type: string
+            enum:
+              - special_name
+              - product_name
+              - quantity
+              - total_cost
+              - revenue
+              - discount
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportSpecialProduct'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/source-order:
+    get:
+      tags:
+        - Report
+      summary: Источники заказов
+      description: ''
+      operationId: ReportSourceOrder
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=source delivery_quantity delivery_total delivery_profit retail_quantity retail_total retail_profit hold_quantity hold_total hold_profit pickup_quantity pickup_total pickup_profit quantity total profit
+          schema:
+            type: string
+            enum:
+              - source
+              - delivery_quantity
+              - delivery_total
+              - delivery_profit
+              - retail_quantity
+              - retail_total
+              - retail_profit
+              - hold_quantity
+              - hold_total
+              - hold_profit
+              - pickup_quantity
+              - pickup_total
+              - pickup_profit
+              - quantity
+              - total
+              - profit
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportSourceOrder'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/source-order/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета источники заказов
+      description: ''
+      operationId: ReportSourceOrderTotal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSourceOrderTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/order-processing-time:
+    get:
+      tags:
+        - Report
+      summary: Время выполнения
+      description: ''
+      operationId: ReportOrderProcessingTime
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/orderTypes'
+        - $ref: '#/components/parameters/orderSources'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=sale_point_name not_confirmed_time confirmed_time cooking_time ready_time sent_time processing_time
+          schema:
+            type: string
+            enum:
+              - sale_point_name
+              - not_confirmed_time
+              - confirmed_time
+              - cooking_time
+              - ready_time
+              - sent_time
+              - processing_time
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportOrderProcessingTime'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/order-processing-time/detail:
+    get:
+      tags:
+        - Report
+      summary: Время выполнения по дням
+      description: ''
+      operationId: ReportOrderProcessingTimeDetail
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/orderTypes'
+        - $ref: '#/components/parameters/orderSources'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=date order_day sale_point_name not_confirmed_time confirmed_time cooking_time ready_time sent_time processing_time
+          schema:
+            type: string
+            enum:
+              - date
+              - order_day
+              - sale_point_name
+              - not_confirmed_time
+              - confirmed_time
+              - cooking_time
+              - ready_time
+              - sent_time
+              - processing_time
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportOrderProcessingTimeDetail'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/order-processing-time/total:
+    get:
+      tags:
+        - Report
+      summary: Итог отчета время выполнения
+      description: ''
+      operationId: ReportOrderProcessingTimeTotal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOrderProcessingTimeTotal'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/abc:
+    get:
+      tags:
+        - Report
+      summary: ABC
+      description: ''
+      operationId: ReportABC
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/closeUserIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - name: group_a
+          in: query
+          required: true
+          description: группа A (в процентах)
+          schema:
+            type: integer
+            x-go-type: int64
+            example: 80
+            maximum: 100
+            minimum: 0
+        - name: group_b
+          in: query
+          required: true
+          description: группа B (в процентах), группа C все остальное
+          schema:
+            type: integer
+            x-go-type: int64
+            example: 15
+            maximum: 100
+            minimum: 0
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name category_name quantity cost_price quantity_group cost_price_group
+          schema:
+            type: string
+            enum:
+              - name
+              - category_name
+              - quantity
+              - cost_price
+              - quantity_group
+              - cost_price_group
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportABC'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/kitchen/cooks:
+    get:
+      tags:
+        - Report
+      summary: Аналитика работы кухни
+      description: Список сотрудников с количеством приготовленных блюд
+      operationId: ReportKitchenCooks
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=name dishes_count
+          schema:
+            type: string
+            enum:
+              - name
+              - dishes_count
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - $ref: '#/components/parameters/productIDs'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportKitchenCooks'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report/kitchen/cooks/details:
+    get:
+      tags:
+        - Report
+      summary: Детализация по сотруднику
+      description: Детализация по дням для конкретного сотрудника
+      operationId: ReportKitchenCooksDetail
+      parameters:
+        - $ref: '#/components/parameters/dateFrom'
+        - $ref: '#/components/parameters/dateTo'
+        - name: sort_by
+          in: query
+          required: true
+          x-oapi-codegen-extra-tags:
+            binding: omitempty,oneof=shift_date dishes_count
+          schema:
+            type: string
+            enum:
+              - shift_date
+              - dishes_count
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/regionIDs'
+        - $ref: '#/components/parameters/salePointIDs'
+        - $ref: '#/components/parameters/userIDs'
+        - $ref: '#/components/parameters/productCategoryIds'
+        - $ref: '#/components/parameters/productIDs'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Pagination-Total-Count:
+              $ref: '#/components/headers/XPaginationTotalCount'
+            X-Pagination-Page-Count:
+              $ref: '#/components/headers/XPaginationPageCount'
+            X-Pagination-Current-Page:
+              $ref: '#/components/headers/XPaginationCurrentPage'
+            X-Pagination-Per-Page:
+              $ref: '#/components/headers/XPaginationPerPage'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportKitchenCooksDetail'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    XContextHeader:
+      type: apiKey
+      description: '{"tenant_id": "797314dd-913b-47ee-ae2e-b7ec5e433279", "tenant_domain": "google"}'
+      name: x-context
+      in: header
+  parameters:
+    dateFrom:
+      name: date_from
+      in: query
+      required: true
+      description: Дата с
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: string
+        example: '2025-01-01'
+    dateTo:
+      name: date_to
+      in: query
+      required: true
+      description: Дата по
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: string
+        example: '2025-01-01'
+    recencyFirstBound:
+      name: recency_first_bound
+      description: Давность покупки первая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    recencySecondBound:
+      name: recency_second_bound
+      description: Давность покупки вторая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    frequencyFirstBound:
+      name: frequency_first_bound
+      description: Частота покупок первая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    frequencySecondBound:
+      name: frequency_second_bound
+      description: Частота покупок вторая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    monetaryFirstBound:
+      name: monetary_first_bound
+      description: Сумма покупок первая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    monetarySecondBound:
+      name: monetary_second_bound
+      description: Сумма покупок вторая граница
+      in: query
+      required: true
+      x-oapi-codegen-extra-tags:
+        binding: required
+      schema:
+        type: integer
+        x-go-type: int64
+    SortOrder:
+      name: sort_order
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/SortOrder'
+    groups:
+      name: groups[]
+      description: Группа в РФМ анализе
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/RFMGroup'
+        x-go-type: '[]string'
+    regionIDs:
+      name: region_ids[]
+      description: Регионы, продажи которых будут анализироваться
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    salePointIDs:
+      name: sale_point_ids[]
+      description: Тогровые точки, продажи которых будут анализироваться
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    Page:
+      name: page
+      in: query
+      description: Номер страницы
+      required: false
+      schema:
+        type: integer
+        x-go-type: int64
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per-page
+      in: query
+      description: Размер страницы
+      required: false
+      schema:
+        type: integer
+        x-go-type: int64
+        minimum: 1
+        default: 20
+      x-oapi-codegen-extra-tags:
+        binding: omitempty,min=1
+    userIDs:
+      name: user_ids[]
+      description: Идентификаторы сотрудников
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    paymentTypes:
+      name: payment_types[]
+      description: Типы оплаты
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/PaymentType'
+    productIDs:
+      name: product_ids[]
+      description: Идентификаторы товаров
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    orderID:
+      name: order_id
+      in: query
+      description: ID заказа
+      required: false
+      schema:
+        type: string
+        format: uuid
+        x-go-type: string
+    productCategoryIds:
+      name: product_category_ids[]
+      description: Идентификаторы категорий товаров
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    closeUserIDs:
+      name: close_user_ids[]
+      description: Идентификаторы сотрудников, закрывших смену
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    orderTypes:
+      name: order_types[]
+      description: Типы заказов
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/OrderType'
+    specialIDs:
+      name: special_ids[]
+      description: Идентификаторы акций
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+          x-go-type: string
+    orderSources:
+      name: order_sources[]
+      description: Источники заказов
+      in: query
+      required: false
+      x-go-type-skip-optional-pointer: true
+      schema:
+        type: array
+        items:
+          type: string
+  schemas:
+    SortOrder:
+      type: string
+      enum:
+        - asc
+        - desc
+    RFMGroup:
+      type: string
+      description: Присвоенная группа по сегментам </br> loyal - Лояльные</br> promising - Перспективные</br> newbies - Новички</br> at_risk - В зоне риска</br> at_loss - В зоне потери</br> drifting - Дрейфующие</br> sleeping - Спящие</br>
+      enum:
+        - loyal
+        - promising
+        - newbies
+        - at_risk
+        - at_loss
+        - drifting
+        - sleeping
+    RFMSegment:
+      type: integer
+      x-go-type: int8
+      enum:
+        - 1
+        - 2
+        - 3
+    RFMReportCustomer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: id покупателя
+        fio:
+          type: string
+          description: ФИО покупателя
+        phone:
+          type: string
+          description: Номер телефона покупателя
+        region_ids:
+          type: array
+          description: Регионы (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        sale_point_ids:
+          type: array
+          description: Торговые точки (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        last_purchase_days:
+          type: integer
+          x-go-type: int64
+          description: Количество дней с последней покупки
+        purchase_quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество покупок
+        purchase_amount:
+          type: number
+          x-go-type: float64
+          description: Сумма покупок
+        recency:
+          allOf:
+            - $ref: '#/components/schemas/RFMSegment'
+            - description: Присвоенный сегмент давности последней покупки
+        frequency:
+          allOf:
+            - $ref: '#/components/schemas/RFMSegment'
+            - description: Присвоенный сегмент частоты покупок
+        monetary:
+          allOf:
+            - $ref: '#/components/schemas/RFMSegment'
+            - description: Присвоенный сегмент суммы покупок
+        group:
+          $ref: '#/components/schemas/RFMGroup'
+      required:
+        - id
+        - fio
+        - phone
+        - region_ids
+        - sale_point_ids
+        - last_purchase_days
+        - purchase_quantity
+        - purchase_amount
+        - recency
+        - frequency
+        - monetary
+        - group
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    RFMReportGroup:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/RFMGroup'
+        count:
+          type: integer
+          x-go-type: int64
+          description: Количество покупателей в группе
+      required:
+        - id
+        - count
+    RFMReportSummary:
+      type: object
+      properties:
+        count:
+          type: integer
+          x-go-type: int64
+          description: Количество покупателей
+        avg_purchase_amount:
+          type: number
+          x-go-type: float64
+          description: Средняя сумма покупок
+        avg_purchase_quantity:
+          type: number
+          x-go-type: float64
+          description: Среднее количество покупок
+        avg_last_purchase_days:
+          type: number
+          x-go-type: float64
+          description: Среднее количество дней с последней покупки
+      required:
+        - count
+        - avg_purchase_amount
+        - avg_purchase_quantity
+        - avg_last_purchase_days
+    ReportTypeOrder:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Дата смены
+        shift_date:
+          type: string
+          description: Дата смены
+          deprecated: true
+        region_id:
+          type: string
+          format: uuid
+          description: Id региона
+        sale_point_id:
+          type: string
+          format: uuid
+          description: Id торговой точки
+        region_name:
+          type: string
+          description: Название региона
+        sale_point_name:
+          type: string
+          description: Название торговой точки
+        quantity:
+          type: integer
+          description: Количество покупок
+          x-go-type: int64
+        sales_sum:
+          type: number
+          description: Сумма продаж
+          x-go-type: float64
+        retail_quantity:
+          type: integer
+          x-go-type: int64
+        retail_cash_sales_sum:
+          type: number
+          x-go-type: float64
+        retail_card_sales_sum:
+          type: number
+          x-go-type: float64
+        retail_online_sales_sum:
+          type: number
+          x-go-type: float64
+        retail_sbp_sales_sum:
+          type: number
+          x-go-type: float64
+        cash_retail_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        card_retail_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        without-payment_retail_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        online_retail_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        hold_quantity:
+          type: integer
+          x-go-type: int64
+        hold_cash_sales_sum:
+          type: number
+          x-go-type: float64
+        hold_card_sales_sum:
+          type: number
+          x-go-type: float64
+        hold_online_sales_sum:
+          type: number
+          x-go-type: float64
+        hold_sbp_sales_sum:
+          type: number
+          x-go-type: float64
+        cash_hold_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        card_hold_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        without-payment_hold_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        online_hold_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        pickup_quantity:
+          type: integer
+          x-go-type: int64
+        pickup_cash_sales_sum:
+          type: number
+          x-go-type: float64
+        pickup_card_sales_sum:
+          type: number
+          x-go-type: float64
+        pickup_online_sales_sum:
+          type: number
+          x-go-type: float64
+        pickup_sbp_sales_sum:
+          type: number
+          x-go-type: float64
+        cash_pickup_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        card_pickup_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        without-payment_pickup_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        online_pickup_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        delivery_quantity:
+          type: integer
+          x-go-type: int64
+        delivery_cash_sales_sum:
+          type: number
+          x-go-type: float64
+        delivery_card_sales_sum:
+          type: number
+          x-go-type: float64
+        delivery_online_sales_sum:
+          type: number
+          x-go-type: float64
+        delivery_sbp_sales_sum:
+          type: number
+          x-go-type: float64
+        cash_delivery_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        card_delivery_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        without-payment_delivery_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+        online_delivery_sales_sum:
+          type: number
+          x-go-type: float64
+          deprecated: true
+      required:
+        - shift_date
+        - region_id
+        - sale_point_id
+        - region_name
+        - sale_point_name
+        - quantity
+        - sales_sum
+        - retail_quantity
+        - retail_cash_sales_sum
+        - retail_card_sales_sum
+        - retail_online_sales_sum
+        - retail_sbp_sales_sum
+        - hold_quantity
+        - hold_cash_sales_sum
+        - hold_card_sales_sum
+        - hold_online_sales_sum
+        - hold_sbp_sales_sum
+        - pickup_quantity
+        - pickup_cash_sales_sum
+        - pickup_card_sales_sum
+        - pickup_online_sales_sum
+        - pickup_sbp_sales_sum
+        - delivery_quantity
+        - delivery_cash_sales_sum
+        - delivery_card_sales_sum
+        - delivery_online_sales_sum
+        - delivery_sbp_sales_sum
+        - date
+        - cash_delivery_sales_sum
+        - cash_hold_sales_sum
+        - cash_pickup_sales_sum
+        - cash_retail_sales_sum
+        - card_delivery_sales_sum
+        - card_hold_sales_sum
+        - card_pickup_sales_sum
+        - card_retail_sales_sum
+        - without-payment_delivery_sales_sum
+        - without-payment_hold_sales_sum
+        - without-payment_pickup_sales_sum
+        - without-payment_retail_sales_sum
+        - online_delivery_sales_sum
+        - online_hold_sales_sum
+        - online_pickup_sales_sum
+        - online_retail_sales_sum
+    CustomerSegmentationRfmFilter:
+      type: object
+      properties:
+        recency_first_bound:
+          type: integer
+          x-go-type: int64
+          description: Давность покупки первая граница
+        recency_second_bound:
+          type: integer
+          x-go-type: int64
+          description: Давность покупки вторая граница
+        frequency_first_bound:
+          type: integer
+          x-go-type: int64
+          description: Частота покупок первая граница
+        frequency_second_bound:
+          type: integer
+          x-go-type: int64
+          description: Частота покупок вторая граница
+        monetary_first_bound:
+          type: integer
+          x-go-type: int64
+          description: Сумма покупок первая граница
+        monetary_second_bound:
+          type: integer
+          x-go-type: int64
+          description: Сумма покупок вторая граница
+        groups:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Группа в РФМ анализе
+          items:
+            $ref: '#/components/schemas/RFMGroup'
+          x-go-type: '[]string'
+      required:
+        - recency_first_bound
+        - recency_second_bound
+        - frequency_first_bound
+        - frequency_second_bound
+        - monetary_first_bound
+        - monetary_second_bound
+    PaymentType:
+      type: string
+      x-go-type: string
+      description: Тип оплаты </br> cash - наличные </br> card - карта </br> online - онлайн </br> sbp - СБП</br>
+      enum:
+        - cash
+        - card
+        - online
+        - sbp
+    OrderType:
+      type: string
+      x-go-type: string
+      description: Тип заказа </br> delivery - доставка </br> pickup - самовывоз </br> hold - в заведении </br> retail - розничная продажа</br>
+      enum:
+        - delivery
+        - pickup
+        - hold
+        - retail
+    Sex:
+      type: integer
+      x-go-type: int8
+      x-go-type-skip-optional-pointer: true
+      description: Пол </br> 1 - Мужчина 2 - Женщина
+      enum:
+        - 1
+        - 2
+    ReportCustomerSegmentationFilter:
+      type: object
+      properties:
+        date_from:
+          type: string
+          description: Дата C
+          example: '2025-01-01'
+        date_to:
+          type: string
+          description: Дата По
+          example: '2025-02-01'
+        rfm:
+          $ref: '#/components/schemas/CustomerSegmentationRfmFilter'
+        region_ids:
+          type: array
+          description: Id регионов
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+            format: uuid
+        sale_point_ids:
+          type: array
+          description: Id торговых точек
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+            format: uuid
+        birth_date_from:
+          type: string
+          description: Дата рождения с
+          x-go-type-skip-optional-pointer: true
+          example: '2025-01-01'
+        birth_date_to:
+          type: string
+          description: Дата рождения по
+          x-go-type-skip-optional-pointer: true
+          example: '2025-01-20'
+        birth_day_from:
+          type: string
+          description: День рождения с
+          example: 01-20
+          x-go-type-skip-optional-pointer: true
+        birth_day_to:
+          type: string
+          description: День рождения по
+          example: 02-20
+          x-go-type-skip-optional-pointer: true
+        quantity_from:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов с
+        quantity_to:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов по
+        avg_amount_from:
+          type: integer
+          x-go-type: int64
+          description: Средняя сумма заказа с
+        avg_amount_to:
+          type: integer
+          x-go-type: int64
+          description: Средняя сумма заказа по
+        amount_from:
+          type: integer
+          x-go-type: int64
+          description: Сумма заказа с
+        amount_to:
+          type: integer
+          x-go-type: int64
+          description: Сумма заказа по
+        sources:
+          type: array
+          description: Источники заказов
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+        payment_types:
+          type: array
+          description: Типы оплат
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/PaymentType'
+        order_types:
+          type: array
+          description: Типы заказов
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/OrderType'
+        coupon_ids:
+          type: array
+          description: ID купонов
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+            format: uuid
+        bonus_quantity_from:
+          type: integer
+          x-go-type: int64
+          description: Количество бонусов с
+        bonus_quantity_to:
+          type: integer
+          x-go-type: int64
+          description: Количество бонусов по
+        registration_date_from:
+          type: string
+          description: Дата регистрации с
+          x-go-type-skip-optional-pointer: true
+          example: '2025-01-01'
+        registration_date_to:
+          type: string
+          example: '2025-01-20'
+          description: Дата регистрации по
+          x-go-type-skip-optional-pointer: true
+        sex:
+          $ref: '#/components/schemas/Sex'
+        product_ids:
+          type: array
+          description: ID товаров
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+            format: uuid
+        product_category_ids:
+          type: array
+          description: ID категорий товаров
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+            format: uuid
+      required:
+        - date_from
+        - date_to
+    ReportCustomerSegmentation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id покупателя
+        fio:
+          type: string
+          description: ФИО
+        phone:
+          type: string
+          description: Телефон
+        birth_date:
+          type: string
+          description: Дата рождения
+          nullable: true
+        sex:
+          $ref: '#/components/schemas/Sex'
+        registration_date:
+          type: string
+          description: Дата регистрации
+          nullable: true
+        bonus_quantity:
+          type: number
+          x-go-type: float64
+          description: Количество бонусов
+        region_ids:
+          type: array
+          description: Регионы заказов (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        sale_point_ids:
+          type: array
+          description: Торговые точки заказов (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        group:
+          $ref: '#/components/schemas/RFMGroup'
+        quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов
+        avg_amount:
+          type: number
+          x-go-type: float64
+          description: Средняя сумма заказов
+        amount:
+          type: number
+          x-go-type: float64
+          description: Сумма заказов
+        sources:
+          type: array
+          description: Источники заказов
+          items:
+            type: string
+        payment_types:
+          type: array
+          description: Типы оплат
+          items:
+            $ref: '#/components/schemas/PaymentType'
+        order_types:
+          type: array
+          description: Типы заказов
+          items:
+            $ref: '#/components/schemas/OrderType'
+        coupon_ids:
+          type: array
+          description: Купоны (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        product_ids:
+          type: array
+          description: Купленные товары (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+        product_category_ids:
+          type: array
+          description: Категории купленных товаров (ограничено 5 шт)
+          items:
+            type: string
+            format: uuid
+      required:
+        - id
+        - fio
+        - phone
+        - birth_date
+        - sex
+        - registration_date
+        - bonus_quantity
+        - region_ids
+        - sale_point_ids
+        - group
+        - quantity
+        - avg_amount
+        - amount
+        - sources
+        - payment_types
+        - order_types
+        - coupon_ids
+        - product_ids
+        - product_category_ids
+    ConditionType:
+      type: string
+      enum:
+        - and
+        - or
+        - nested
+        - customer_birthday
+        - customer_balance
+        - customer_gender
+        - order_amount
+        - order_type
+        - datetime_dateinterval
+        - structure_sale_point
+        - structure_region
+        - datetime_relative_date_interval
+        - order_source
+        - order_payment_type
+        - orders_count
+        - orders_amount
+        - orders_avg_amount
+        - orders_product
+        - orders_product_category
+    Condition:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+      required:
+        - type
+    SomeCondition:
+      type: object
+      description: Какое-то условие</br></br> Есть зависымые условия, например количество заказов зависит от типа заказа, типа оплаты, те. если указаны зависимые условия, то количество заказов будет считаться для указанного типа заказа с указанным типом оплаты</br></br> Есть вложенные условия, эти условия выполняются в своем контексте, в нем зависымые условия берут зависимости из своего контекста, это позволяет описывать условия за несколько периодов даты, например где количество заказов за прошлый месяц больше 10 и количество заказов за этот месяц больше 5
+      discriminator:
+        propertyName: type
+        mapping:
+          and: '#/components/schemas/AndCondition'
+          or: '#/components/schemas/OrCondition'
+          nested: '#/components/schemas/NestedCondition'
+          customer_balance: '#/components/schemas/CustomerBalanceCondition'
+          customer_birthday: '#/components/schemas/CustomerBirthDayCondition'
+          customer_gender: '#/components/schemas/CustomerGenderCondition'
+          structure_region: '#/components/schemas/OrderRegionCondition'
+          structure_sale_point: '#/components/schemas/OrderSalePointCondition'
+          orders_product: '#/components/schemas/OrdersProduct'
+          orders_product_category: '#/components/schemas/OrdersProductCategory'
+          orders_amount: '#/components/schemas/OrdersAmountCondition'
+          order_amount: '#/components/schemas/OrderAmountCondition'
+          orders_avg_amount: '#/components/schemas/OrdersAVGAmountCondition'
+          orders_count: '#/components/schemas/OrdersCountCondition'
+          order_payment_type: '#/components/schemas/OrderPaymentTypeCondition'
+          order_source: '#/components/schemas/OrderSourceCondition'
+          order_type: '#/components/schemas/OrderTypeCondition'
+          datetime_dateinterval: '#/components/schemas/DateIntervalCondition'
+          datetime_relative_date_interval: '#/components/schemas/RelativeDateIntervalCondition'
+      oneOf:
+        - $ref: '#/components/schemas/AndCondition'
+        - $ref: '#/components/schemas/OrCondition'
+        - $ref: '#/components/schemas/NestedCondition'
+        - $ref: '#/components/schemas/CustomerBalanceCondition'
+        - $ref: '#/components/schemas/CustomerBirthDayCondition'
+        - $ref: '#/components/schemas/CustomerGenderCondition'
+        - $ref: '#/components/schemas/OrderRegionCondition'
+        - $ref: '#/components/schemas/OrderSalePointCondition'
+        - $ref: '#/components/schemas/OrdersProduct'
+        - $ref: '#/components/schemas/OrdersProductCategory'
+        - $ref: '#/components/schemas/OrderAmountCondition'
+        - $ref: '#/components/schemas/OrdersAmountCondition'
+        - $ref: '#/components/schemas/OrdersAVGAmountCondition'
+        - $ref: '#/components/schemas/OrdersCountCondition'
+        - $ref: '#/components/schemas/OrderPaymentTypeCondition'
+        - $ref: '#/components/schemas/OrderSourceCondition'
+        - $ref: '#/components/schemas/OrderTypeCondition'
+        - $ref: '#/components/schemas/DateIntervalCondition'
+        - $ref: '#/components/schemas/RelativeDateIntervalCondition'
+    AndCondition:
+      description: Логическое И
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            conditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/SomeCondition'
+          required:
+            - conditions
+    OrCondition:
+      description: Логическое ИЛИ
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            conditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/SomeCondition'
+          required:
+            - conditions
+    NestedCondition:
+      type: object
+      description: Вложенное условие
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            condition:
+              $ref: '#/components/schemas/SomeCondition'
+          required:
+            - condition
+    OperatorType:
+      type: string
+      enum:
+        - eq
+        - ne
+        - ge
+        - gt
+        - le
+        - lt
+        - contains
+        - notcontains
+    CompareCondition:
+      type: object
+      description: условие с сравнением значения
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            op:
+              $ref: '#/components/schemas/OperatorType'
+          required:
+            - op
+    DoubleOrString:
+      oneOf:
+        - type: number
+          format: double
+        - type: string
+    CustomerBalanceCondition:
+      type: object
+      description: Баланс покупателя
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/DoubleOrString'
+          required:
+            - value
+    IntOrString:
+      oneOf:
+        - type: integer
+          format: int64
+        - type: string
+    CustomerBirthDayCondition:
+      type: object
+      description: День рождения покупателя через N дней
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/IntOrString'
+          required:
+            - value
+    StringOrStringArray:
+      oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+    CustomerGenderCondition:
+      type: object
+      description: Пол покупателя
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/StringOrStringArray'
+          required:
+            - value
+    UuidOrUuidArray:
+      oneOf:
+        - type: string
+          format: uuid
+        - type: array
+          items:
+            type: string
+            format: uuid
+    OrderRegionCondition:
+      type: object
+      description: Регион заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/UuidOrUuidArray'
+          required:
+            - value
+    OrderSalePointCondition:
+      type: object
+      description: Торговая точка заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/UuidOrUuidArray'
+          required:
+            - value
+    OrdersProduct:
+      type: object
+      description: Товар
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/UuidOrUuidArray'
+          required:
+            - value
+    OrdersProductCategory:
+      type: object
+      description: Категория товара
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/UuidOrUuidArray'
+          required:
+            - value
+    OrdersAmountCondition:
+      type: object
+      description: Сумма заказов
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/DoubleOrString'
+          required:
+            - value
+    OrderAmountCondition:
+      type: object
+      description: Сумма заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/DoubleOrString'
+          required:
+            - value
+    OrdersAVGAmountCondition:
+      type: object
+      description: Средний чек
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/DoubleOrString'
+          required:
+            - value
+    OrdersCountCondition:
+      type: object
+      description: Количество заказов
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/IntOrString'
+          required:
+            - value
+    OrderPaymentTypeCondition:
+      type: object
+      description: Тип оплаты заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              oneOf:
+                - $ref: '#/components/schemas/PaymentType'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/PaymentType'
+          required:
+            - value
+    OrderSourceCondition:
+      type: object
+      description: Источник заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/StringOrStringArray'
+          required:
+            - value
+    OrderTypeCondition:
+      type: object
+      description: Тип заказа
+      allOf:
+        - $ref: '#/components/schemas/CompareCondition'
+        - properties:
+            value:
+              oneOf:
+                - $ref: '#/components/schemas/OrderType'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/OrderType'
+          required:
+            - value
+    DateIntervalCondition:
+      type: object
+      description: Дата заказа
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            date_from:
+              $ref: '#/components/schemas/IntOrString'
+            date_to:
+              $ref: '#/components/schemas/IntOrString'
+          required:
+            - date_from
+            - date_to
+    RelativeDateIntervalCondition:
+      type: object
+      description: Дата заказа запоследние N дней
+      allOf:
+        - $ref: '#/components/schemas/Condition'
+        - properties:
+            value:
+              $ref: '#/components/schemas/IntOrString'
+          required:
+            - value
+    ReportCustomerListFilter:
+      type: object
+      properties:
+        condition:
+          $ref: '#/components/schemas/SomeCondition'
+        validate:
+          type: boolean
+          description: нужен чтобы проверить корректность условия поиска без выполнения запроса
+          default: false
+      required:
+        - condition
+    ReportPaymentBase:
+      type: object
+      properties:
+        count:
+          type: integer
+          x-go-type: int64
+          description: Количество чеков
+        return_count:
+          type: integer
+          x-go-type: int64
+          description: Количество возвратов
+          deprecated: true
+        payback_count:
+          type: integer
+          x-go-type: int64
+          description: Количество возвратов
+        return_sum:
+          type: number
+          x-go-type: float64
+          description: Сумма возвратов
+          deprecated: true
+        payback_sum:
+          type: number
+          x-go-type: float64
+          description: Сумма возвратов
+        sum_card:
+          type: number
+          x-go-type: float64
+          description: Сумма оплаты картой
+          deprecated: true
+        revenue_card:
+          type: number
+          x-go-type: float64
+          description: Выручка по карте
+        sum_cash:
+          type: number
+          x-go-type: float64
+          description: Сумма оплаты наличными
+          deprecated: true
+        revenue_cash:
+          type: number
+          x-go-type: float64
+          description: Выручка наличными
+        sum_online:
+          type: number
+          x-go-type: float64
+          description: Сумма оплаты онлайн
+          deprecated: true
+        revenue_online:
+          type: number
+          x-go-type: float64
+          description: Выручка через онлайн
+        sum_sbp:
+          type: number
+          x-go-type: float64
+          description: Сумма оплаты через СБП
+          deprecated: true
+        revenue_sbp:
+          type: number
+          x-go-type: float64
+          description: Выручка через СБП
+        sum_all:
+          type: number
+          x-go-type: float64
+          description: Выручка
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        average_sum:
+          type: number
+          x-go-type: float64
+          description: Средний чек
+          deprecated: true
+        average_revenue:
+          type: number
+          x-go-type: float64
+          description: Средний чек
+        profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль (для отчета на главной)
+          deprecated: true
+      required:
+        - count
+        - return_count
+        - payback_count
+        - return_sum
+        - payback_sum
+        - sum_card
+        - revenue_card
+        - sum_cash
+        - revenue_cash
+        - sum_online
+        - revenue_online
+        - sum_sbp
+        - revenue_sbp
+        - sum_all
+        - revenue
+        - average_sum
+        - average_revenue
+        - profit
+    ReportPayment:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportPaymentBase'
+        - type: object
+          properties:
+            date:
+              type: string
+              description: Дата смены
+          required:
+            - date
+    ReportPaymentTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportPaymentBase'
+    ReportPaymentTerminal:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportPaymentBase'
+        - type: object
+          properties:
+            terminal_id:
+              type: string
+              format: uuid
+              description: Id терминала
+              nullable: true
+            terminal_name:
+              type: string
+              description: Название терминала
+          required:
+            - terminal_id
+            - terminal_name
+    ReportPaymentSalePoint:
+      type: object
+      properties:
+        sale_point_id:
+          type: string
+          format: uuid
+          description: Id точки
+        sale_point_name:
+          type: string
+          description: Название точки
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportPaymentTerminal'
+      required:
+        - sale_point_id
+        - sale_point_name
+        - data
+    ReportExpectedProfitBase:
+      type: object
+      properties:
+        count:
+          type: integer
+          x-go-type: int64
+          description: Всего чеков (используется чтобы посчитать real_count, не показывается)
+          deprecated: true
+        return_count:
+          type: integer
+          x-go-type: int64
+          description: Всего возвратов (используется чтобы посчитать real_count, не показывается)
+          deprecated: true
+        total_count:
+          type: integer
+          x-go-type: int64
+          description: Количество чеков с вычетом возвратов
+        real_count:
+          type: integer
+          x-go-type: int64
+          description: Количество чеков с вычетом возвратов
+          deprecated: true
+        sum_all:
+          type: number
+          x-go-type: float64
+          description: Выручка
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        cost_price:
+          type: number
+          x-go-type: float64
+          description: Прогнозная себестоимость
+        profit:
+          type: number
+          x-go-type: float64
+          description: Прогнозная прибыль
+        markup_percent:
+          type: number
+          x-go-type: float64
+          description: Процент наценики
+        percent:
+          type: number
+          x-go-type: float64
+          description: Процент наценики
+          deprecated: true
+      required:
+        - count
+        - return_count
+        - total_count
+        - real_count
+        - sum_all
+        - revenue
+        - cost_price
+        - profit
+        - markup_percent
+        - percent
+    ReportExpectedProfit:
+      allOf:
+        - $ref: '#/components/schemas/ReportExpectedProfitBase'
+        - type: object
+          properties:
+            date:
+              type: string
+              description: Дата смены
+              example: '2025-01-01'
+          required:
+            - date
+    ReportExpectedProfitTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportExpectedProfitBase'
+    ReportPersonnelBase:
+      type: object
+      properties:
+        earnings:
+          type: number
+          x-go-type: float64
+          description: Выручка
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        profit:
+          type: number
+          x-go-type: float64
+          description: Ожидаемая прибыль
+        checks_count:
+          type: integer
+          x-go-type: int64
+          description: Кол-во чеков
+          deprecated: true
+        total_count:
+          type: integer
+          x-go-type: int64
+          description: Кол-во чеков
+        average_check:
+          type: number
+          x-go-type: float64
+          description: Средний чек
+          deprecated: true
+        average_revenue:
+          type: number
+          x-go-type: float64
+          description: Средний чек
+      required:
+        - earnings
+        - revenue
+        - profit
+        - checks_count
+        - total_count
+        - average_check
+        - average_revenue
+    ReportPersonnel:
+      allOf:
+        - $ref: '#/components/schemas/ReportPersonnelBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Id сотрудника
+            name:
+              type: string
+              description: ФИО
+          required:
+            - id
+            - name
+    ReportPersonnelTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportPersonnelBase'
+    SalesDocumentTradeType:
+      type: string
+      x-go-type: string
+      description: Тип чека </br> sell - продажа </br> payback - возврат </br>
+      enum:
+        - sell
+        - payback
+    ReportPaycheckBase:
+      type: object
+      properties:
+        paid:
+          type: number
+          x-go-type: float64
+          description: Оплачено
+          deprecated: true
+        total_cost:
+          type: number
+          x-go-type: float64
+          description: Оплачено
+        sell_discount:
+          type: number
+          x-go-type: float64
+          description: Скидка
+          deprecated: true
+        discount:
+          type: number
+          x-go-type: float64
+          description: Скидка
+        profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль
+      required:
+        - paid
+        - total_cost
+        - sell_discount
+        - discount
+        - profit
+    SalesDocumentCashType:
+      type: string
+      x-go-type: string
+      description: Тип чека </br> cash_income - приход наличных</br> cash_outcome - изьятие наличных</br>
+      enum:
+        - cash_income
+        - cash_outcome
+    SalesDocumentType:
+      type: string
+      x-go-type: string
+      description: Тип чека </br> sell - продажа </br> payback - возврат </br> z_report - z-отчет </br> cash_income - приход наличных</br> cash_outcome - изьятие наличных</br> open_shift - открытие смены</br> close_shift - закрытие смены</br> correction - коррекция </br>
+      allOf:
+        - $ref: '#/components/schemas/SalesDocumentTradeType'
+        - $ref: '#/components/schemas/SalesDocumentCashType'
+        - type: string
+          enum:
+            - z_report
+            - open_shift
+            - close_shift
+            - correction
+    ReportPaycheck:
+      allOf:
+        - $ref: '#/components/schemas/ReportPaycheckBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Id чека
+            order_id:
+              type: string
+              format: uuid
+              description: Id заказа
+            order_number:
+              type: string
+              description: Номер заказа (пока пустой)
+            number:
+              type: integer
+              x-go-type: uint64
+              description: Номер чека
+            shift_number:
+              type: integer
+              description: Номер смены
+              x-go-type: uint64
+            close_user_id:
+              type: string
+              format: uuid
+              description: Id кассира
+            close_user_name:
+              type: string
+              description: ФИО кассира
+            cashier_name:
+              type: string
+              description: ФИО кассира
+              deprecated: true
+            terminal_id:
+              type: string
+              format: uuid
+              description: Id терминала
+              nullable: true
+            terminal_name:
+              type: string
+              description: Название терминала
+            type:
+              $ref: '#/components/schemas/SalesDocumentType'
+            close_date:
+              type: integer
+              x-go-type: int64
+              description: Дата закрытия чека
+            close:
+              type: integer
+              x-go-type: int64
+              description: Дата закрытия чека
+              deprecated: true
+            payment_type:
+              type: string
+              description: Тип оплаты
+              deprecated: true
+            payment_types:
+              type: array
+              description: Типы оплат
+              x-go-type-skip-optional-pointer: true
+              items:
+                $ref: '#/components/schemas/PaymentType'
+          required:
+            - id
+            - number
+            - order_id
+            - order_number
+            - shift_number
+            - close_user_id
+            - close_user_name
+            - cashier_name
+            - terminal_id
+            - terminal_name
+            - type
+            - close_date
+            - close
+            - payment_type
+            - payment_types
+    ReportPaycheckTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportPaycheckBase'
+    ReportProductBase:
+      type: object
+      properties:
+        quantity:
+          type: number
+          x-go-type: float64
+          description: Количество товара
+        quantity_with_discount:
+          type: number
+          x-go-type: float64
+          description: Количество товара с учетом скидки
+        quantity_without_discount:
+          type: integer
+          x-go-type: float64
+          description: Количество товара без учета скидки
+        amount:
+          type: number
+          x-go-type: float64
+          description: Выручка
+          deprecated: true
+        amount_with_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка с учетом скидки
+          deprecated: true
+        amount_without_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка без учета скидки
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        revenue_with_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка с учетом скидки
+        revenue_without_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка без учета скидки
+        profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль
+        profit_with_discount:
+          type: number
+          x-go-type: float64
+          description: Прибыль с учетом скидки
+        profit_without_discount:
+          type: number
+          x-go-type: float64
+          description: Прибыль без учета скидки
+        discount_sum:
+          type: number
+          x-go-type: float64
+          description: Сумма скидок
+      required:
+        - quantity
+        - quantity_with_discount
+        - quantity_without_discount
+        - amount
+        - amount_with_discount
+        - amount_without_discount
+        - revenue
+        - revenue_with_discount
+        - revenue_without_discount
+        - profit
+        - profit_with_discount
+        - profit_without_discount
+        - discount_sum
+    ReportProduct:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportProductBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Id товара
+            name:
+              type: string
+              description: Название товара
+            article:
+              type: string
+              description: Артикул
+          required:
+            - id
+            - name
+            - article
+    ReportProductsTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportProductBase'
+    ReportCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id категории
+        name:
+          type: string
+          description: Название категории
+        quantity:
+          type: number
+          x-go-type: float64
+          description: Количество товара
+        amount:
+          type: number
+          x-go-type: float64
+          description: Выручка
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль
+      required:
+        - id
+        - name
+        - quantity
+        - amount
+        - revenue
+        - profit
+    ReportCashIncomeOutcome:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id чека
+        type:
+          $ref: '#/components/schemas/SalesDocumentCashType'
+        sale_point_id:
+          type: string
+          format: uuid
+          description: Id торговой точки
+        name:
+          type: string
+          description: Название торговой точки
+          deprecated: true
+        sale_point_name:
+          type: string
+          description: Название торговой точки
+        close_user_id:
+          type: string
+          format: uuid
+          description: Id кассира
+        cashier_name:
+          type: string
+          description: ФИО кассира
+          deprecated: true
+        close_user_name:
+          type: string
+          description: ФИО кассира
+        close_date:
+          type: integer
+          x-go-type: int64
+          description: Дата закрытия чека
+        description:
+          type: string
+          description: Описание
+        sum:
+          type: number
+          x-go-type: float64
+          description: Сумма
+      required:
+        - id
+        - type
+        - sale_point_id
+        - name
+        - sale_point_name
+        - close_user_id
+        - cashier_name
+        - close_user_name
+        - close_date
+        - description
+        - sum
+    ReportCashOnHand:
+      type: object
+      properties:
+        sale_point_id:
+          type: string
+          format: uuid
+          description: Id торговой точки
+        name:
+          type: string
+          description: Название торговой точки
+          deprecated: true
+        sale_point_name:
+          type: string
+          description: Название торговой точки
+        sell:
+          type: number
+          x-go-type: float64
+          description: Продажи
+        payback:
+          type: number
+          x-go-type: float64
+          description: Возвраты
+        income:
+          type: number
+          x-go-type: float64
+          description: Внесения
+        outcome:
+          type: number
+          x-go-type: float64
+          description: Выплаты
+        total:
+          type: number
+          x-go-type: float64
+          description: Итого
+      required:
+        - sale_point_id
+        - name
+        - sale_point_name
+        - sell
+        - payback
+        - income
+        - outcome
+        - total
+    ReportSalesOnMapBase:
+      type: object
+      properties:
+        orders_count:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов
+        drivers_count:
+          type: integer
+          x-go-type: int64
+          description: Количество водителей
+        count_orders:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов
+          deprecated: true
+        count_drivers:
+          type: integer
+          x-go-type: int64
+          description: Количество водителей
+          deprecated: true
+        total:
+          type: number
+          x-go-type: float64
+          description: Итого
+      required:
+        - orders_count
+        - drivers_count
+        - count_orders
+        - count_drivers
+        - total
+    ReportSalesOnMap:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportSalesOnMapBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Id торговой точки
+            name:
+              type: string
+              description: Название торговой точки
+          required:
+            - id
+            - name
+    ReportSalesOnMapTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportSalesOnMapBase'
+    ReportSalesOnMapData:
+      type: object
+      properties:
+        count:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов в области
+        lat:
+          type: number
+          x-go-type: float64
+          description: Широта центра области
+        long:
+          type: number
+          x-go-type: float64
+          description: Долгота центра области
+      required:
+        - count
+        - lat
+        - long
+    ReportOrderPaymentHourBase:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка по заказам
+        revenue_without_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка по заказам без учета скидок
+        sales_sum:
+          type: number
+          x-go-type: float64
+          description: Сумма продаж
+          deprecated: true
+        items_sum:
+          type: number
+          x-go-type: float64
+          description: Сумма заказов без скидки
+          deprecated: true
+      required:
+        - quantity
+        - revenue
+        - revenue_without_discount
+        - sales_sum
+        - items_sum
+    ReportOrderPaymentHour:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportOrderPaymentHourBase'
+        - type: object
+          properties:
+            hour:
+              type: integer
+              x-go-type: int8
+              description: Час
+          required:
+            - hour
+    ReportOrderPaymentHourTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportOrderPaymentHourBase'
+    ReportSpecial:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: id Акции
+        name:
+          type: string
+          description: Название акции
+        orders_count:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка по акции
+        orders_amount_with_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка по акции
+          deprecated: true
+        revenue_without_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка по акции без учета скидок
+        orders_amount_without_discount:
+          type: number
+          x-go-type: float64
+          description: Выручка по акции без учета скидок
+          deprecated: true
+        orders_amount_discount:
+          type: number
+          x-go-type: float64
+          description: Сумма скидок
+          deprecated: true
+        discount:
+          type: number
+          x-go-type: float64
+          description: Сумма скидок
+      required:
+        - id
+        - name
+        - orders_count
+        - revenue
+        - orders_amount_with_discount
+        - revenue_without_discount
+        - orders_amount_without_discount
+        - discount
+        - orders_amount_discount
+    ReportSpecialProduct:
+      type: object
+      properties:
+        special_id:
+          type: string
+          format: uuid
+          description: id Акции
+        special_name:
+          type: string
+          description: Название акции
+        product_id:
+          type: string
+          format: uuid
+          description: id товара
+        product_name:
+          type: string
+          description: Название товара
+        quantity:
+          type: number
+          x-go-type: float64
+          description: Количество проданного товара
+        total_cost:
+          type: number
+          x-go-type: float64
+          description: Сумма продаж
+          deprecated: true
+        revenue:
+          type: number
+          x-go-type: float64
+          description: Выручка
+        discount:
+          type: number
+          x-go-type: float64
+          description: Скидка
+      required:
+        - special_id
+        - special_name
+        - product_id
+        - product_name
+        - quantity
+        - total_cost
+        - revenue
+        - discount
+    ReportSourceOrderBase:
+      type: object
+      properties:
+        delivery_quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов на доставку
+        delivery_total:
+          type: number
+          x-go-type: float64
+          description: Сумма заказов на доставку
+        delivery_profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль заказов на доставку
+        hold_quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов в заведении
+        hold_total:
+          type: number
+          x-go-type: float64
+          description: Сумма заказов в заведении
+        hold_profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль заказов в заведении
+        retail_quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество розничных заказов
+        retail_total:
+          type: number
+          x-go-type: float64
+          description: Сумма розничных заказов
+        retail_profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль розничных заказов
+        pickup_quantity:
+          type: integer
+          x-go-type: int64
+          description: Количество заказов на самовывоз
+        pickup_total:
+          type: number
+          x-go-type: float64
+          description: Сумма заказов на самовывоз
+        pickup_profit:
+          type: number
+          x-go-type: float64
+          description: Прибыль заказов на самовывоз
+        quantity:
+          type: integer
+          x-go-type: int64
+          description: Итог. кол-во заказов
+        total:
+          type: number
+          x-go-type: float64
+          description: Итог. сумма
+        profit:
+          type: number
+          x-go-type: float64
+          description: Итог. прибыль
+      required:
+        - delivery_quantity
+        - delivery_total
+        - delivery_profit
+        - hold_quantity
+        - hold_total
+        - hold_profit
+        - retail_quantity
+        - retail_total
+        - retail_profit
+        - pickup_quantity
+        - pickup_total
+        - pickup_profit
+        - quantity
+        - total
+        - profit
+    ReportSourceOrder:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportSourceOrderBase'
+        - type: object
+          properties:
+            source:
+              type: string
+              description: Источник заказа
+          required:
+            - source
+    ReportSourceOrderTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportSourceOrderBase'
+    ReportOrderProcessingTimeBase:
+      type: object
+      description: Среднее время заказа в различных статусах
+      properties:
+        not_confirmed_time:
+          type: integer
+          x-go-type: int64
+          description: Не подтвержден
+        confirmed_time:
+          type: integer
+          x-go-type: int64
+          description: Подтвержден
+        cooking_time:
+          type: integer
+          x-go-type: int64
+          description: Готовится
+        ready_time:
+          type: integer
+          x-go-type: int64
+          description: Готов
+        sent_time:
+          type: integer
+          x-go-type: int64
+          description: Доставляется
+        processing_time:
+          type: integer
+          x-go-type: int64
+          description: Общее время
+      required:
+        - not_confirmed_time
+        - confirmed_time
+        - cooking_time
+        - ready_time
+        - sent_time
+        - processing_time
+    ReportOrderProcessingTime:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportOrderProcessingTimeBase'
+        - type: object
+          properties:
+            sale_point_id:
+              type: string
+              format: uuid
+              description: Id торговой точки
+            sale_point_name:
+              type: string
+              description: Название торговой точки
+          required:
+            - sale_point_id
+            - sale_point_name
+    ReportOrderProcessingTimeDetail:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReportOrderProcessingTime'
+        - type: object
+          properties:
+            date:
+              type: string
+              description: Дата смены
+            order_day:
+              type: string
+              description: Дата смены
+              deprecated: true
+          required:
+            - date
+            - order_day
+    ReportOrderProcessingTimeTotal:
+      allOf:
+        - $ref: '#/components/schemas/ReportOrderProcessingTimeBase'
+    ABCGroup:
+      type: string
+      description: Группа ABC
+      enum:
+        - A
+        - B
+        - C
+    ReportABC:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id товара
+        name:
+          type: string
+          description: Название товара
+        category_id:
+          type: string
+          format: uuid
+          description: Id категории
+        category_name:
+          type: string
+          description: Название категории
+        quantity:
+          type: number
+          x-go-type: float64
+          description: Количество
+        cost_price:
+          type: number
+          x-go-type: float64
+          description: Себестоимость
+        quantity_group:
+          $ref: '#/components/schemas/ABCGroup'
+        cost_price_group:
+          $ref: '#/components/schemas/ABCGroup'
+      required:
+        - id
+        - name
+        - category_id
+        - category_name
+        - quantity
+        - cost_price
+        - quantity_group
+        - cost_price_group
+    ReportKitchenCooks:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id сотрудника
+        name:
+          type: string
+          description: ФИО
+        dishes_count:
+          type: number
+          x-go-type: float64
+          description: Количество приготовленных блюд
+      required:
+        - id
+        - name
+        - dishes_count
+    ReportKitchenCooksDetail:
+      type: object
+      properties:
+        shift_date:
+          type: string
+          description: Дата смены
+        dishes_count:
+          type: number
+          x-go-type: float64
+          description: Количество приготовленных блюд
+      required:
+        - shift_date
+        - dishes_count
+  headers:
+    XPaginationTotalCount:
+      description: Всего записей
+      schema:
+        type: integer
+        x-go-type: int64
+        default: 0
+    XPaginationPageCount:
+      description: Количество страниц
+      schema:
+        type: integer
+        x-go-type: int64
+        default: 1
+    XPaginationCurrentPage:
+      description: Текущая страница
+      schema:
+        type: integer
+        x-go-type: int64
+        default: 1
+    XPaginationPerPage:
+      description: Размер страницы
+      schema:
+        type: integer
+        x-go-type: int64
+        default: 20
