@@ -92,6 +92,14 @@ func aggregatePayment(orders []order, fromISO, toISO string, filters []QueryFilt
 			amount = o.TotalCost
 		}
 
+		// Заказ влияет на отчёт только как возврат либо как выручка. Прочие
+		// (confirmed/not_confirmed/cooking…) пропускаем, не создавая пустой день.
+		isReturn := o.DateReturned != nil && *o.DateReturned > 0
+		isRevenue := !isReturn && rule.CountStatuses[statusValue(o, rule.StatusField)]
+		if !isReturn && !isRevenue {
+			continue
+		}
+
 		a := days[day]
 		if a == nil {
 			a = &dayAgg{}
@@ -99,12 +107,9 @@ func aggregatePayment(orders []order, fromISO, toISO string, filters []QueryFilt
 		}
 
 		// Возврат — отдельная колонка; из выручки вычитается (см. SubtractReturns).
-		if o.DateReturned != nil && *o.DateReturned > 0 {
+		if isReturn {
 			a.returnCount++
 			a.returnSum += amount
-			continue
-		}
-		if !rule.CountStatuses[statusValue(o, rule.StatusField)] {
 			continue
 		}
 
