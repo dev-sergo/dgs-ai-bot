@@ -4,7 +4,11 @@
 // (ключ — session_id из пре-слоя авторизации) без изменения интерфейса.
 package session
 
-import "sync"
+import (
+	"sync"
+
+	"dgsbot/internal/plan"
+)
 
 // Message — реплика диалога.
 type Message struct {
@@ -18,12 +22,20 @@ const MaxMessages = 12
 
 // Store — потокобезопасное хранилище истории по session_id.
 type Store struct {
-	mu   sync.Mutex
-	data map[string][]Message
+	mu       sync.Mutex
+	data     map[string][]Message
+	pending  map[string]plan.AnalysisPlan // план, ждущий подтверждения «да» (plan-confirm)
+	awaiting map[string]plan.AnalysisPlan // advice-план, ждущий ответа про период (clarify-resume)
 }
 
 // NewStore создаёт пустое хранилище.
-func NewStore() *Store { return &Store{data: map[string][]Message{}} }
+func NewStore() *Store {
+	return &Store{
+		data:     map[string][]Message{},
+		pending:  map[string]plan.AnalysisPlan{},
+		awaiting: map[string]plan.AnalysisPlan{},
+	}
+}
 
 // History возвращает копию истории сессии (последние MaxMessages реплик).
 func (s *Store) History(sessionID string) []Message {
@@ -47,4 +59,42 @@ func (s *Store) Append(sessionID, userText, assistantText string) {
 		h = h[len(h)-MaxMessages:]
 	}
 	s.data[sessionID] = h
+}
+
+// SetPending запоминает план, который ждёт подтверждения пользователя («да»).
+// Однократный: следующая реплика его забирает (TakePending) независимо от ответа.
+func (s *Store) SetPending(sessionID string, p plan.AnalysisPlan) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pending[sessionID] = p
+}
+
+// TakePending возвращает и удаляет ожидающий план (single-shot). ok=false, если его нет.
+func (s *Store) TakePending(sessionID string) (plan.AnalysisPlan, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.pending[sessionID]
+	if ok {
+		delete(s.pending, sessionID)
+	}
+	return p, ok
+}
+
+// SetAwaitingPeriod запоминает advice-план, для которого спросили период.
+// Следующая реплика-период возобновит консультацию тем же планом (а не упадёт в report).
+func (s *Store) SetAwaitingPeriod(sessionID string, p plan.AnalysisPlan) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.awaiting[sessionID] = p
+}
+
+// TakeAwaitingPeriod возвращает и удаляет ожидающий период advice-план (single-shot).
+func (s *Store) TakeAwaitingPeriod(sessionID string) (plan.AnalysisPlan, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.awaiting[sessionID]
+	if ok {
+		delete(s.awaiting, sessionID)
+	}
+	return p, ok
 }

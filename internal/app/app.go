@@ -38,6 +38,13 @@ const lowConfidencePrompt = "Не уверен, что правильно пон
 const unknownPeriodPrompt = "Не распознал период. Уточните: сегодня, вчера, " +
 	"последние 7 или 30 дней, эта или прошлая неделя, этот или прошлый месяц."
 
+// confirmConfidence — верхняя граница «полосы подтверждения». План с уверенностью
+// в диапазоне [minConfidence, confirmConfidence) не исполняется сразу: бот эхом
+// проговаривает интерпретацию и ждёт «да» (plan-confirm — дешёвый UX-шаг доверия).
+// Ниже minConfidence — общий clarify (не угадываем вовсе), выше — исполняем сразу.
+// Stub-планировщик отдаёт confidence==0 → полоса не срабатывает (детерминизм CI/eval).
+const confirmConfidence = 0.7
+
 // Answer — результат обработки запроса.
 type Answer struct {
 	TenantID   string                `json:"tenant_id"`
@@ -88,6 +95,17 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	start := time.Now()
 	defer func() { a.logAsk(tenantID, sessionID, ans, err, time.Since(start)) }()
 
+	// Plan-confirm: если прошлой репликой мы переспросили «правильно понимаю …?»,
+	// короткое «да» исполняет сохранённый план без повторного планирования. Pending
+	// одноразовый — забираем его в начале хода при ЛЮБОМ ответе; не-«да» сбрасывает
+	// его и идёт обычным путём (новая реплика планируется заново, не исполняя устаревшее).
+	if pend, ok := a.takePending(sessionID); ok && isAffirmation(text) {
+		if v := plan.Validate(&pend, a.cat); v.OK {
+			return a.executeReport(ctx, tenantID, sessionID, text, pend)
+		}
+		// План внезапно невалиден (напр. изменился каталог) — обычный путь ниже.
+	}
+
 	// История диалога — для follow-up и возобновления уточнений.
 	p, err := a.planner.Plan(ctx, a.history(sessionID), text)
 	if err != nil {
@@ -97,6 +115,17 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	// → products+contribution и направление рейтинга (худшие/лучшие) для top_n —
 	// то, что модель делает нестабильно.
 	planner.Refine(text, &p)
+
+	// Возобновление консультации: на прошлом ходу для разбора спросили период.
+	// Если новая реплика несёт период — продолжаем advice (планировщик на голом
+	// периоде теряет intent=advice и иначе выдал бы обычный отчёт). Single-shot.
+	if pend, ok := a.takeAwaitingPeriod(sessionID); ok && hasPeriod(p.Period) {
+		pend.Period = p.Period
+		if len(p.Filters) > 0 {
+			pend.Filters = p.Filters // перенесём уточнённые фильтры, если появились
+		}
+		p = pend
+	}
 	ans.Plan = p
 
 	// Консультационный запрос («на чём теряю», «что улучшить») — отдельный режим:
@@ -135,6 +164,28 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 		a.remember(sessionID, text, ans.Text)
 		return ans, nil
 	}
+
+	// Средняя уверенность планировщика — подтверждаем интерпретацию перед исполнением.
+	// План валиден и исполним, но модель не уверена: вместо тихой догадки проговариваем
+	// её словами и ждём «да». Низкая уверенность (<minConfidence) уже отбита общим clarify
+	// выше; полоса [minConfidence, confirmConfidence) — конкретная догадка под подтверждение.
+	if p.Confidence > 0 && p.Confidence < confirmConfidence {
+		a.setPending(sessionID, p)
+		msg := confirmPrompt(p, a.cat)
+		ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: msg}
+		ans.Text = msg
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
+
+	return a.executeReport(ctx, tenantID, sessionID, text, p)
+}
+
+// executeReport исполняет уже провалидированный план отчёта: резолв фильтров/периода,
+// выборка, движок, рендер. Вынесен из Ask, чтобы подтверждённый (plan-confirm) план
+// шёл тем же путём, что и прямой запрос высокой уверенности.
+func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
+	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
 
 	rep, _ := a.cat.Report(p.Report)
 
@@ -270,6 +321,9 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	// Период обязателен: пустой/неизвестный токен → уточняем, а не угадываем.
 	from, to, err := a.resolvePeriod(p.Period, t)
 	if err != nil {
+		// Запоминаем advice-план: ответ-период на следующем ходу возобновит разбор,
+		// а не выродится в обычный отчёт (планировщик теряет intent=advice на голом периоде).
+		a.setAwaitingPeriod(sessionID, p)
 		ans.Validation = plan.ValidationResult{NeedClarify: true, ClarifyPrompt: advicePeriodPrompt}
 		ans.Text = advicePeriodPrompt
 		a.remember(sessionID, text, ans.Text)
@@ -471,6 +525,114 @@ func (a *App) outOfScopeMessage() string {
 		"и их стандартные разбивки. " + a.helpHint()
 }
 
+// confirmPrompt — эхо интерпретации плана для подтверждения (plan-confirm).
+// Показываем, КАК мы поняли запрос, и просим подтвердить, прежде чем исполнять.
+func confirmPrompt(p plan.AnalysisPlan, c *catalog.Catalog) string {
+	return "Правильно понимаю: " + describePlan(p, c) +
+		"? Ответьте «да» — выполню, или уточните запрос."
+}
+
+// describePlan собирает человекочитаемую интерпретацию плана (отчёт + период +
+// разрезы) для эха подтверждения. Числа не считает — только переводит план в слова.
+func describePlan(p plan.AnalysisPlan, c *catalog.Catalog) string {
+	name := p.Report
+	if r, ok := c.Report(p.Report); ok {
+		name = r.Name
+	}
+	var b strings.Builder
+	switch p.Method {
+	case "top_n":
+		if p.Order == "asc" {
+			b.WriteString("антирейтинг по отчёту «" + name + "»")
+		} else {
+			b.WriteString("топ по отчёту «" + name + "»")
+		}
+	case "compare":
+		b.WriteString("сравнение периодов по отчёту «" + name + "»")
+	case "contribution":
+		b.WriteString("разбор вклада по отчёту «" + name + "»")
+	default:
+		b.WriteString("отчёт «" + name + "»")
+	}
+	if ph := periodPhrase(p.Period); ph != "" {
+		b.WriteString(" за " + ph)
+	}
+	for _, f := range p.Filters {
+		if len(f.Values) == 0 {
+			continue
+		}
+		label := filterLabels[f.Field]
+		if label == "" {
+			label = f.Field
+		}
+		b.WriteString(", " + label + ": " + strings.Join(f.Values, ", "))
+	}
+	return b.String()
+}
+
+// periodTokenPhrases — человеческие названия токенов периода для эха подтверждения.
+var periodTokenPhrases = map[string]string{
+	"today":         "сегодня",
+	"yesterday":     "вчера",
+	"last_7_days":   "последние 7 дней",
+	"last_14_days":  "последние 14 дней",
+	"last_30_days":  "последние 30 дней",
+	"last_90_days":  "последние 90 дней",
+	"last_3_months": "последние 3 месяца",
+	"this_week":     "эту неделю",
+	"last_week":     "прошлую неделю",
+	"this_month":    "этот месяц",
+	"last_month":    "прошлый месяц",
+}
+
+// periodPhrase переводит период плана в человеческую фразу для эха.
+func periodPhrase(p plan.Period) string {
+	if p.Kind == "explicit" {
+		if p.From != "" && p.To != "" {
+			return "период с " + p.From + " по " + p.To
+		}
+		return ""
+	}
+	if ph, ok := periodTokenPhrases[p.Token]; ok {
+		return ph
+	}
+	return p.Token // неизвестный токен — показываем как есть, чем молчим
+}
+
+// isAffirmation распознаёт короткое подтверждение («да», «верно», «ага», «ок»…)
+// в ответ на эхо плана. Намеренно консервативна: подтверждением считается только
+// реплика, целиком состоящая из утвердительных слов (≤3). «да, покажи товары» НЕ
+// подтверждает устаревший план — такая реплика перепланируется заново.
+func isAffirmation(text string) bool {
+	t := strings.ToLower(text)
+	t = strings.Map(func(r rune) rune {
+		switch r {
+		case ',', '.', '!', ';', '…':
+			return ' '
+		}
+		return r
+	}, t)
+	fields := strings.Fields(t)
+	if len(fields) == 0 || len(fields) > 3 {
+		return false
+	}
+	for _, f := range fields {
+		if !affirmationWords[f] {
+			return false
+		}
+	}
+	return true
+}
+
+// affirmationWords — закрытый набор утвердительных слов (config-as-data, не фаззи).
+var affirmationWords = map[string]bool{
+	"да": true, "ага": true, "угу": true, "верно": true, "точно": true,
+	"именно": true, "правильно": true, "подтверждаю": true, "согласен": true,
+	"давай": true, "поехали": true, "погнали": true, "ок": true, "окей": true,
+	"всё": true, "все": true, "так": true,
+	"yes": true, "yep": true, "yeah": true, "ok": true, "okay": true, "sure": true,
+}
+
 // helpText — список возможностей, собранный из каталога (не выдумывается моделью).
 func (a *App) helpText() string {
 	var names []string
@@ -500,6 +662,41 @@ func (a *App) remember(sessionID, userText, assistantText string) {
 	if a.sessions != nil {
 		a.sessions.Append(sessionID, userText, assistantText)
 	}
+}
+
+// setPending запоминает план, ждущий подтверждения «да» (plan-confirm).
+func (a *App) setPending(sessionID string, p plan.AnalysisPlan) {
+	if a.sessions != nil {
+		a.sessions.SetPending(sessionID, p)
+	}
+}
+
+// takePending забирает (и удаляет) ожидающий подтверждения план. ok=false, если его нет.
+func (a *App) takePending(sessionID string) (plan.AnalysisPlan, bool) {
+	if a.sessions == nil {
+		return plan.AnalysisPlan{}, false
+	}
+	return a.sessions.TakePending(sessionID)
+}
+
+// hasPeriod — есть ли в плане распознанный период (relative-токен или explicit-даты).
+func hasPeriod(p plan.Period) bool {
+	return p.Token != "" || p.From != ""
+}
+
+// setAwaitingPeriod запоминает advice-план, для которого спросили период (clarify-resume).
+func (a *App) setAwaitingPeriod(sessionID string, p plan.AnalysisPlan) {
+	if a.sessions != nil {
+		a.sessions.SetAwaitingPeriod(sessionID, p)
+	}
+}
+
+// takeAwaitingPeriod забирает advice-план, ждущий ответа про период. ok=false, если его нет.
+func (a *App) takeAwaitingPeriod(sessionID string) (plan.AnalysisPlan, bool) {
+	if a.sessions == nil {
+		return plan.AnalysisPlan{}, false
+	}
+	return a.sessions.TakeAwaitingPeriod(sessionID)
 }
 
 // resolveFilters превращает фильтры плана в фильтры запроса.
