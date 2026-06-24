@@ -42,7 +42,10 @@ func (s *StubPlanner) Plan(_ context.Context, _ []session.Message, query string)
 	case isProducts:
 		report = "products"
 		metrics = []string{"amount", "quantity"}
-	case containsAny(q, "чеки", "чеков", "кассов", "транзакц"):
+	case containsAny(q, "сколько чеков", "количество чеков", "сколько было чеков"):
+		report = "payment"
+		metrics = []string{"kol_vo_chekov", "date"}
+	case containsAny(q, "чеки", "кассов", "транзакц"):
 		report = "paycheck"
 		metrics = []string{"paid"}
 	case containsAny(q, "заказ", "доставк", "самовывоз"):
@@ -145,6 +148,8 @@ func token(q string) string {
 	switch {
 	case strings.Contains(q, "вчера"):
 		return "yesterday"
+	case strings.Contains(q, "прошл") && strings.Contains(q, "недел"):
+		return "last_week"
 	case strings.Contains(q, "недел"):
 		return "last_7_days"
 	case strings.Contains(q, "месяц"):
