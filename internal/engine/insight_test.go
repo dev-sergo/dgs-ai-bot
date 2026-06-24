@@ -51,9 +51,9 @@ func TestBuildInsightBundle(t *testing.T) {
 		t.Errorf("Discounts = %v, want 105", b.Discounts)
 	}
 
-	// ReturnRate — к payment-выручке: 200/1500*100 = 13.33.
-	if b.ReturnRate != 13.33 {
-		t.Errorf("ReturnRate = %v, want 13.33", b.ReturnRate)
+	// ReturnRate — к ВАЛОВЫМ продажам (нетто+возвраты): 200/(1500+200)*100 = 11.76.
+	if b.ReturnRate != 11.76 {
+		t.Errorf("ReturnRate = %v, want 11.76", b.ReturnRate)
 	}
 	// DiscountShare — к выручке ТОВАРОВ (products.amount = 5150): 105/5150*100 = 2.04.
 	// Один источник со скидками → корректно и в гибридном режиме (payment=API, products=фикстура).
@@ -124,14 +124,24 @@ func TestBuildInsightBundle_EmptyPrev(t *testing.T) {
 
 // TestRelativeLossMetrics — guard'ы относительных метрик: деление на ноль и нулевые потери.
 func TestRelativeLossMetrics(t *testing.T) {
-	// revenue=0 → доли не считаем (защита от деления на ноль), даже если возвраты/скидки есть.
-	zeroRev := BuildInsightBundle(
-		dooglys.Result{Rows: []dooglys.Row{{"sum_all": 0.0, "return_sum": 50.0}}},
+	// Ни продаж, ни возвратов → валовая база 0, доли не считаем (защита от деления на ноль).
+	zeroAll := BuildInsightBundle(
+		dooglys.Result{Rows: []dooglys.Row{{"sum_all": 0.0, "return_sum": 0.0}}},
 		dooglys.Result{},
 		dooglys.Result{Rows: []dooglys.Row{{"name": "X", "quantity": 1.0, "amount": 0.0, "discount_sum": 20.0}}},
 		"RUB", envelope.Period{}, envelope.Period{})
-	if zeroRev.ReturnRate != 0 || zeroRev.DiscountShare != 0 {
-		t.Errorf("при revenue=0 ждём ReturnRate=0 DiscountShare=0, got %v/%v", zeroRev.ReturnRate, zeroRev.DiscountShare)
+	if zeroAll.ReturnRate != 0 || zeroAll.DiscountShare != 0 {
+		t.Errorf("при пустом периоде ждём ReturnRate=0 DiscountShare=0, got %v/%v", zeroAll.ReturnRate, zeroAll.DiscountShare)
+	}
+
+	// Нетто=0, но возвраты есть → валовая база = возвраты, ставка 100% (всё вернули).
+	allReturned := BuildInsightBundle(
+		dooglys.Result{Rows: []dooglys.Row{{"sum_all": 0.0, "return_sum": 50.0}}},
+		dooglys.Result{},
+		dooglys.Result{},
+		"RUB", envelope.Period{}, envelope.Period{})
+	if allReturned.ReturnRate != 100 {
+		t.Errorf("при нетто=0 и возвратах ждём ReturnRate=100, got %v", allReturned.ReturnRate)
 	}
 
 	// Возвраты=0 → ReturnRate=0; скидки идут долей от выручки.

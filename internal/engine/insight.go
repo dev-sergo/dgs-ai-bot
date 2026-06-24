@@ -50,7 +50,7 @@ type InsightBundle struct {
 	AvgCheck       Trend       `json:"avg_check"`       // взвешенный средний чек (sum_all / kol_vo_chekov)
 	ReturnsSum     Trend       `json:"returns_sum"`     // деньги, ушедшие в возвраты
 	ReturnCount    float64     `json:"return_count"`    // число возвратов за текущий период
-	ReturnRate     float64     `json:"return_rate"`     // % возвратов: return_sum / выручка текущего периода
+	ReturnRate     float64     `json:"return_rate"`     // % возвратов: return_sum / валовые продажи (нетто + возвраты)
 	Discounts      float64     `json:"discounts"`       // сумма выданных скидок (products.discount_sum)
 	DiscountShare  float64     `json:"discount_share"`  // доля скидок: discounts / выручка ТОВАРОВ (products.amount), %
 	ChannelMix     []Component `json:"channel_mix"`     // каналы оплаты по убыванию суммы (только ненулевые)
@@ -88,8 +88,11 @@ func BuildInsightBundle(paymentNow, paymentPrev, productsNow dooglys.Result,
 		AvgCheck:    trendOf(avgCheckOf(paymentNow.Rows), avgCheckOf(paymentPrev.Rows)),
 		ReturnsSum:  trendOf(returnsNow, sumField(paymentPrev.Rows, "return_sum")),
 		ReturnCount: round2(sumField(paymentNow.Rows, "return_count")),
-		// Относительные метрики потерь — к выручке ТЕКУЩЕГО периода (shareOf guard на revenue=0 → 0).
-		ReturnRate:     round2(shareOf(returnsNow, revenueNow)),
+		// ReturnRate — классическая ставка возвратов: возвраты / ВАЛОВЫЕ продажи
+		// (нетто-выручка + возвраты). Делить на нетто нельзя: возвраты из неё уже
+		// вычтены, и доля завышается (800/2608=30.7% против 800/3408=23.5%).
+		// guard: валовая база 0 (нет ни продаж, ни возвратов) → 0.
+		ReturnRate:     round2(shareOf(returnsNow, revenueNow+returnsNow)),
 		Discounts:      round2(discountsNow),
 		DiscountShare:  round2(shareOf(discountsNow, productRevenueNow)),
 		ChannelMix:     channelMix(paymentNow.Rows),
