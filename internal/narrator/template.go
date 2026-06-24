@@ -41,6 +41,15 @@ func Compose(e envelope.Envelope) string {
 		return b.String()
 	}
 
+	// Поправка ложной посылки: вопрос подразумевал одно направление, числа показывают
+	// обратное («почему упала» при выросшей выручке). Нейтральные существительные —
+	// без согласования рода с метрикой (выручка/показатель). См. planner.PremiseDirection.
+	if pd, _ := e.Meta["premise_dir"].(string); pd == "down" && dAbs > 0 {
+		b.WriteString("Уточнение: за период не падение, а рост. ")
+	} else if pd == "up" && dAbs < 0 {
+		b.WriteString("Уточнение: за период не рост, а снижение. ")
+	}
+
 	fmt.Fprintf(&b, "%s за период: %s, за предыдущий: %s — %s на %s (%s).",
 		metric,
 		render.Money(now, e.Currency),

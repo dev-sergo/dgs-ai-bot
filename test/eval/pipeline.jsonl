@@ -8,6 +8,7 @@
 {"query": "какой товар самый популярный за месяц", "expect": {"intent": "report", "envelope": true, "rows": 1}}
 {"query": "сравни выручку за этот месяц", "expect": {"intent": "report", "envelope": true, "narrative": true, "summary": {"value_now": 2471.74, "value_prev": 3304.39}}}
 {"query": "почему упала выручка за неделю", "expect": {"intent": "report", "envelope": true, "narrative": true, "contains": ["Наличные"], "summary": {"value_now": 1041.74}}}
+{"query": "почему выросла выручка за этот месяц", "expect": {"intent": "report", "envelope": true, "narrative": true, "contains_any": [["не рост, а снижение", "не выросла, а снизилась", "снизилась, а не выросла", "не вырос"]], "summary": {"value_now": 2471.74, "value_prev": 3304.39}}}
 {"query": "покажи выручку", "expect": {"clarify": true, "envelope": false, "contains": ["период"]}}
 {"query": "что ты умеешь", "expect": {"intent": "help", "envelope": false, "non_empty_text": true}}
 {"query": "привет", "expect": {"intent": "smalltalk", "envelope": false, "non_empty_text": true}}

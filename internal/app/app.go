@@ -302,6 +302,11 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 
 	// Нарратив — только для аналитики (class B) и только когда есть что объяснять.
 	if (p.Method == "compare" || p.Method == "contribution") && a.narrator != nil {
+		// Направление, заложенное в причинный вопрос («почему упала»). Нарратор поправит
+		// посылку, если она расходится с числами, а не подыграет ей.
+		if dir := planner.PremiseDirection(text); dir != "" {
+			env.Meta["premise_dir"] = dir
+		}
 		if txt, nerr := a.narrator.Narrate(ctx, env); nerr == nil && txt != "" {
 			env.Narrative = txt
 		}

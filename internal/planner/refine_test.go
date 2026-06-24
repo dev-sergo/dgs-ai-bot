@@ -1,10 +1,56 @@
 package planner
 
 import (
+	"bufio"
+	"encoding/json"
+	"os"
 	"testing"
 
 	"dgsbot/internal/plan"
 )
+
+// RefineAdvice не должен помечать advice НИ ОДИН кейс корпуса, который ждёт другой intent
+// (report/help/smalltalk/off_topic). Детерминированный страж: расширение adviceRe не может
+// тихо утянуть отчётный запрос в advice (иначе eval-host просядет на ровном месте).
+// Читает рабочий корпус eval-host — coupling намеренный: правка регекса сразу проверяется
+// против всех живых формулировок без рига.
+func TestRefineAdvice_CorpusNoFalsePositive(t *testing.T) {
+	f, err := os.Open("../../test/eval/prompts.jsonl")
+	if err != nil {
+		t.Skipf("корпус недоступен: %v", err)
+	}
+	defer f.Close()
+
+	type corpusCase struct {
+		Query  string `json:"query"`
+		Expect struct {
+			Intent string `json:"intent"`
+		} `json:"expect"`
+	}
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for sc.Scan() {
+		line := sc.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+		var c corpusCase
+		if err := json.Unmarshal(line, &c); err != nil {
+			t.Fatalf("битая строка %q: %v", string(line), err)
+		}
+		if c.Expect.Intent == "advice" {
+			continue // эти и должны быть advice
+		}
+		p := plan.AnalysisPlan{}
+		RefineAdvice(c.Query, &p)
+		if p.Intent == "advice" {
+			t.Errorf("%q (ждали intent=%q) ошибочно помечен advice", c.Query, c.Expect.Intent)
+		}
+	}
+	if err := sc.Err(); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestRefineTopNOrder(t *testing.T) {
 	cases := []struct {
@@ -47,6 +93,16 @@ func TestRefineAdvice(t *testing.T) {
 		"дай совет что убрать из меню",
 		"на чём можно сэкономить за прошлый месяц",
 		"посоветуй что-нибудь по выручке за месяц", // бизнес-якорь у «посоветуй»
+		// N1 — свободные формулировки совета, раньше падавшие в off_topic:
+		"как поднять средний чек",
+		"как увеличить прибыль за месяц",
+		"как повысить оборот",
+		"как нарастить выручку",
+		"где у меня проблемы",
+		"в чём у меня проблема с продажами",
+		"какие у меня проблемы",
+		"где слабые места",
+		"что оптимизировать",
 	}
 	for _, q := range advice {
 		p := plan.AnalysisPlan{Intent: "off_topic"} // модель часто кладёт сюда off_topic
@@ -64,6 +120,8 @@ func TestRefineAdvice(t *testing.T) {
 		"посоветуй хорошее кино",
 		"выручка за неделю",
 		"топ товаров за месяц",
+		"как поднять настроение", // глагол роста без бизнес-объекта — не advice
+		"как повысить квалификацию",
 	}
 	for _, q := range notAdvice {
 		p := plan.AnalysisPlan{Intent: "off_topic"}
@@ -342,6 +400,28 @@ func TestRefineChannelShare_Skips(t *testing.T) {
 	RefineChannelShare("доля безналичных", &off)
 	if off.Intent != "off_topic" {
 		t.Errorf("off_topic не должен меняться, got %q", off.Intent)
+	}
+}
+
+// PremiseDirection вытаскивает направление, заложенное в причинный вопрос: спад/рост/нейтрально.
+// Спад имеет приоритет в смешанной фразе («возвраты выросли, выручка упала»).
+func TestPremiseDirection(t *testing.T) {
+	cases := []struct{ query, want string }{
+		{"почему упала выручка за месяц", "down"},
+		{"из-за чего снизился оборот", "down"},
+		{"что стало причиной падения продаж", "down"},
+		{"почему просели продажи", "down"},
+		{"за счёт чего вырос оборот", "up"},
+		{"почему выросла выручка за неделю", "up"},
+		{"причина роста продаж", "up"},
+		{"возвраты выросли, а выручка упала — почему", "down"}, // спад приоритетнее
+		{"сравни выручку за два месяца", ""},                   // нейтрально
+		{"выручка за неделю", ""},
+	}
+	for _, c := range cases {
+		if got := PremiseDirection(c.query); got != c.want {
+			t.Errorf("%q: PremiseDirection=%q, want %q", c.query, got, c.want)
+		}
 	}
 }
 
