@@ -103,14 +103,17 @@ func main() {
 
 	// Датасет вопросов/ответов (JSONL) — для продуктовой аналитики и дообучения.
 	// Включается, только если задан QUERY_LOG_PATH; файл переживает рестарт (append).
+	// Открыть не удалось (напр. нет прав на смонтированный каталог) — это НЕ повод
+	// ронять сервис: предупреждаем и работаем без датасета (лог просто выключен).
 	if cfg.QueryLogPath != "" {
-		ql, err := querylog.Open(cfg.QueryLogPath)
-		if err != nil {
-			log.Fatalf("query log: %v", err)
+		if ql, err := querylog.Open(cfg.QueryLogPath); err != nil {
+			log.Printf("WARNING: query log отключён — не открыть %s: %v "+
+				"(проверь права на каталог: chown 65532:65532)", cfg.QueryLogPath, err)
+		} else {
+			defer ql.Close()
+			a.QueryLog = ql
+			log.Printf("query log: пишем датасет вопрос→план→ответ → %s", cfg.QueryLogPath)
 		}
-		defer ql.Close()
-		a.QueryLog = ql
-		log.Printf("query log: пишем датасет вопрос→план→ответ → %s", cfg.QueryLogPath)
 	}
 
 	srv := httpx.New(cfg, a)
