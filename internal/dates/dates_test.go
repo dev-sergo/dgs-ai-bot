@@ -74,6 +74,40 @@ func TestPrevRange(t *testing.T) {
 	}
 }
 
+func TestNormalizeExplicitYear(t *testing.T) {
+	msk := mustLoad(t, "Europe/Moscow")
+	// «сейчас» — 24 июня 2026.
+	now := time.Date(2026, 6, 24, 10, 0, 0, 0, msk)
+
+	cases := []struct {
+		name           string
+		from, to       string
+		hasYearInText  bool
+		wantFrom       string
+		wantTo         string
+	}{
+		// Модель пинит 2023 на «июнь» без года → текущий год (июнь уже идёт).
+		{"month past year → current", "01.06.2023", "30.06.2023", false, "01.06.2026", "30.06.2026"},
+		// Диапазон «с 1 по 15 июня» — год 2023 → 2026.
+		{"day range past year → current", "01.06.2023", "15.06.2023", false, "01.06.2026", "15.06.2026"},
+		// Пользователь сам назвал год → не трогаем.
+		{"explicit year kept", "01.06.2024", "30.06.2024", true, "01.06.2024", "30.06.2024"},
+		// Уже текущий год → без изменений.
+		{"already current year", "01.06.2026", "30.06.2026", false, "01.06.2026", "30.06.2026"},
+		// «декабрь» без года: текущий год даёт будущее (сейчас июнь) → прошлый год.
+		{"future month → previous year", "01.12.2023", "31.12.2023", false, "01.12.2025", "31.12.2025"},
+		// Битые даты — возвращаем как есть.
+		{"unparsable kept", "2023-06-01", "2023-06-30", false, "2023-06-01", "2023-06-30"},
+	}
+	for _, c := range cases {
+		gotFrom, gotTo := NormalizeExplicitYear(c.from, c.to, c.hasYearInText, msk, now)
+		if gotFrom != c.wantFrom || gotTo != c.wantTo {
+			t.Errorf("%s: %s..%s → %s..%s, want %s..%s",
+				c.name, c.from, c.to, gotFrom, gotTo, c.wantFrom, c.wantTo)
+		}
+	}
+}
+
 func TestResolveUnknown(t *testing.T) {
 	_, err := Resolve("someday", time.UTC, time.Now())
 	if err == nil {

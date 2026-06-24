@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 
@@ -218,7 +219,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	// Резолв периода в абсолютные даты по таймзоне тенанта.
 	// Неизвестный токен — clarify, а не 500: модель иногда генерирует токены вне
 	// white-list (last_14_days, last_week и т.п.) — лучше переспросить, чем крашиться.
-	from, to, err := a.resolvePeriod(p.Period, t)
+	from, to, err := a.resolvePeriod(p.Period, t, text)
 	if err != nil {
 		var unknownTok *dates.ErrUnknownToken
 		if errors.As(err, &unknownTok) {
@@ -323,7 +324,7 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	}
 
 	// Период обязателен: пустой/неизвестный токен → уточняем, а не угадываем.
-	from, to, err := a.resolvePeriod(p.Period, t)
+	from, to, err := a.resolvePeriod(p.Period, t, text)
 	if err != nil {
 		// Запоминаем advice-план: ответ-период на следующем ходу возобновит разбор,
 		// а не выродится в обычный отчёт (планировщик теряет intent=advice на голом периоде).
@@ -800,9 +801,17 @@ func primaryMetric(p plan.AnalysisPlan, rep catalog.Report) string {
 	return "sum_all"
 }
 
-func (a *App) resolvePeriod(p plan.Period, t tenantctx.Tenant) (from, to string, err error) {
+// yearInTextRe — пользователь сам назвал год в реплике (4 цифры 20xx). Тогда явный период
+// не нормализуем: это осознанный выбор, а не угаданный моделью год.
+var yearInTextRe = regexp.MustCompile(`20\d{2}`)
+
+// rawText — исходная реплика: нужна, чтобы отличить «модель выдумала год» от «пользователь
+// назвал год» при нормализации явного периода (см. dates.NormalizeExplicitYear).
+func (a *App) resolvePeriod(p plan.Period, t tenantctx.Tenant, rawText string) (from, to string, err error) {
 	if p.Kind == "explicit" {
-		return p.From, p.To, nil
+		from, to = dates.NormalizeExplicitYear(
+			p.From, p.To, yearInTextRe.MatchString(rawText), t.Location(), a.Now())
+		return from, to, nil
 	}
 	r, err := dates.Resolve(p.Token, t.Location(), a.Now())
 	if err != nil {

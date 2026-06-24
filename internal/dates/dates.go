@@ -66,6 +66,37 @@ func Resolve(token string, loc *time.Location, now time.Time) (Range, error) {
 	}
 }
 
+// NormalizeExplicitYear чинит год в явных датах, которые проставила модель: на запрос
+// без года («июнь», «с 1 по 15 июня») LLM не знает «сейчас» и пинит прошлый год (типично
+// 2023) → выборка пустая, «данных нет». Год месяца/диапазона переносим к актуальному.
+//
+// hasYearInText=true (пользователь сам назвал год — «июнь 2024», «01.06.2025») → НЕ трогаем:
+// это осознанный выбор периода. Если перенос в текущий год даёт период целиком в будущем
+// (сегодня раньше его начала) — берём прошлый год: ближайшее СЛУЧИВШЕЕСЯ вхождение месяца.
+func NormalizeExplicitYear(from, to string, hasYearInText bool, loc *time.Location, now time.Time) (string, string) {
+	if hasYearInText {
+		return from, to
+	}
+	f, errF := time.ParseInLocation(layout, from, loc)
+	t, errT := time.ParseInLocation(layout, to, loc)
+	if errF != nil || errT != nil {
+		return from, to // не разобрали — оставляем как есть (валидатор/выборка разберётся)
+	}
+	cy := now.In(loc).Year()
+	if f.Year() == cy && t.Year() == cy {
+		return from, to // уже текущий год
+	}
+	nf := time.Date(cy, f.Month(), f.Day(), 0, 0, 0, 0, loc)
+	nt := time.Date(cy, t.Month(), t.Day(), 0, 0, 0, 0, loc)
+	n := now.In(loc)
+	today := time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, loc)
+	if nf.After(today) { // период ещё не наступил в этом году → прошлый год
+		nf = nf.AddDate(-1, 0, 0)
+		nt = nt.AddDate(-1, 0, 0)
+	}
+	return df(nf), df(nt)
+}
+
 // PrevRange возвращает предыдущий равный по длине период (для compare).
 func PrevRange(r Range) (Range, error) {
 	from, err := time.Parse(layout, r.From)
