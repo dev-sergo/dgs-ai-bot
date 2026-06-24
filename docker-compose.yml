@@ -25,6 +25,12 @@ services:
       DGS_PASSWORD: "${DGS_PASSWORD:-}"
       # Демо-гейт: общий токен на всех маршрутах (кроме /healthz). Пусто → гейт выключен.
       AUTH_TOKEN: "${AUTH_TOKEN:-}"
+      # Датасет вопрос→план→ответ (JSONL) для аналитики и дообучения. Пишется в
+      # /app/data (см. volume ниже) → на хост в ./data/queries.jsonl. Пусто → выключено.
+      QUERY_LOG_PATH: "${QUERY_LOG_PATH:-/app/data/queries.jsonl}"
+    volumes:
+      # Датасет наружу на хост — переживает пересборку контейнера, доступен для analytics.
+      - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

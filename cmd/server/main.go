@@ -18,6 +18,7 @@ import (
 	"dgsbot/internal/llm"
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
+	"dgsbot/internal/querylog"
 	"dgsbot/internal/resolver"
 	"dgsbot/internal/session"
 	"dgsbot/internal/tenantctx"
@@ -99,6 +100,19 @@ func main() {
 	}
 
 	a := app.New(pl, tenants, client, res, nar, adv, session.NewStore())
+
+	// Датасет вопросов/ответов (JSONL) — для продуктовой аналитики и дообучения.
+	// Включается, только если задан QUERY_LOG_PATH; файл переживает рестарт (append).
+	if cfg.QueryLogPath != "" {
+		ql, err := querylog.Open(cfg.QueryLogPath)
+		if err != nil {
+			log.Fatalf("query log: %v", err)
+		}
+		defer ql.Close()
+		a.QueryLog = ql
+		log.Printf("query log: пишем датасет вопрос→план→ответ → %s", cfg.QueryLogPath)
+	}
+
 	srv := httpx.New(cfg, a)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

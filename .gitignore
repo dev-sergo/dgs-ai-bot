@@ -66,6 +66,9 @@ venv/
 # === Docker ===
 # (compose-файлы коммитим; volume-данные — нет)
 docker-data/
+# Датасет вопрос→план→ответ (живые запросы пользователей — не коммитим)
+/data/*
+!/data/.gitkeep
 
 # === Frontend (web/) ===
 node_modules/

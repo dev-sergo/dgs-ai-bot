@@ -18,6 +18,7 @@ import (
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
+	"dgsbot/internal/querylog"
 	"dgsbot/internal/render"
 	"dgsbot/internal/resolver"
 	"dgsbot/internal/session"
@@ -69,6 +70,9 @@ type App struct {
 	Now func() time.Time
 	// Logger — структурный лог исходов Ask (аудит/наблюдаемость). По умолчанию slog.Default().
 	Logger *slog.Logger
+	// QueryLog — дозапись датасета «вопрос → план → ответ» в JSONL (аналитика/дообучение).
+	// nil → выключено. Включается в main по env QUERY_LOG_PATH.
+	QueryLog *querylog.Writer
 }
 
 // New собирает оркестратор.
@@ -93,7 +97,7 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 
 	// Структурный лог исхода — один раз на любой ветке возврата (аудит/наблюдаемость).
 	start := time.Now()
-	defer func() { a.logAsk(tenantID, sessionID, ans, err, time.Since(start)) }()
+	defer func() { a.logAsk(tenantID, sessionID, text, ans, err, time.Since(start)) }()
 
 	// Plan-confirm: если прошлой репликой мы переспросили «правильно понимаю …?»,
 	// короткое «да» исполняет сохранённый план без повторного планирования. Pending
@@ -404,9 +408,11 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	return ans, nil
 }
 
-// logAsk пишет одну структурную строку об исходе запроса (аудит/наблюдаемость).
+// logAsk пишет одну структурную строку об исходе запроса (аудит/наблюдаемость)
+// и, если включён QueryLog, дозаписывает строку датасета (вопрос+план+ответ).
 // Покрывает все ветки Ask через defer: интент, отчёт/метод/период, исход, латентность.
-func (a *App) logAsk(tenantID, sessionID string, ans Answer, err error, dur time.Duration) {
+func (a *App) logAsk(tenantID, sessionID, text string, ans Answer, err error, dur time.Duration) {
+	a.recordQuery(tenantID, sessionID, text, ans, err, dur)
 	if a.Logger == nil {
 		return
 	}
@@ -425,6 +431,32 @@ func (a *App) logAsk(tenantID, sessionID string, ans Answer, err error, dur time
 		return
 	}
 	a.Logger.Info("ask", attrs...)
+}
+
+// recordQuery дозаписывает строку датасета «вопрос → план → ответ» для аналитики
+// и дообучения. Пишется на любой ветке Ask; nil QueryLog (лог выключен) — no-op.
+func (a *App) recordQuery(tenantID, sessionID, text string, ans Answer, err error, dur time.Duration) {
+	if a.QueryLog == nil {
+		return
+	}
+	rec := querylog.Record{
+		TS:        a.Now().UTC().Format(time.RFC3339),
+		Tenant:    tenantID,
+		Session:   sessionID,
+		Text:      text,
+		Intent:    ans.Plan.EffectiveIntent(),
+		Outcome:   askOutcome(ans, err),
+		Plan:      ans.Plan,
+		Answer:    ans.Text,
+		LatencyMS: dur.Milliseconds(),
+	}
+	if ans.Envelope != nil {
+		rec.Rows = len(ans.Envelope.Rows)
+	}
+	if err != nil {
+		rec.Err = err.Error()
+	}
+	a.QueryLog.Write(rec)
 }
 
 // askOutcome классифицирует исход для лога:
