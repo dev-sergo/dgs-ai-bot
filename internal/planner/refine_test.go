@@ -283,3 +283,76 @@ func TestRefineDefaultMethod_SkipsExistingMethod(t *testing.T) {
 		t.Errorf("метод не должен меняться, got %q", p.Method)
 	}
 }
+
+// «доля безналичных / онлайн / по карте» → method=channel_share с нужным focus-каналом.
+func TestRefineChannelShare(t *testing.T) {
+	cases := []struct {
+		query string
+		focus []string
+	}{
+		{"доля безналичных за июнь", []string{"sum_card", "onlayn", "sbp"}},
+		{"какой процент оплат прошёл по карте за неделю", []string{"sum_card"}},
+		{"доля онлайн-оплат за месяц", []string{"onlayn"}},
+		{"сколько процентов через сбп вчера", []string{"sbp"}},
+		{"доля наличных за месяц", []string{"sum_cash"}},
+		{"покажи долю каналов оплаты за неделю", nil}, // общая структура
+	}
+	for _, c := range cases {
+		p := plan.AnalysisPlan{Intent: "report", Report: "payment", Method: "contribution"}
+		RefineChannelShare(c.query, &p)
+		if p.Method != "channel_share" {
+			t.Errorf("%q: method=%q, want channel_share", c.query, p.Method)
+			continue
+		}
+		if p.Report != "payment" {
+			t.Errorf("%q: report=%q, want payment", c.query, p.Report)
+		}
+		if !equalStrings(p.Metrics, c.focus) {
+			t.Errorf("%q: metrics=%v, want %v", c.query, p.Metrics, c.focus)
+		}
+	}
+}
+
+// Не канально-долевые запросы и advice/off_topic channel_share НЕ трогает.
+func TestRefineChannelShare_Skips(t *testing.T) {
+	// Триггер доли есть, но якоря канала нет — не наше.
+	skip := []string{
+		"доля скидок за месяц",
+		"процент возвратов за неделю",
+		"выручка по карте за месяц", // нет триггера доли
+		"топ товаров за месяц",
+	}
+	for _, q := range skip {
+		p := plan.AnalysisPlan{Intent: "report", Report: "payment", Method: "plain"}
+		RefineChannelShare(q, &p)
+		if p.Method == "channel_share" {
+			t.Errorf("%q: ошибочно стал channel_share", q)
+		}
+	}
+
+	// Совет «как поднять долю безнала» остаётся advice, а не фактический channel_share.
+	adv := plan.AnalysisPlan{Intent: "advice"}
+	RefineChannelShare("как увеличить долю безналичных", &adv)
+	if adv.Method == "channel_share" || adv.Intent != "advice" {
+		t.Errorf("advice не должен превращаться в channel_share: intent=%q method=%q", adv.Intent, adv.Method)
+	}
+
+	// Явный off_topic (отказ) channel_share не реанимирует.
+	off := plan.AnalysisPlan{Intent: "off_topic"}
+	RefineChannelShare("доля безналичных", &off)
+	if off.Intent != "off_topic" {
+		t.Errorf("off_topic не должен меняться, got %q", off.Intent)
+	}
+}
+
+func equalStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

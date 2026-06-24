@@ -418,6 +418,7 @@
 {"query": "скидочная нагрузка за последнюю неделю", "expect": {"intent": "report", "report": "paycheck|payment|products", "period_token": "last_7_days|this_week"}}
 {"query": "доля возвратов за этот месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
 {"query": "процент отмен заказов за прошлый месяц", "expect": {"intent": "report", "report": "orders", "period_token": "last_month"}}
+{"query": "доля безналичных за этот месяц", "expect": {"intent": "report", "report": "payment", "method": "channel_share", "period_token": "this_month"}}
 {"query": "выручка за прошлый месяц на точке в Выксе", "expect": {"intent": "report", "report": "payment", "period_token": "last_month", "filters": ["sale_point", "locality"]}}
 {"query": "топ-5 блюд на точке Центральная за прошлый месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_month", "filters": ["sale_point"]}}
 {"query": "заказы из приложения с оплатой СБП за этот месяц", "expect": {"intent": "report", "report": "orders", "period_token": "this_month", "filters": ["source", "payment_type"]}}

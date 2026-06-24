@@ -48,11 +48,73 @@ var descRe = regexp.MustCompile(`лучш|^топ|\sтоп|больше\s+все
 // доводит то, что модель делает нестабильно. Применяется в app и eval (зеркало прода).
 func Refine(query string, p *plan.AnalysisPlan) {
 	RefineAdvice(query, p)
+	RefineChannelShare(query, p)
 	RefineEmployeeRanking(query, p)
 	RefineProductContribution(query, p)
 	RefinePaymentChannelFilter(p)
 	RefineTopNOrder(query, p)
 	RefineDefaultMethod(p)
+}
+
+// channelShareTriggerRe — запрос ДОЛИ/процента (а не суммы). Без канального якоря (ниже)
+// не срабатывает: «доля скидок»/«процент возвратов» — другие метрики, не каналы оплаты.
+var channelShareTriggerRe = regexp.MustCompile(`дол[яюие]|процент|сколько\s+процент|какая\s+част|в\s+процентах|удельн`)
+
+// каналы оплаты для focus доли. Порядок проверки важен: «безнал» ловим РАНЬШЕ «нал».
+var (
+	beznalRe      = regexp.MustCompile(`безнал|без\s*нал|не\s*налич`)
+	cashRe        = regexp.MustCompile(`налич|кэш|кеш`)
+	cardRe        = regexp.MustCompile(`карт`)
+	onlineRe      = regexp.MustCompile(`онлайн|online`)
+	sbpRe         = regexp.MustCompile(`сбп|sbp|быстр[а-яё]*\s+платеж`)
+	chanGenericRe = regexp.MustCompile(`канал[а-яё]*\s+оплат|способ[а-яё]*\s+оплат|структур[а-яё]*\s+оплат|дол[а-яё]*\s+канал`)
+)
+
+// channelShareFocus определяет, по какому каналу спрашивают долю. Второе значение —
+// был ли вообще канальный якорь (без него RefineChannelShare не трогает план).
+// Пустой срез при ok=true — общий вопрос о структуре оплат (показываем все каналы).
+func channelShareFocus(q string) (focus []string, ok bool) {
+	switch {
+	case beznalRe.MatchString(q):
+		return []string{"sum_card", "onlayn", "sbp"}, true
+	case cashRe.MatchString(q):
+		return []string{"sum_cash"}, true
+	case cardRe.MatchString(q):
+		return []string{"sum_card"}, true
+	case onlineRe.MatchString(q):
+		return []string{"onlayn"}, true
+	case sbpRe.MatchString(q):
+		return []string{"sbp"}, true
+	case chanGenericRe.MatchString(q):
+		return nil, true // структура всех каналов
+	}
+	return nil, false
+}
+
+// RefineChannelShare детерминированно маршрутизирует «доля безналичных / онлайн / по карте»
+// в method=channel_share (доля канала за период) — раньше такой запрос уходил в contribution
+// с путаным нарративом «доли изменения». Узкий guard: нужен И триггер доли, И канальный
+// якорь. Не трогаем advice («как поднять долю безнала») и off_topic (явный отказ): channel_share
+// — фактический отчёт, а не совет и не обход лимитов.
+func RefineChannelShare(query string, p *plan.AnalysisPlan) {
+	if p.Intent == "advice" || p.Intent == "off_topic" {
+		return
+	}
+	q := strings.ToLower(query)
+	if !channelShareTriggerRe.MatchString(q) {
+		return
+	}
+	focus, ok := channelShareFocus(q)
+	if !ok {
+		return
+	}
+	p.Report = "payment"
+	p.Method = "channel_share"
+	p.Metrics = focus
+	p.GroupBy = nil
+	if p.Intent == "" {
+		p.Intent = "report"
+	}
 }
 
 // adviceRe — детектор КОНСУЛЬТАЦИОННЫХ запросов про ЭТО заведение: «на чём теряю»,

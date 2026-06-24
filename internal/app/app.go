@@ -271,6 +271,10 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 			p.GroupBy = []string{rep.DefaultDim}
 		}
 		env = engine.TopN(p, rep, resNow, tenantID, currency, period)
+	case "channel_share":
+		// Доля каналов оплаты за период (не сравнение): p.Metrics — выделенные каналы
+		// (безнал/онлайн/карта), пусто → общая структура. Нарратив строит движок.
+		env = engine.ChannelShare(resNow, p.Metrics, tenantID, currency, period)
 	default:
 		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
 		// иначе таблица потеряет смысловую колонку (строки без подписи).

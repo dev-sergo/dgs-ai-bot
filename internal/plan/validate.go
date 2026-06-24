@@ -61,7 +61,7 @@ func Validate(p *AnalysisPlan, c *catalog.Catalog) ValidationResult {
 	if p.Method == "" {
 		p.Method = "plain"
 	}
-	if !contains([]string{"plain", "compare", "contribution", "top_n"}, p.Method) {
+	if !contains([]string{"plain", "compare", "contribution", "top_n", "channel_share"}, p.Method) {
 		res.Errors = append(res.Errors, fmt.Sprintf("method %q неизвестен", p.Method))
 	}
 
