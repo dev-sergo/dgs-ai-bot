@@ -16,10 +16,13 @@ HOST_OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 HOST_UARCH := $(shell uname -m)
 HOST_ARCH := $(if $(filter x86_64,$(HOST_UARCH)),amd64,$(if $(filter arm64 aarch64,$(HOST_UARCH)),arm64,$(HOST_UARCH)))
 
-.PHONY: tidy build build-host run-host test vet run eval-host fmt sh
+.PHONY: tidy get-tg build build-host run-host test vet run eval-host fmt sh
 
 tidy:        ## go mod tidy
 	$(GO_RUN) go mod tidy
+
+get-tg:      ## добавить telegram-bot-api в go.mod (нужно один раз)
+	$(GO_RUN) sh -c "go get github.com/go-telegram-bot-api/telegram-bot-api/v5@latest && go mod tidy"
 
 build:       ## собрать бинарник (linux, для контейнера) в ./bin
 	$(GO_RUN) go build -o bin/server ./cmd/server

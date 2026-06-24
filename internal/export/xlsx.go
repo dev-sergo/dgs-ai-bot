@@ -125,3 +125,15 @@ func widthFor(col envelope.Column) float64 {
 }
 
 func strPtr(s string) *string { return &s }
+
+// Filename строит имя файла из типа отчёта и периода (используется обоими транспортами).
+func Filename(e *envelope.Envelope) string {
+	name := e.Type
+	if name == "" {
+		name = "report"
+	}
+	if e.Period.From != "" {
+		name += "_" + e.Period.From + "_" + e.Period.To
+	}
+	return name + ".xlsx"
+}

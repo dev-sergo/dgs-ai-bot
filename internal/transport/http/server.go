@@ -13,7 +13,6 @@ import (
 
 	"dgsbot/internal/app"
 	"dgsbot/internal/config"
-	"dgsbot/internal/envelope"
 	"dgsbot/internal/export"
 )
 
@@ -164,24 +163,13 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fname := exportFilename(ans.Envelope)
+	fname := export.Filename(ans.Envelope)
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", `attachment; filename="`+fname+`"`)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }
 
-// exportFilename собирает имя файла из типа отчёта и периода.
-func exportFilename(e *envelope.Envelope) string {
-	name := e.Type
-	if name == "" {
-		name = "report"
-	}
-	if e.Period.From != "" {
-		name += "_" + e.Period.From + "_" + e.Period.To
-	}
-	return name + ".xlsx"
-}
 
 func firstNonEmpty(vals ...string) string {
 	for _, v := range vals {

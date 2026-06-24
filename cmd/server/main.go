@@ -24,6 +24,7 @@ import (
 	"dgsbot/internal/session"
 	"dgsbot/internal/tenantctx"
 	httpx "dgsbot/internal/transport/http"
+	tgx "dgsbot/internal/transport/telegram"
 )
 
 // productIndexTimeout ограничивает фоновое построение индекса товаров: перебор всей
@@ -133,6 +134,16 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	// Telegram-бот запускается параллельно с HTTP, если задан токен.
+	// Пустой TELEGRAM_TOKEN → только HTTP, поведение идентично текущему.
+	if cfg.Telegram.Token != "" {
+		bot, err := tgx.New(cfg.Telegram, a)
+		if err != nil {
+			log.Fatalf("telegram: %v", err)
+		}
+		go bot.Run(ctx)
+	}
 
 	if err := srv.Run(ctx); err != nil {
 		log.Printf("server stopped: %v", err)

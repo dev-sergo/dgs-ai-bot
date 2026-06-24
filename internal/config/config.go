@@ -4,6 +4,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -51,6 +53,14 @@ type Dooglys struct {
 	Password string // api: пароль для get-token (из DGS_PASSWORD)
 }
 
+// Telegram — настройки Telegram-транспорта (тонкий адаптер поверх app.Ask).
+// Пустой Token → транспорт выключен (как пустой AUTH_TOKEN выключает HTTP-гейт).
+type Telegram struct {
+	Token         string  // TELEGRAM_TOKEN; пусто → бот не запускается
+	Allowlist     []int64 // TELEGRAM_ALLOWLIST (csv chat_id); пусто → открыт всем
+	DefaultTenant string  // TELEGRAM_TENANT; tenant по умолчанию для всех чатов
+}
+
 // Config — корневая конфигурация.
 type Config struct {
 	HTTPAddr     string
@@ -60,6 +70,7 @@ type Config struct {
 	QueryLogPath string // JSONL-датасет вопросов/ответов (env QUERY_LOG_PATH); пусто → лог выключен
 	LLM          LLM
 	Dooglys      Dooglys
+	Telegram     Telegram
 }
 
 // Load читает конфиг из ENV с разумными дефолтами под локальную разработку.
@@ -85,6 +96,11 @@ func Load() Config {
 			Login:    env("DGS_LOGIN", ""),
 			Password: env("DGS_PASSWORD", ""),
 		},
+		Telegram: Telegram{
+			Token:         env("TELEGRAM_TOKEN", ""),
+			Allowlist:     envInt64CSV("TELEGRAM_ALLOWLIST"),
+			DefaultTenant: env("TELEGRAM_TENANT", "mock_single"),
+		},
 	}
 }
 
@@ -101,8 +117,12 @@ func (c Config) Summary() string {
 	if c.QueryLogPath != "" {
 		qlog = c.QueryLogPath
 	}
-	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s",
-		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog)
+	tg := "off"
+	if c.Telegram.Token != "" {
+		tg = fmt.Sprintf("on(tenant=%s allowlist=%d)", c.Telegram.DefaultTenant, len(c.Telegram.Allowlist))
+	}
+	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s telegram=%s",
+		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, tg)
 }
 
 func env(key, def string) string {
@@ -129,4 +149,24 @@ func envDuration(key string, def time.Duration) time.Duration {
 		}
 	}
 	return def
+}
+
+// envInt64CSV парсит список chat_id из csv ("123,456"). Пустое значение или мусор —
+// nil (allowlist выключен → бот открыт всем). Нечисловые элементы тихо пропускаются.
+func envInt64CSV(key string) []int64 {
+	v := os.Getenv(key)
+	if v == "" {
+		return nil
+	}
+	var out []int64
+	for _, part := range strings.Split(v, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if n, err := strconv.ParseInt(part, 10, 64); err == nil {
+			out = append(out, n)
+		}
+	}
+	return out
 }

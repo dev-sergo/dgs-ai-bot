@@ -19,6 +19,9 @@
 | [03-testing-strategy.md](03-testing-strategy.md) | Тестирование локально без реальных запросов и без GPU: моки, фикстуры, eval-harness |
 | [04-development-plan.md](04-development-plan.md) | Итоговый план: white-list, AnalysisPlan, дерево приложения, майлстоуны, фикстуры, тесты, масштабирование |
 | [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md) | Живой чек-лист доработок качества и безопасности + журнал итераций (где мы сейчас) |
+| [06-assistant-design.md](06-assistant-design.md) | Дизайн ассистента-консультанта: insight-bundle, intent=advice, advisor-промпт, eval совета |
+| [07-customer-overview.md](07-customer-overview.md) | Что умеет бот и куда развивается — обзор для заказчика |
+| [08-telegram-transport.md](08-telegram-transport.md) | Telegram-транспорт: развязка с ядром, базовые решения, рендер отчётов, поэтапный план, границы |
 
 ## Ключевые решения (одной строкой)
 
