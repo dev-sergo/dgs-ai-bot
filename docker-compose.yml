@@ -1,35 +1,56 @@
+# Общий блок env для обоих транспортов (HTTP и Telegram) — LLM-риг и источник данных.
+# Каждый сервис добавляет к нему свои специфичные переменные.
+x-app-env: &app-env
+  # LLM-риг (llama.cpp, OpenAI-совместимый). На риге модель живёт на хосте —
+  # из контейнера достаём через host.docker.internal. Если модель слушает
+  # только 127.0.0.1, забиндь её на 0.0.0.0 ИЛИ укажи LAN-IP в .env.
+  LLM_BASE_URL: "${LLM_BASE_URL:-http://host.docker.internal:8080}"
+  LLM_MODEL: "${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07}"
+  # planner=stub → работа без GPU/сети (детерминированные планы).
+  PLANNER_MODE: "${PLANNER_MODE:-llm}"
+  FIXTURES_PATH: "/app/docs/contracts/fixtures"
+  # Источник данных Dooglys. fixture (default) — детерминированные JSON-фикстуры;
+  # api — живой JSON API v1 (требует DGS_DOMAIN/DGS_LOGIN/DGS_PASSWORD). Значения
+  # берутся из .env рядом с compose; не заданы → старт на фикстурах.
+  DGS_CLIENT: "${DGS_CLIENT:-fixture}"
+  DGS_BASE: "${DGS_BASE:-https://google.dooglys.com}"
+  DGS_DOMAIN: "${DGS_DOMAIN:-google}"
+  DGS_LOGIN: "${DGS_LOGIN:-}"
+  DGS_PASSWORD: "${DGS_PASSWORD:-}"
+
 services:
-  # Go API + детерминированная аналитика. Наружу НЕ публикуется —
+  # HTTP API + детерминированная аналитика (cmd/server). Наружу НЕ публикуется —
   # доступен только из сети compose, через nginx (сервис web).
   bot:
     build: .
     expose:
       - "8088"
     environment:
+      <<: *app-env
       HTTP_ADDR: ":8088"
-      # LLM-риг (llama.cpp, OpenAI-совместимый). На риге модель живёт на хосте —
-      # из контейнера достаём через host.docker.internal. Если модель слушает
-      # только 127.0.0.1, забиндь её на 0.0.0.0 ИЛИ укажи LAN-IP в .env.
-      LLM_BASE_URL: "${LLM_BASE_URL:-http://host.docker.internal:8080}"
-      LLM_MODEL: "${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07}"
-      # planner=stub → работа без GPU/сети (детерминированные планы).
-      PLANNER_MODE: "${PLANNER_MODE:-llm}"
-      FIXTURES_PATH: "/app/docs/contracts/fixtures"
-      # Источник данных Dooglys. fixture (default) — детерминированные JSON-фикстуры;
-      # api — живой JSON API v1 (требует DGS_DOMAIN/DGS_LOGIN/DGS_PASSWORD). Значения
-      # берутся из .env рядом с compose; не заданы → бот стартует на фикстурах.
-      DGS_CLIENT: "${DGS_CLIENT:-fixture}"
-      DGS_BASE: "${DGS_BASE:-https://google.dooglys.com}"
-      DGS_DOMAIN: "${DGS_DOMAIN:-google}"
-      DGS_LOGIN: "${DGS_LOGIN:-}"
-      DGS_PASSWORD: "${DGS_PASSWORD:-}"
       # Демо-гейт: общий токен на всех маршрутах (кроме /healthz). Пусто → гейт выключен.
       AUTH_TOKEN: "${AUTH_TOKEN:-}"
-      # Датасет вопрос→план→ответ (JSONL) для аналитики и дообучения. Пишется в
-      # /app/data (см. volume ниже) → на хост в ./data/queries.jsonl. Пусто → выключено.
+      # Датасет вопрос→план→ответ (JSONL). Пишется в /app/data → на хост в ./data. Пусто → выкл.
       QUERY_LOG_PATH: "${QUERY_LOG_PATH:-/app/data/queries.jsonl}"
     volumes:
-      # Датасет наружу на хост — переживает пересборку контейнера, доступен для analytics.
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Telegram-бот (cmd/bot) — отдельный процесс/сервис, развивается и рестартует
+  # независимо от HTTP API. Ходит в api.telegram.org по ИСХОДЯЩЕМУ — портов не публикует.
+  # Запускается, только если в .env задан TELEGRAM_TOKEN (иначе процесс падает с явной ошибкой).
+  telegram:
+    build: .
+    entrypoint: ["/app/bot"]
+    environment:
+      <<: *app-env
+      TELEGRAM_TOKEN: "${TELEGRAM_TOKEN:-}"
+      TELEGRAM_TENANT: "${TELEGRAM_TENANT:-mock_single}"
+      TELEGRAM_ALLOWLIST: "${TELEGRAM_ALLOWLIST:-}"
+      # Свой файл датасета, чтобы два процесса не писали в один JSONL вперемешку.
+      QUERY_LOG_PATH: "${TELEGRAM_QUERY_LOG_PATH:-/app/data/queries-telegram.jsonl}"
+    volumes:
       - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"

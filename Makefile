@@ -16,7 +16,7 @@ HOST_OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 HOST_UARCH := $(shell uname -m)
 HOST_ARCH := $(if $(filter x86_64,$(HOST_UARCH)),amd64,$(if $(filter arm64 aarch64,$(HOST_UARCH)),arm64,$(HOST_UARCH)))
 
-.PHONY: tidy get-tg build build-host run-host test vet run eval-host fmt sh
+.PHONY: tidy get-tg build build-host run-host bot-host test vet run eval-host fmt sh
 
 tidy:        ## go mod tidy
 	$(GO_RUN) go mod tidy
@@ -36,6 +36,15 @@ run-host: build-host  ## запустить сервис НА ХОСТЕ (исп
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
 	FIXTURES_PATH=docs/contracts/fixtures \
 	./bin/server-host
+
+bot-host:    ## поднять Telegram-бот НА ХОСТЕ (нужен TELEGRAM_TOKEN в окружении)
+	$(GO_RUN) sh -c "GOOS=$(HOST_OS) GOARCH=$(HOST_ARCH) go build -o bin/bot ./cmd/bot"
+	PLANNER_MODE=$${PLANNER_MODE:-llm} \
+	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	FIXTURES_PATH=$${FIXTURES_PATH:-docs/contracts/fixtures} \
+	TELEGRAM_TENANT=$${TELEGRAM_TENANT:-mock_single} \
+	./bin/bot
 
 test:        ## юнит/интеграционные тесты (без GPU)
 	$(GO_RUN) go test ./...

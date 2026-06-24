@@ -1,11 +1,10 @@
-// Command server — HTTP-точка входа Dooglys AI-bot (POST /ask, /export, /healthz).
-// Telegram-транспорт живёт в отдельном бинаре cmd/bot (общая сборка — internal/bootstrap).
+// Command bot — Telegram-точка входа Dooglys AI-bot. Отдельный процесс/деплой
+// от HTTP-сервера (cmd/server), общая сборка app.App — internal/bootstrap.
 package main
 
 import (
 	"context"
 	"log"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -13,12 +12,16 @@ import (
 
 	"dgsbot/internal/bootstrap"
 	"dgsbot/internal/config"
-	httpx "dgsbot/internal/transport/http"
+	tgx "dgsbot/internal/transport/telegram"
 )
 
 func main() {
 	cfg := config.Load()
 	log.Printf("config: %s", cfg.Summary())
+
+	if cfg.Telegram.Token == "" {
+		log.Fatal("TELEGRAM_TOKEN не задан — боту нечем подключиться к Telegram")
+	}
 
 	a, cleanup, err := bootstrap.App(cfg)
 	if err != nil {
@@ -26,13 +29,13 @@ func main() {
 	}
 	defer cleanup()
 
-	srv := httpx.New(cfg, a)
+	bot, err := tgx.New(cfg.Telegram, a)
+	if err != nil {
+		log.Fatalf("telegram: %v", err)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	if err := srv.Run(ctx); err != nil {
-		log.Printf("server stopped: %v", err)
-		os.Exit(1)
-	}
+	bot.Run(ctx) // блокирует до отмены ctx (SIGINT/SIGTERM)
 }

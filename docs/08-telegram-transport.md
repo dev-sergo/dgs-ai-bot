@@ -1,7 +1,8 @@
 # 08 — Telegram-транспорт
 
-Статус: **спроектировано, не реализовано** (решения зафиксированы 2026-06-24). Реализация —
-тонкий адаптер поверх существующего ядра; план по этапам в §5.
+Статус: **реализовано** (адаптер — коммит 741ad06; вынос в отдельный сервис — 2026-06-25).
+Тонкий адаптер поверх существующего ядра; план по этапам в §5. Транспорт живёт **отдельным
+процессом** `cmd/bot` (общая сборка `*app.App` — `internal/bootstrap`), независимо от HTTP-сервера.
 
 ## 1. Зачем и принцип
 
@@ -31,7 +32,7 @@ Telegram как первичную обёртку.
 
 | Решение | Выбор | Почему |
 |---|---|---|
-| Сборка | вариант 1: тот же `cmd/server`, два транспорта над одним `*app.App` | проще для пилота; пустой `TELEGRAM_TOKEN` → только HTTP, как сейчас |
+| Сборка | отдельный бинарь `cmd/bot` над общей сборкой `internal/bootstrap.App`; HTTP — `cmd/server` | бот развивается, рестартует и деплоится независимо от API; ноль дублирования проводки `*app.App` |
 | Библиотека | `github.com/go-telegram-bot-api/telegram-bot-api/v5` | самая обкатанная, простой long-polling |
 | Режим отправки | plain-текст (без Markdown) в v1 | обходим экранирование MarkdownV2 |
 | Доставка апдейтов | long-polling, не webhook | публичный URL не нужен |
@@ -64,9 +65,10 @@ xlsx-файл, а не таблица в чате.
 
 ## 5. План реализации (по этапам)
 
-Новые файлы: `internal/transport/telegram/{bot,render,commands,render_test}.go`.
-Затронутые: `internal/config/config.go`, `cmd/server/main.go`, перенос `exportFilename` в
-`internal/export` (+1 строка в `transport/http/server.go`), `go.mod`/`go.sum`. **Ядро — ноль правок.**
+Новые файлы: `internal/transport/telegram/{bot,render,commands,render_test}.go`, `cmd/bot/main.go`,
+`internal/bootstrap/bootstrap.go`. Затронутые: `internal/config/config.go`, `cmd/server/main.go`
+(упрощён до HTTP, сборка ушла в `bootstrap`), перенос `exportFilename` в `internal/export` (+1
+строка в `transport/http/server.go`), `go.mod`/`go.sum`. **Ядро — ноль правок.**
 
 | Этап | Что | Готово, когда |
 |---|---|---|
@@ -74,7 +76,7 @@ xlsx-файл, а не таблица в чате.
 | 2. Рендер | `Render` (§4) + перенос `exportFilename` в `export` | `render_test.go` зелёный |
 | 3. Bot loop | `New`/`Run(ctx)`: polling, allowlist-guard, горутина+`typing` на апдейт, `Ask`→`Render`→отправка | отчёт даёт текст; «выгрузи» даёт xlsx; чужой chat_id (при allowlist) — отлуп |
 | 4. Команды | `/start` `/help` (канонные), `/today` (синтез «как вчера»), `/tt КОД` (фильтр `sale_point` в сессии) | четыре команды отвечают |
-| 5. Сборка | в `cmd/server/main.go` два транспорта под общим `ctx`; упал один → гасим второй | `go build ./...`+`go vet` чистые; без токена = как раньше; Ctrl-C гасит оба |
+| 5. Сборка | общая проводка `*app.App` → `internal/bootstrap`; `cmd/bot` запускает только бот, `cmd/server` — только HTTP; два сервиса в `docker-compose` | `go build ./...`+`go vet` чистые; каждый процесс рестартует независимо; пустой `TELEGRAM_TOKEN` → `cmd/bot` падает с явной ошибкой, API не задет |
 | 6. Проверка + доки | команда запуска (env) + чек-лист ручных проверок; `go test ./...` зелёный | прогон запускает пользователь |
 
 Объём этапов 1–5: **~2–3 дня**.
