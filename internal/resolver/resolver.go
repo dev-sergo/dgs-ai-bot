@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"dgsbot/internal/dooglys"
 )
@@ -38,7 +39,12 @@ var specs = map[string]kindSpec{
 }
 
 // Store — загруженные справочники по видам (kind).
+//
+// byKind защищён mu: индекс товаров может догружаться в фоне (api-режим, SetOptions из
+// горутины при старте — см. cmd/server) уже после того, как сервер начал обслуживать
+// запросы и звать Resolve. Без блокировки это гонка карты.
 type Store struct {
+	mu     sync.RWMutex
 	byKind map[string][]Entry
 }
 
@@ -114,7 +120,9 @@ func (s *Store) SetOptions(kind string, opts []dooglys.SelectOption) {
 		entries = append(entries, Entry{UUID: o.UUID, Names: []string{o.Name}})
 	}
 	if len(entries) > 0 {
+		s.mu.Lock()
 		s.byKind[kind] = entries
+		s.mu.Unlock()
 	}
 }
 
@@ -184,7 +192,11 @@ func (e *ResolveError) Error() string {
 // Resolve ищет uuid по имени: точное (без регистра), затем подстрочное совпадение.
 // Несколько кандидатов → неоднозначность; ноль → не найдено.
 func (s *Store) Resolve(kind, name string) (Match, error) {
+	// Снимок слайса под RLock; сам слайс/Entry неизменяемы (SetOptions заменяет
+	// значение карты целиком), поэтому итерируем уже без блокировки.
+	s.mu.RLock()
 	entries := s.byKind[kind]
+	s.mu.RUnlock()
 	q := strings.ToLower(strings.TrimSpace(name))
 
 	// 1) точное совпадение по любому имени.

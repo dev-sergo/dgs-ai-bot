@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	_ "time/tzdata" // встроенная база таймзон — чтобы работало в distroless без системного tzdata
 
@@ -24,6 +25,10 @@ import (
 	"dgsbot/internal/tenantctx"
 	httpx "dgsbot/internal/transport/http"
 )
+
+// productIndexTimeout ограничивает фоновое построение индекса товаров: перебор всей
+// истории заказов не должен висеть бесконечно при недоступном/медленном API.
+const productIndexTimeout = 6 * time.Minute
 
 func main() {
 	cfg := config.Load()
@@ -72,14 +77,22 @@ func main() {
 			dooglys.NewFixtureClient(cfg.FixturesPath),
 		)
 		// Резолвер: sale_point/user — из фикстур, товары — из живых заказов (имена совпадают
-		// с тем, что в отчёте → drill-down по товару резолвится). Индекс строится один раз.
+		// с тем, что в отчёте → drill-down по товару резолвится). Индекс товаров перебирает
+		// всю историю заказов (~минуты) — строим его в ФОНЕ с таймаутом, чтобы HTTP слушал
+		// сразу: до готовности индекса товары резолвятся из фикстур, потом SetOptions
+		// атомарно заменяет их живыми (Store под RWMutex). Раньше синхронный вызов держал
+		// старт ~4 мин → каждый редеплой = минуты «502».
 		res = resolver.Load(cfg.FixturesPath)
-		if opts, err := api.ProductIndex(context.Background()); err != nil {
-			log.Printf("resolver: живой индекс товаров недоступен (%v) — товары из фикстур", err)
-		} else {
-			res.SetOptions("product", opts)
-			log.Printf("resolver: %d товаров из живых заказов", len(opts))
-		}
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), productIndexTimeout)
+			defer cancel()
+			if opts, err := api.ProductIndex(ctx); err != nil {
+				log.Printf("resolver: живой индекс товаров недоступен (%v) — товары из фикстур", err)
+			} else {
+				res.SetOptions("product", opts)
+				log.Printf("resolver: %d товаров из живых заказов (фоновый индекс готов)", len(opts))
+			}
+		}()
 	case config.DooglysHTTP:
 		if cfg.Dooglys.Cookie == "" {
 			log.Fatal("DGS_CLIENT=http requires DGS_COOKIE to be set")
