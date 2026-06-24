@@ -35,6 +35,30 @@ func TestCompare(t *testing.T) {
 	}
 }
 
+func TestCompareSredniyChekvWeighted(t *testing.T) {
+	rep := paymentReport(t)
+	// now: 2 строки, sum_all=300 kol_vo_chekov=6 → взвешенный avg=50; наивная сумма sredniy_chek=25+100=125.
+	now := dooglys.Result{Rows: []dooglys.Row{
+		{"sum_all": 100.0, "kol_vo_chekov": 4.0, "sredniy_chek": 25.0},
+		{"sum_all": 200.0, "kol_vo_chekov": 2.0, "sredniy_chek": 100.0},
+	}}
+	// prev: 1 строка, weighted avg=100.
+	prev := dooglys.Result{Rows: []dooglys.Row{
+		{"sum_all": 400.0, "kol_vo_chekov": 4.0, "sredniy_chek": 100.0},
+	}}
+
+	e := Compare(rep, "sredniy_chek", now, prev, "tnt", "RUB", per(), per())
+	if e.Summary["value_now"] != 50 {
+		t.Errorf("value_now = %v, want 50 (взвешенное 300/6)", e.Summary["value_now"])
+	}
+	if e.Summary["value_prev"] != 100 {
+		t.Errorf("value_prev = %v, want 100", e.Summary["value_prev"])
+	}
+	if e.Summary["delta_abs"] != -50 {
+		t.Errorf("delta_abs = %v, want -50", e.Summary["delta_abs"])
+	}
+}
+
 func TestContributionDecomposesDelta(t *testing.T) {
 	rep := paymentReport(t)
 	// now: card90 cash30 → 120; prev: card50 cash50 → 100; total delta 20.

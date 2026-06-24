@@ -43,8 +43,8 @@ func NormalizeMethod(p *plan.AnalysisPlan) {
 func Compare(rep catalog.Report, metric string, now, prev dooglys.Result,
 	tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
 
-	vNow := sumField(now.Rows, metric)
-	vPrev := sumField(prev.Rows, metric)
+	vNow := periodValue(rep, now.Rows, metric)
+	vPrev := periodValue(rep, prev.Rows, metric)
 	delta := round2(vNow - vPrev)
 
 	return envelope.Envelope{
@@ -84,8 +84,8 @@ func Contribution(rep catalog.Report, metric string, now, prev dooglys.Result, t
 
 	if comps := components[rep.Slug]; len(comps) > 0 {
 		rows := make([]contribRow, 0, len(comps))
-		vNow := sumField(now.Rows, metric)
-		vPrev := sumField(prev.Rows, metric)
+		vNow := periodValue(rep, now.Rows, metric)
+		vPrev := periodValue(rep, prev.Rows, metric)
 		totalDelta := vNow - vPrev
 		for _, key := range comps {
 			n := sumField(now.Rows, key)
@@ -233,6 +233,21 @@ func sumField(rows []dooglys.Row, key string) float64 {
 		}
 	}
 	return s
+}
+
+// periodValue агрегирует метрику по набору строк с учётом Field.Agg.
+// Для avg-метрик (sredniy_chek) считает взвешенное среднее sum_all/kol_vo_chekov,
+// а не сумму построчных средних — так же, как buildSummary в engine.go.
+func periodValue(rep catalog.Report, rows []dooglys.Row, metric string) float64 {
+	f, ok := rep.FieldByKey(metric)
+	if ok && f.Agg == "avg" {
+		checks := sumField(rows, "kol_vo_chekov")
+		if checks == 0 {
+			return 0
+		}
+		return round2(sumField(rows, "sum_all") / checks)
+	}
+	return sumField(rows, metric)
 }
 
 // pct возвращает относительное изменение в процентах (0 при нулевой базе).
