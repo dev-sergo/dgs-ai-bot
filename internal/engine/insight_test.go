@@ -85,8 +85,27 @@ func TestBuildInsightBundle(t *testing.T) {
 		t.Fatalf("BottomProducts: %d, want 2 (Салфетка исключена): %+v", len(b.BottomProducts), b.BottomProducts)
 	}
 	water := b.BottomProducts[0]
-	if water.Name != "Вода" || water.Amount != 150 || water.Quantity != 5 || water.Profit != -15 {
-		t.Errorf("первый аутсайдер = %+v, want Вода amount=150 qty=5 profit=-15", water)
+	if water.Name != "Вода" || water.Amount != 150 || water.Quantity != 5 {
+		t.Errorf("первый аутсайдер = %+v, want Вода amount=150 qty=5", water)
+	}
+	if water.Profit == nil || *water.Profit != -15 {
+		t.Errorf("Вода.Profit = %v, want -15 (себестоимость в фикстуре есть)", water.Profit)
+	}
+}
+
+// TestProductsNoProfitData — когда в строках нет profit (живой API из order_items),
+// поле Profit остаётся nil и выпадает из снимка: advisor не должен судить о прибыльности.
+func TestProductsNoProfitData(t *testing.T) {
+	productsNow := dooglys.Result{Rows: []dooglys.Row{
+		{"name": "Ролл Миледи", "quantity": 1.0, "amount": 120.0, "discount_sum": 0.0},
+		{"name": "Пицца", "quantity": 5.0, "amount": 2500.0, "discount_sum": 50.0},
+	}}
+	b := BuildInsightBundle(dooglys.Result{Rows: []dooglys.Row{{"sum_all": 2620.0}}},
+		dooglys.Result{}, productsNow, "RUB", envelope.Period{}, envelope.Period{})
+	for _, p := range append(append([]NamedRow{}, b.TopProducts...), b.BottomProducts...) {
+		if p.Profit != nil {
+			t.Errorf("%s: Profit=%v, want nil при отсутствии себестоимости", p.Name, *p.Profit)
+		}
 	}
 }
 

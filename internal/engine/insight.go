@@ -28,12 +28,15 @@ type Component struct {
 }
 
 // NamedRow — агрегат одной позиции номенклатуры за период.
+// Profit — указатель: nil, когда себестоимости нет (живой API из order_items её не
+// отдаёт). Так поле выпадает из JSON (omitempty) и advisor не выдумывает «убыточность»
+// там, где данных о прибыли просто нет.
 type NamedRow struct {
-	Name     string  `json:"name"`
-	Quantity float64 `json:"quantity"`
-	Amount   float64 `json:"amount"`
-	Profit   float64 `json:"profit"`
-	Discount float64 `json:"discount"`
+	Name     string   `json:"name"`
+	Quantity float64  `json:"quantity"`
+	Amount   float64  `json:"amount"`
+	Profit   *float64 `json:"profit,omitempty"`
+	Discount float64  `json:"discount"`
 }
 
 // InsightBundle — детерминированный «снимок бизнеса» за период: набор фактов, поверх
@@ -154,40 +157,55 @@ func channelMix(rows []dooglys.Row) []Component {
 // productsByAmount агрегирует строки по имени, фильтрует нулевые продажи и возвращает N
 // позиций: аутсайдеры (asc=true) или лидеры (asc=false) по выручке.
 func productsByAmount(rows []dooglys.Row, n int, asc bool) []NamedRow {
-	agg := map[string]*NamedRow{}
+	// Внутренний накопитель: profitSeen помечает, что хоть в одной строке была
+	// себестоимость (иначе Profit остаётся nil — «прибыль неизвестна»).
+	type acc struct {
+		quantity, amount, profit, discount float64
+		profitSeen                         bool
+	}
+	agg := map[string]*acc{}
 	order := []string{}
 	for _, r := range rows {
 		name, _ := r["name"].(string)
 		if name == "" {
 			continue
 		}
-		nr, ok := agg[name]
+		a, ok := agg[name]
 		if !ok {
-			nr = &NamedRow{Name: name}
-			agg[name] = nr
+			a = &acc{}
+			agg[name] = a
 			order = append(order, name)
 		}
 		q, _ := toFloat(r["quantity"])
-		a, _ := toFloat(r["amount"])
-		p, _ := toFloat(r["profit"])
+		amt, _ := toFloat(r["amount"])
+		p, pok := toFloat(r["profit"])
 		d, _ := toFloat(r["discount_sum"])
-		nr.Quantity += q
-		nr.Amount += a
-		nr.Profit += p
-		nr.Discount += d
+		a.quantity += q
+		a.amount += amt
+		a.discount += d
+		if pok {
+			a.profit += p
+			a.profitSeen = true
+		}
 	}
 
 	out := make([]NamedRow, 0, len(order))
 	for _, name := range order {
-		nr := agg[name]
-		if nr.Quantity <= 0 {
+		a := agg[name]
+		if a.quantity <= 0 {
 			continue
 		}
-		nr.Quantity = round2(nr.Quantity)
-		nr.Amount = round2(nr.Amount)
-		nr.Profit = round2(nr.Profit)
-		nr.Discount = round2(nr.Discount)
-		out = append(out, *nr)
+		nr := NamedRow{
+			Name:     name,
+			Quantity: round2(a.quantity),
+			Amount:   round2(a.amount),
+			Discount: round2(a.discount),
+		}
+		if a.profitSeen {
+			pr := round2(a.profit)
+			nr.Profit = &pr
+		}
+		out = append(out, nr)
 	}
 
 	sort.SliceStable(out, func(i, j int) bool {

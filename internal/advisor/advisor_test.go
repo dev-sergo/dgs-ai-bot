@@ -9,6 +9,8 @@ import (
 	"dgsbot/internal/llm"
 )
 
+func ptr(f float64) *float64 { return &f }
+
 func TestCompose(t *testing.T) {
 	b := engine.InsightBundle{
 		Currency:      "RUB",
@@ -19,8 +21,8 @@ func TestCompose(t *testing.T) {
 		Discounts:     105,
 		DiscountShare: 7,
 		BottomProducts: []engine.NamedRow{
-			{Name: "Вода", Amount: 150, Quantity: 5, Profit: -15},
-			{Name: "Кофе", Amount: 300, Quantity: 4, Profit: 120},
+			{Name: "Вода", Amount: 150, Quantity: 5, Profit: ptr(-15)},
+			{Name: "Кофе", Amount: 300, Quantity: 4, Profit: ptr(120)},
 		},
 	}
 	out := Compose(b)

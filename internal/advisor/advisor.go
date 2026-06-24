@@ -99,7 +99,7 @@ func Compose(b engine.InsightBundle) string {
 		parts := make([]string, 0, len(b.BottomProducts))
 		for _, p := range b.BottomProducts {
 			s := fmt.Sprintf("%s (%s", p.Name, render.Money(p.Amount, cur))
-			if p.Profit < 0 {
+			if p.Profit != nil && *p.Profit < 0 {
 				s += ", в минусе"
 			}
 			s += ")"
