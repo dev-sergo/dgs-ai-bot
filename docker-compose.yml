@@ -15,6 +15,16 @@ services:
       # planner=stub → работа без GPU/сети (детерминированные планы).
       PLANNER_MODE: "${PLANNER_MODE:-llm}"
       FIXTURES_PATH: "/app/docs/contracts/fixtures"
+      # Источник данных Dooglys. fixture (default) — детерминированные JSON-фикстуры;
+      # api — живой JSON API v1 (требует DGS_DOMAIN/DGS_LOGIN/DGS_PASSWORD). Значения
+      # берутся из .env рядом с compose; не заданы → бот стартует на фикстурах.
+      DGS_CLIENT: "${DGS_CLIENT:-fixture}"
+      DGS_BASE: "${DGS_BASE:-https://google.dooglys.com}"
+      DGS_DOMAIN: "${DGS_DOMAIN:-google}"
+      DGS_LOGIN: "${DGS_LOGIN:-}"
+      DGS_PASSWORD: "${DGS_PASSWORD:-}"
+      # Демо-гейт: общий токен на всех маршрутах (кроме /healthz). Пусто → гейт выключен.
+      AUTH_TOKEN: "${AUTH_TOKEN:-}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
