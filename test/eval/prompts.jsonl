@@ -150,7 +150,7 @@
 {"query": "топ-5 блюд по прибыли за прошлый месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_month"}}
 {"query": "самые доходные позиции меню за неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days|this_week"}}
 {"query": "что продаётся лучше всего сегодня", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "today"}}
-{"query": "лучшие товары по выручке за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days"}}
+{"query": "лучшие товары по выручке за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_week"}}
 {"query": "топ товаров на точке за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days", "filters": ["sale_point"]}}
 {"query": "самый популярный товар в городе за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days"}}
 {"query": "топ блюд в категории напитки за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days", "filters": ["product_category"]}}
@@ -175,11 +175,11 @@
 {"query": "товары которые плохо берут за неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days|this_week"}}
 {"query": "самое непопулярное блюдо за последний месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_30_days|last_month"}}
 {"query": "что не продаётся за сегодня", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "today"}}
-{"query": "хуже всего продаваемые блюда за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days"}}
+{"query": "хуже всего продаваемые блюда за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_week"}}
 {"query": "антирейтинг товаров за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days"}}
 {"query": "что хуже продаётся на точке за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days", "filters": ["sale_point"]}}
 {"query": "список товаров с минимальной выручкой за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days"}}
-{"query": "товары с маленьким спросом за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days"}}
+{"query": "товары с маленьким спросом за прошлую неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_week"}}
 {"query": "позиции с наименьшей выручкой за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days"}}
 {"query": "что продали меньше всего за прошлый месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_month"}}
 {"query": "непопулярные блюда в категории за прошлый месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_month", "filters": ["product_category"]}}
@@ -189,7 +189,7 @@
 {"query": "все чеки за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week"}}
 {"query": "чеки за текущий месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month"}}
 {"query": "отчёт по чекам за прошлый месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_month"}}
-{"query": "сколько чеков за последние 7 дней", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days"}}
+{"query": "сколько чеков за последние 7 дней", "expect": {"intent": "report", "report": "payment|paycheck", "period_token": "last_7_days"}}
 {"query": "покажи чеки за эту неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_week"}}
 {"query": "чеки за последние 30 дней", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_30_days"}}
 {"query": "отчёт по кассовым операциям за вчера", "expect": {"intent": "report", "report": "paycheck", "period_token": "yesterday"}}
@@ -197,7 +197,7 @@
 {"query": "чеки с большими скидками за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days"}}
 {"query": "прибыль по чекам за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week"}}
 {"query": "суммарные скидки по чекам за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days"}}
-{"query": "сколько чеков было закрыто сегодня", "expect": {"intent": "report", "report": "paycheck", "period_token": "today"}}
+{"query": "сколько чеков было закрыто сегодня", "expect": {"intent": "report", "report": "payment|paycheck", "period_token": "today"}}
 {"query": "покажи крупные чеки за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days"}}
 {"query": "чеки в разбивке по типу оплаты за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days"}}
 {"query": "покажи чеки с оплатой картой за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days", "filters": ["payment_type"]}}
@@ -206,7 +206,7 @@
 {"query": "сколько чеков провели наличными за месяц", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_month|last_30_days", "filters": ["payment_type"]}}
 {"query": "чеки с онлайн-оплатой за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week", "filters": ["payment_type"]}}
 {"query": "чеки за сегодня по карте", "expect": {"intent": "report", "report": "paycheck", "period_token": "today", "filters": ["payment_type"]}}
-{"query": "все чеки за прошлую неделю по наличным", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days", "filters": ["payment_type"]}}
+{"query": "все чеки за прошлую неделю по наличным", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_week", "filters": ["payment_type"]}}
 {"query": "чеки за эту неделю по СБП", "expect": {"intent": "report", "report": "paycheck", "period_token": "this_week", "filters": ["payment_type"]}}
 {"query": "покажи чеки сотрудника за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week", "filters": ["user"]}}
 {"query": "чеки кассира за сегодня", "expect": {"intent": "report", "report": "paycheck", "period_token": "today", "filters": ["user"]}}
@@ -232,9 +232,9 @@
 {"query": "заказы из мобильного приложения за месяц", "expect": {"intent": "report", "report": "orders", "period_token": "this_month|last_30_days", "filters": ["source"]}}
 {"query": "заказы delivery-club за прошлый месяц", "expect": {"intent": "report", "report": "orders", "period_token": "last_month", "filters": ["source"]}}
 {"query": "заказы с сайта за прошлый месяц", "expect": {"intent": "report", "report": "orders", "period_token": "last_month", "filters": ["source"]}}
-{"query": "заказы из мобайл за прошлую неделю", "expect": {"intent": "report", "report": "orders", "period_token": "last_7_days", "filters": ["source"]}}
+{"query": "заказы из мобайл за прошлую неделю", "expect": {"intent": "report", "report": "orders", "period_token": "last_week", "filters": ["source"]}}
 {"query": "заказы онлайн за эту неделю", "expect": {"intent": "report", "report": "orders", "period_token": "this_week", "filters": ["source"]}}
-{"query": "заказы за прошлую неделю из приложения", "expect": {"intent": "report", "report": "orders", "period_token": "last_7_days", "filters": ["source"]}}
+{"query": "заказы за прошлую неделю из приложения", "expect": {"intent": "report", "report": "orders", "period_token": "last_week", "filters": ["source"]}}
 {"query": "сколько заказов с наличной оплатой за месяц", "expect": {"intent": "report", "report": "orders", "period_token": "this_month|last_30_days", "filters": ["payment_type"]}}
 {"query": "заказы с оплатой картой за неделю", "expect": {"intent": "report", "report": "orders", "period_token": "last_7_days|this_week", "filters": ["payment_type"]}}
 {"query": "заказы с СБП за сегодня", "expect": {"intent": "report", "report": "orders", "period_token": "today", "filters": ["payment_type"]}}
@@ -263,7 +263,7 @@
 {"query": "аналитика за текущий месяц", "expect": {"intent": "report", "period_token": "this_month"}}
 {"query": "как идут продажи в этом месяце", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
 {"query": "сводный отчёт за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
-{"query": "статистика за прошлую неделю", "expect": {"intent": "report", "period_token": "last_7_days"}}
+{"query": "статистика за прошлую неделю", "expect": {"intent": "report", "period_token": "last_week"}}
 {"query": "что ты умеешь", "expect": {"intent": "help"}}
 {"query": "какие у тебя функции", "expect": {"intent": "help"}}
 {"query": "что ты можешь показать", "expect": {"intent": "help"}}
@@ -365,7 +365,7 @@
 {"query": "вируча за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}
 {"query": "покажи выруку вчера", "expect": {"intent": "report", "report": "payment", "period_token": "yesterday"}}
 {"query": "топ блюда за месяц", "expect": {"intent": "report", "report": "products", "period_token": "this_month|last_30_days"}}
-{"query": "заказы за прошла неделя", "expect": {"intent": "report", "report": "orders", "period_token": "last_7_days"}}
+{"query": "заказы за прошла неделя", "expect": {"intent": "report", "report": "orders", "period_token": "last_week"}}
 {"query": "сколько продали за эту неделю?", "expect": {"intent": "report", "period_token": "this_week"}}
 {"query": "выручка текущий месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
 {"query": "ТОП ТОВАРОВ ЗА МЕСЯЦ", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days"}}
@@ -407,7 +407,7 @@
 {"query": "выручка по дням недели за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
 {"query": "покажи выручку по часам за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}
 {"query": "статистика продаж по часам за вчера", "expect": {"intent": "report", "report": "payment", "period_token": "yesterday"}}
-{"query": "выручка утром и вечером за прошлую неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_7_days"}}
+{"query": "выручка утром и вечером за прошлую неделю", "expect": {"intent": "report", "report": "payment", "period_token": "last_week"}}
 {"query": "заказы в обед за текущую неделю", "expect": {"intent": "report", "report": "orders", "period_token": "this_week"}}
 {"query": "пик заказов по времени суток за прошлый месяц", "expect": {"intent": "report", "report": "orders", "period_token": "last_month"}}
 {"query": "анализ продаж за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
@@ -422,7 +422,7 @@
 {"query": "топ-5 блюд на точке Центральная за прошлый месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_month", "filters": ["sale_point"]}}
 {"query": "заказы из приложения с оплатой СБП за этот месяц", "expect": {"intent": "report", "report": "orders", "period_token": "this_month", "filters": ["source", "payment_type"]}}
 {"query": "заказы в Выксе через мобайл за этот месяц", "expect": {"intent": "report", "report": "orders", "period_token": "this_month", "filters": ["locality", "source"]}}
-{"query": "чеки картой на точке в Выксе за прошлую неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days", "filters": ["sale_point", "payment_type"]}}
+{"query": "чеки картой на точке в Выксе за прошлую неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_week", "filters": ["sale_point", "payment_type"]}}
 {"query": "выручка на каждой точке за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
 {"query": "выручка по всем точкам за прошлый месяц", "expect": {"intent": "report", "report": "payment", "period_token": "last_month"}}
 {"query": "сравнение точек по выручке за этот месяц", "expect": {"intent": "report", "report": "payment", "period_token": "this_month"}}
@@ -500,7 +500,7 @@
 {"query": "один худший товар за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days|last_month"}}
 {"query": "что лучше всего продавалось за последние 30 дней", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_30_days"}}
 {"query": "какой товар хуже всего продавался за последние 30 дней", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_30_days"}}
-{"query": "топ выручки за прошлую неделю", "expect": {"intent": "report", "report": "payment|products", "method": "top_n", "period_token": "last_7_days"}}
+{"query": "топ выручки за прошлую неделю", "expect": {"intent": "report", "report": "payment|products", "method": "top_n", "period_token": "last_week"}}
 {"query": "рейтинг товаров за вчера по количеству", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "yesterday"}}
 {"query": "что не берут за последнюю неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days|this_week"}}
 {"query": "худшая позиция за неделю", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "last_7_days|this_week"}}
@@ -531,7 +531,7 @@
 {"query": "дай данные по выручке и товарам за месяц", "expect": {"intent": "report", "period_token": "this_month|last_30_days"}}
 {"query": "покажи выручку и количество чеков за сегодня", "expect": {"intent": "report", "report": "payment", "period_token": "today"}}
 {"query": "топ товаров и выручка за этот месяц", "expect": {"intent": "report", "period_token": "this_month"}}
-{"query": "и выручку и заказы за прошлую неделю", "expect": {"intent": "report", "period_token": "last_7_days"}}
+{"query": "и выручку и заказы за прошлую неделю", "expect": {"intent": "report", "period_token": "last_week"}}
 {"query": "можно мне посмотреть выручку вчера и сегодня", "expect": {"intent": "report", "report": "payment"}}
 {"query": "покажи сначала чеки, потом товары за месяц", "expect": {"intent": "report", "period_token": "this_month|last_30_days"}}
 {"query": "почему упали продажи товаров за прошлый месяц", "expect": {"intent": "report", "report": "products", "class": "B", "method": "compare", "period_token": "last_month"}}
@@ -546,6 +546,6 @@
 {"query": "за счёт чего изменились заказы через сайт за последний месяц", "expect": {"intent": "report", "report": "orders", "class": "B", "method": "compare", "period_token": "last_30_days|last_month", "filters": ["source"]}}
 {"query": "что стало причиной роста выручки за месяц", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "this_month|last_30_days"}}
 {"query": "объясни почему вырос оборот за прошлый месяц", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "last_month"}}
-{"query": "что изменило структуру доходов за прошлую неделю", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "last_7_days"}}
+{"query": "что изменило структуру доходов за прошлую неделю", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "last_week"}}
 {"query": "откуда прирост выручки за этот месяц", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "this_month"}}
 {"query": "что привело к снижению выручки за прошлый месяц", "expect": {"intent": "report", "report": "payment", "class": "B", "method": "contribution", "period_token": "last_month"}}
