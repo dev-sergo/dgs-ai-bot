@@ -17,7 +17,7 @@ import (
 func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 	tenantID, currency string, period envelope.Period) envelope.Envelope {
 
-	cols := buildColumns(p, rep)
+	cols := buildColumns(p, rep, res)
 	rows := buildRows(cols, p, rep, res)
 	summary := buildSummary(cols, p, rep, res)
 
@@ -39,7 +39,7 @@ func Plain(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 func TopN(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 	tenantID, currency string, period envelope.Period) envelope.Envelope {
 
-	cols := buildColumns(p, rep)
+	cols := buildColumns(p, rep, res)
 	rows := buildRows(cols, p, rep, res)
 	summary := buildSummary(cols, p, rep, res)
 
@@ -80,15 +80,28 @@ func TopN(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result,
 }
 
 // buildColumns: сначала измерения, затем метрики (без дублей и без PII).
-func buildColumns(p plan.AnalysisPlan, rep catalog.Report) []envelope.Column {
+// Метрику, которой источник не отдаёт НИ в одной строке, выбрасываем: иначе колонка
+// рисуется нулями и вводит в заблуждение (напр. «Ожидаемая прибыль 0,00 ₽» у живого
+// товарного отчёта из order_items, где себестоимости нет). Размерности (group_by) и
+// вычисляемый sredniy_chek (его считает buildRows, в сырых строках его может не быть)
+// не трогаем. При пустой выборке фильтр не применяем — это ветка «данных нет».
+func buildColumns(p plan.AnalysisPlan, rep catalog.Report, res dooglys.Result) []envelope.Column {
 	var cols []envelope.Column
 	seen := map[string]bool{}
+	dimKey := map[string]bool{}
+	for _, g := range p.GroupBy {
+		dimKey[g] = true
+	}
 	addCol := func(key string) {
 		if seen[key] {
 			return
 		}
 		f, ok := rep.FieldByKey(key)
 		if !ok || f.PII {
+			return
+		}
+		// Метрика отсутствует во всех строках источника → колонка-пустышка, пропускаем.
+		if len(res.Rows) > 0 && !dimKey[key] && key != "sredniy_chek" && !keyInAnyRow(res.Rows, key) {
 			return
 		}
 		seen[key] = true
@@ -101,6 +114,17 @@ func buildColumns(p plan.AnalysisPlan, rep catalog.Report) []envelope.Column {
 		addCol(m)
 	}
 	return cols
+}
+
+// keyInAnyRow сообщает, присутствует ли ключ хотя бы в одной строке выборки (наличие
+// поля, а не ненулевое значение): отличает «источник не отдаёт метрику» от «метрика=0».
+func keyInAnyRow(rows []dooglys.Row, key string) bool {
+	for _, r := range rows {
+		if _, ok := r[key]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // buildRows проецирует строки на колонки и агрегирует их по измерению (group_by):

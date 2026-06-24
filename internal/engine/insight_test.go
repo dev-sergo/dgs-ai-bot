@@ -3,8 +3,10 @@ package engine
 import (
 	"testing"
 
+	"dgsbot/internal/catalog"
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/envelope"
+	"dgsbot/internal/plan"
 )
 
 func TestBuildInsightBundle(t *testing.T) {
@@ -105,6 +107,64 @@ func TestProductsNoProfitData(t *testing.T) {
 	for _, p := range append(append([]NamedRow{}, b.TopProducts...), b.BottomProducts...) {
 		if p.Profit != nil {
 			t.Errorf("%s: Profit=%v, want nil при отсутствии себестоимости", p.Name, *p.Profit)
+		}
+	}
+}
+
+// TestBottomProductsSkipsZeroRevenue — позиции с нулевой выручкой (бесплатные добавки,
+// мусор номенклатуры) не попадают в аутсайдеры, даже если продавались (quantity>0).
+func TestBottomProductsSkipsZeroRevenue(t *testing.T) {
+	productsNow := dooglys.Result{Rows: []dooglys.Row{
+		{"name": "Имбирь", "quantity": 9.0, "amount": 0.0, "discount_sum": 0.0},   // бесплатная добавка
+		{"name": "fdsafda", "quantity": 1.0, "amount": 0.0, "discount_sum": 0.0},  // мусор
+		{"name": "Картошка", "quantity": 1.0, "amount": 50.0, "discount_sum": 0.0}, // реальный аутсайдер
+		{"name": "Пицца", "quantity": 3.0, "amount": 1500.0, "discount_sum": 0.0},
+	}}
+	b := BuildInsightBundle(dooglys.Result{Rows: []dooglys.Row{{"sum_all": 1550.0}}},
+		dooglys.Result{}, productsNow, "RUB", envelope.Period{}, envelope.Period{})
+	for _, p := range b.BottomProducts {
+		if p.Amount <= 0 {
+			t.Errorf("в аутсайдерах позиция с нулевой выручкой: %+v", p)
+		}
+	}
+	// Картошка (50) должна остаться, Имбирь/fdsafda — нет.
+	var hasKartoshka bool
+	for _, p := range b.BottomProducts {
+		if p.Name == "Имбирь" || p.Name == "fdsafda" {
+			t.Errorf("нулевая позиция %q просочилась в аутсайдеры", p.Name)
+		}
+		if p.Name == "Картошка" {
+			hasKartoshka = true
+		}
+	}
+	if !hasKartoshka {
+		t.Errorf("реальный аутсайдер «Картошка» (50₽) пропал: %+v", b.BottomProducts)
+	}
+}
+
+// TestBuildColumns_DropsAbsentMetric — метрику, которой нет ни в одной строке источника
+// (profit у живого товарного отчёта), не выносим в колонки: иначе «Ожидаемая прибыль
+// 0,00 ₽» вводит в заблуждение. Присутствующую-нулевую метрику (sbp=0) сохраняем.
+func TestBuildColumns_DropsAbsentMetric(t *testing.T) {
+	rep, ok := catalog.Default().Report("products")
+	if !ok {
+		t.Fatal("нет отчёта products в каталоге")
+	}
+	// Живые строки товаров: profit отсутствует как ключ.
+	res := dooglys.Result{Rows: []dooglys.Row{
+		{"name": "Пицца", "quantity": 3.0, "amount": 1500.0, "discount_sum": 0.0},
+	}}
+	p := plan.AnalysisPlan{GroupBy: []string{"name"}, Metrics: []string{"name", "quantity", "amount", "profit", "discount_sum"}}
+	cols := buildColumns(p, rep, res)
+	for _, c := range cols {
+		if c.Key == "profit" {
+			t.Errorf("колонка profit не должна строиться без данных о прибыли: %+v", cols)
+		}
+	}
+	// amount/quantity/name на месте.
+	for _, want := range []string{"name", "quantity", "amount"} {
+		if _, found := indexOf(cols, want); !found {
+			t.Errorf("колонка %q пропала: %+v", want, cols)
 		}
 	}
 }

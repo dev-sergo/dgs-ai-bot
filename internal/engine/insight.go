@@ -195,7 +195,10 @@ func productsByAmount(rows []dooglys.Row, n int, asc bool) []NamedRow {
 	out := make([]NamedRow, 0, len(order))
 	for _, name := range order {
 		a := agg[name]
-		if a.quantity <= 0 {
+		// Нужна и продажа (quantity>0), и выручка (amount>0): позиции с нулевой выручкой
+		// — это бесплатные добавки (имбирь/палочки) и мусор номенклатуры, а не «слабые
+		// позиции меню», которые стоит пересмотреть. В совет они попадать не должны.
+		if a.quantity <= 0 || a.amount <= 0 {
 			continue
 		}
 		nr := NamedRow{
