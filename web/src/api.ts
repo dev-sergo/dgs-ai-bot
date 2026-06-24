@@ -65,3 +65,47 @@ export async function ask(text: string, signal?: AbortSignal): Promise<AskRespon
 
   return (data ?? {}) as AskResponse
 }
+
+/**
+ * downloadExport скачивает отчёт по тому же текстовому запросу как .xlsx.
+ * Бэкенд (GET /export) переигрывает тот же пайплайн и отдаёт файл; токен и тенант —
+ * заголовками (не в URL), имя файла берём из Content-Disposition.
+ * Кидает AskError с текстом сервера (напр. «нечего экспортировать»), если не 2xx.
+ */
+export async function downloadExport(text: string): Promise<void> {
+  const headers: Record<string, string> = { 'X-Tenant-ID': TENANT_ID }
+  const tok = authToken()
+  if (tok) headers['X-Auth-Token'] = tok
+
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/export?text=${encodeURIComponent(text)}`, { headers })
+  } catch {
+    throw new AskError('Не удалось связаться с сервером для выгрузки.')
+  }
+
+  if (!res.ok) {
+    let msg = `Сервер вернул ошибку ${res.status}`
+    try {
+      const d = (await res.json()) as { error?: string }
+      if (d?.error) msg = d.error
+    } catch {
+      // тело не JSON — оставляем статус
+    }
+    throw new AskError(msg)
+  }
+
+  const blob = await res.blob()
+  const cd = res.headers.get('Content-Disposition') ?? ''
+  const m = cd.match(/filename="?([^"]+)"?/)
+  const filename = m ? m[1] : 'report.xlsx'
+
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
