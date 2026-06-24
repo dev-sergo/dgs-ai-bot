@@ -58,3 +58,40 @@ func asF(v any) float64 {
 	}
 	return 0
 }
+
+func TestLiveAPI_Products(t *testing.T) {
+	base, domain := os.Getenv("DGS_BASE"), os.Getenv("DGS_DOMAIN")
+	login, pass := os.Getenv("DGS_LOGIN"), os.Getenv("DGS_PASSWORD")
+	if base == "" || domain == "" || login == "" || pass == "" {
+		t.Skip("creds required")
+	}
+	c := NewAPIClient(base, domain, login, pass)
+
+	// Полный товарный отчёт за май 2025.
+	res, err := c.Fetch(context.Background(), Query{Report: "products", From: "01.05.2025", To: "31.05.2025"})
+	if err != nil {
+		t.Fatalf("Fetch products: %v", err)
+	}
+	t.Logf("товаров: %d", len(res.Rows))
+	for i, r := range res.Rows {
+		if i >= 5 {
+			break
+		}
+		t.Logf("  %v: кол-во=%v выручка=%v", r["name"], r["quantity"], r["amount"])
+	}
+
+	// Drill-down по имени товара.
+	f := []QueryFilter{{Field: "product", Param: "product_id", Names: []string{"Бизнес ланч"}}}
+	one, err := c.Fetch(context.Background(), Query{Report: "products", From: "01.05.2025", To: "31.05.2025", Filters: f})
+	if err != nil {
+		t.Fatalf("Fetch products filtered: %v", err)
+	}
+	t.Logf("drill-down «Бизнес ланч»: %d строк → %+v", len(one.Rows), one.Rows)
+
+	// Индекс товаров для резолвера.
+	idx, err := c.ProductIndex(context.Background())
+	if err != nil {
+		t.Fatalf("ProductIndex: %v", err)
+	}
+	t.Logf("ProductIndex: %d уникальных товаров", len(idx))
+}

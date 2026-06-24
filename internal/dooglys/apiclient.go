@@ -75,8 +75,8 @@ func NewAPIClient(base, domain, login, password string) *APIClient {
 // заказов; остальные отчёты пока приходят из фикстур (см. решение по пилоту —
 // на боевых данных только payment).
 func (c *APIClient) Fetch(ctx context.Context, q Query) (Result, error) {
-	if q.Report != "payment" {
-		return Result{}, fmt.Errorf("dooglys apiclient: отчёт %q пока не поддержан API (только payment)", q.Report)
+	if q.Report != "payment" && q.Report != "products" {
+		return Result{}, fmt.Errorf("dooglys apiclient: отчёт %q пока не поддержан API (payment, products)", q.Report)
 	}
 
 	fromISO, toISO, err := isoRange(q.From, q.To)
@@ -93,6 +93,11 @@ func (c *APIClient) Fetch(ctx context.Context, q Query) (Result, error) {
 		return Result{}, fmt.Errorf("dooglys apiclient: %w", err)
 	}
 
+	if q.Report == "products" {
+		rows, applied, skipped := aggregateProducts(orders, fromISO, toISO, q.Filters, c.Rule)
+		return Result{Report: q.Report, Label: "Товары", Rows: rows, FiltersApplied: applied, FiltersSkipped: skipped}, nil
+	}
+
 	rows, applied, skipped := aggregatePayment(orders, fromISO, toISO, q.Filters, c.Rule)
 	return Result{
 		Report:         q.Report,
@@ -101,6 +106,32 @@ func (c *APIClient) Fetch(ctx context.Context, q Query) (Result, error) {
 		FiltersApplied: applied,
 		FiltersSkipped: skipped,
 	}, nil
+}
+
+// ProductIndex возвращает уникальные товары (product_id + имя) из позиций ВСЕХ заказов —
+// источник имён для резолвера в API-режиме. Тот же источник, что и товарный отчёт, поэтому
+// имена в отчёте и в резолвере совпадают (drill-down по товару резолвится). Один раз при старте.
+func (c *APIClient) ProductIndex(ctx context.Context) ([]SelectOption, error) {
+	const (
+		fromUnix = 946684800  // 2000-01-01 — захватываем всю историю товаров
+		toUnix   = 4102444800 // 2100-01-01
+	)
+	orders, err := c.fetchOrders(ctx, fromUnix, toUnix)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	var out []SelectOption
+	for _, o := range orders {
+		for _, it := range o.OrderItems {
+			if it.ProductID == "" || it.ProductName == "" || seen[it.ProductID] {
+				continue
+			}
+			seen[it.ProductID] = true
+			out = append(out, SelectOption{UUID: it.ProductID, Name: it.ProductName})
+		}
+	}
+	return out, nil
 }
 
 // fetchOrders тянет все заказы за окно [fromUnix, toUnix] по страницам.

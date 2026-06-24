@@ -54,3 +54,52 @@ func TestAggregatePayment_GoldenMay2025(t *testing.T) {
 		t.Errorf("2025-05-14: ожидали возврат 300 и net -300, got %+v", d)
 	}
 }
+
+// Golden-тест товарного отчёта из order_items тех же реальных заказов.
+func TestAggregateProducts_GoldenMay2025(t *testing.T) {
+	raw, err := os.ReadFile("testdata/orders_may_2025.json")
+	if err != nil {
+		t.Fatalf("чтение golden-фикстуры: %v", err)
+	}
+	var orders []order
+	if err := json.Unmarshal(raw, &orders); err != nil {
+		t.Fatalf("разбор: %v", err)
+	}
+
+	rows, _, _ := aggregateProducts(orders, "2025-05-01", "2025-05-31", nil, DefaultPaymentRule())
+
+	if len(rows) != 17 {
+		t.Fatalf("ожидали 17 товаров, got %d", len(rows))
+	}
+	var amount, qty float64
+	for _, r := range rows {
+		amount += r["amount"].(float64)
+		qty += r["quantity"].(float64)
+	}
+	if round2(amount) != 3408 {
+		t.Errorf("суммарная выручка товаров = %v, want 3408", amount)
+	}
+	if qty != 39 {
+		t.Errorf("суммарное кол-во = %v, want 39", qty)
+	}
+	// Отсортировано по выручке убыв.: первый — самая дорогая пицца (1500).
+	if rows[0]["name"] != "Длинное название самой большой пиццы в мире" || rows[0]["amount"].(float64) != 1500 {
+		t.Errorf("топ-товар = %v (%v), want пицца 1500", rows[0]["name"], rows[0]["amount"])
+	}
+}
+
+// Фильтр по имени товара (drill-down) сворачивает отчёт до одной позиции.
+func TestAggregateProducts_FilterByName(t *testing.T) {
+	raw, _ := os.ReadFile("testdata/orders_may_2025.json")
+	var orders []order
+	json.Unmarshal(raw, &orders)
+
+	f := []QueryFilter{{Field: "product", Param: "product_id", Names: []string{"Бизнес ланч"}}}
+	rows, applied, _ := aggregateProducts(orders, "2025-05-01", "2025-05-31", f, DefaultPaymentRule())
+	if len(applied) != 1 || applied[0] != "product" {
+		t.Errorf("applied=%v, want [product]", applied)
+	}
+	if len(rows) != 1 || rows[0]["name"] != "Бизнес ланч" || rows[0]["amount"].(float64) != 300 {
+		t.Errorf("ожидали 1 строку «Бизнес ланч» 300, got %+v", rows)
+	}
+}

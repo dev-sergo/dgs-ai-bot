@@ -21,6 +21,17 @@ type order struct {
 	CashierShiftDate string  `json:"cashier_shift_date"` // "YYYY-MM-DD" — дата смены
 	DateCreated      int64   `json:"date_created"`
 	DateReturned     *int64  `json:"date_returned"`
+	OrderItems       []orderItem `json:"order_items"` // товарные позиции — для отчёта products
+}
+
+// orderItem — позиция заказа из order_items. Источник товарного отчёта и резолвера имён.
+type orderItem struct {
+	ProductID     string  `json:"product_id"`
+	ProductName   string  `json:"product_name"`
+	Quantity      float64 `json:"quantity"`
+	Price         float64 `json:"price"`
+	DiscountValue float64 `json:"discount_value"`
+	TotalCost     float64 `json:"total_cost"` // сумма позиции (выручка товара)
 }
 
 // PaymentRule — правило агрегации заказов в отчёт «Выручка».

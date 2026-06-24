@@ -101,6 +101,23 @@ func NewLiveStore(ctx context.Context, src SelectSource, reports ...string) (*St
 	return s, nil
 }
 
+// SetOptions заменяет справочник вида kind живыми записями (uuid+имя). Дедуп по uuid.
+// Используется для актуализации списка из API (товары из order_items) поверх фикстур.
+func (s *Store) SetOptions(kind string, opts []dooglys.SelectOption) {
+	seen := map[string]bool{}
+	entries := make([]Entry, 0, len(opts))
+	for _, o := range opts {
+		if o.UUID == "" || o.Name == "" || seen[o.UUID] {
+			continue
+		}
+		seen[o.UUID] = true
+		entries = append(entries, Entry{UUID: o.UUID, Names: []string{o.Name}})
+	}
+	if len(entries) > 0 {
+		s.byKind[kind] = entries
+	}
+}
+
 type gridFile struct {
 	Rows []struct {
 		Meta  map[string]any `json:"meta"`

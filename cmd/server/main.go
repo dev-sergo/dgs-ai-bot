@@ -61,16 +61,24 @@ func main() {
 		if cfg.Dooglys.Login == "" || cfg.Dooglys.Password == "" {
 			log.Fatal("DGS_CLIENT=api requires DGS_LOGIN and DGS_PASSWORD to be set")
 		}
-		log.Printf("dooglys: using JSON API client → %s (domain=%s); payment via API, прочие отчёты — фикстуры",
+		log.Printf("dooglys: using JSON API client → %s (domain=%s); payment+products via API, прочее — фикстуры",
 			cfg.Dooglys.Base, cfg.Dooglys.Domain)
 		api := dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
-		// Гибрид: payment — живой API, products/paycheck/orders — фикстуры (товары/персонал
-		// ещё не на API). Иначе консультант и «топ товаров» падали бы на неподдержанном отчёте.
+		// Гибрид: payment + products — живой API (из тех же заказов/order_items),
+		// paycheck/orders — фикстуры (ещё не на API).
 		client = dooglys.NewComposite(
-			map[string]dooglys.Client{"payment": api},
+			map[string]dooglys.Client{"payment": api, "products": api},
 			dooglys.NewFixtureClient(cfg.FixturesPath),
 		)
+		// Резолвер: sale_point/user — из фикстур, товары — из живых заказов (имена совпадают
+		// с тем, что в отчёте → drill-down по товару резолвится). Индекс строится один раз.
 		res = resolver.Load(cfg.FixturesPath)
+		if opts, err := api.ProductIndex(context.Background()); err != nil {
+			log.Printf("resolver: живой индекс товаров недоступен (%v) — товары из фикстур", err)
+		} else {
+			res.SetOptions("product", opts)
+			log.Printf("resolver: %d товаров из живых заказов", len(opts))
+		}
 	case config.DooglysHTTP:
 		if cfg.Dooglys.Cookie == "" {
 			log.Fatal("DGS_CLIENT=http requires DGS_COOKIE to be set")
