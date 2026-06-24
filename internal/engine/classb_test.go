@@ -59,6 +59,29 @@ func TestCompareSredniyChekvWeighted(t *testing.T) {
 	}
 }
 
+func TestContributionAvgMetricFallsBackToCompare(t *testing.T) {
+	rep := paymentReport(t)
+	// Средний чек нельзя раскладывать на каналы — Contribution должен понизиться до Compare:
+	// без таблицы компонент, с взвешенным итогом (300/6=50 против 400/4=100).
+	now := dooglys.Result{Rows: []dooglys.Row{
+		{"sum_all": 300.0, "kol_vo_chekov": 6.0, "sum_card": 200.0, "sum_cash": 100.0},
+	}}
+	prev := dooglys.Result{Rows: []dooglys.Row{
+		{"sum_all": 400.0, "kol_vo_chekov": 4.0, "sum_card": 400.0, "sum_cash": 0.0},
+	}}
+
+	e := Contribution(rep, "sredniy_chek", now, prev, 5, "tnt", "RUB", per(), per())
+	if len(e.Rows) != 0 {
+		t.Errorf("ожидалась раскладка БЕЗ строк-компонент (compare), got %d строк", len(e.Rows))
+	}
+	if e.Meta["method"] != "compare" {
+		t.Errorf("method = %v, want compare (понижение avg-метрики)", e.Meta["method"])
+	}
+	if e.Summary["value_now"] != 50 || e.Summary["value_prev"] != 100 {
+		t.Errorf("итог = %v/%v, want 50/100 (взвешенный средний чек)", e.Summary["value_now"], e.Summary["value_prev"])
+	}
+}
+
 func TestContributionDecomposesDelta(t *testing.T) {
 	rep := paymentReport(t)
 	// now: card90 cash30 → 120; prev: card50 cash50 → 100; total delta 20.

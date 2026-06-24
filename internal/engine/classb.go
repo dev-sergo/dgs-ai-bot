@@ -82,6 +82,13 @@ type contribRow struct {
 func Contribution(rep catalog.Report, metric string, now, prev dooglys.Result, topN int,
 	tenantID, currency string, periodNow, periodPrev envelope.Period) envelope.Envelope {
 
+	// Non-additive метрику (средний чек, Agg="avg") нельзя разложить на сумму
+	// компонент: среднее ≠ сумма средних по каналам, и доля изменения улетает в
+	// сотни процентов. Честнее показать суммарное изменение — понижаем до compare.
+	if f, ok := rep.FieldByKey(metric); ok && f.Agg == "avg" {
+		return Compare(rep, metric, now, prev, tenantID, currency, periodNow, periodPrev)
+	}
+
 	if comps := components[rep.Slug]; len(comps) > 0 {
 		rows := make([]contribRow, 0, len(comps))
 		vNow := periodValue(rep, now.Rows, metric)
