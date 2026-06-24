@@ -73,3 +73,9 @@ docker-data/
 # === Frontend (web/) ===
 node_modules/
 web/dist/
+
+# === Ручные probe-прогоны (test/manual/) ===
+# Скрипты-харнессы коммитим, выводы прогонов (логи/JSON/скачанные xlsx) — нет.
+test/manual/*.log
+test/manual/*.json
+test/manual/xlsx/
