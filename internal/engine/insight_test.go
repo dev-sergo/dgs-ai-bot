@@ -148,7 +148,7 @@ func TestChannelMix(t *testing.T) {
 	rows := []dooglys.Row{
 		{"sum_card": 300.0, "sum_cash": 100.0, "onlayn": 0.0, "sbp": 0.0},
 	}
-	mix := channelMix(rows, 400)
+	mix := channelMix(rows)
 	if len(mix) != 2 {
 		t.Fatalf("channelMix len=%d, want 2", len(mix))
 	}
@@ -157,5 +157,34 @@ func TestChannelMix(t *testing.T) {
 	}
 	if mix[1].Label != "Наличные" || mix[1].Share != 25 {
 		t.Errorf("mix[1] = %+v, want Наличные 25%%", mix[1])
+	}
+}
+
+// TestChannelMix_NegativeChannelDropped — канал, ушедший в минус из-за возвратов,
+// не показываем и не даём ему испортить доли. Регрессия: онлайн-возврат без
+// онлайн-продаж раньше давал «карта 111%, онлайн -19%».
+func TestChannelMix_NegativeChannelDropped(t *testing.T) {
+	// Карта 2903 (без возвратов), наличные 205 (нетто после возврата),
+	// онлайн -500 (только возврат, продаж нет) — как в боевом мае.
+	rows := []dooglys.Row{
+		{"sum_card": 2903.0, "sum_cash": 205.0, "onlayn": -500.0, "sbp": 0.0},
+	}
+	mix := channelMix(rows)
+	if len(mix) != 2 {
+		t.Fatalf("channelMix len=%d, want 2 (онлайн в минусе отброшен): %+v", len(mix), mix)
+	}
+	var sum float64
+	for _, c := range mix {
+		if c.Share < 0 || c.Share > 100 {
+			t.Errorf("доля канала вне [0,100]: %+v", c)
+		}
+		if c.Label == "Онлайн" {
+			t.Errorf("онлайн с отрицательным притоком не должен попадать в расклад: %+v", c)
+		}
+		sum += c.Share
+	}
+	// Доли нормированы по положительной базе → в сумме 100% (±округление).
+	if sum < 99.9 || sum > 100.1 {
+		t.Errorf("сумма долей = %v, want ≈100", sum)
 	}
 }

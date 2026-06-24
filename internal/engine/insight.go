@@ -89,7 +89,7 @@ func BuildInsightBundle(paymentNow, paymentPrev, productsNow dooglys.Result,
 		ReturnRate:     round2(shareOf(returnsNow, revenueNow)),
 		Discounts:      round2(discountsNow),
 		DiscountShare:  round2(shareOf(discountsNow, productRevenueNow)),
-		ChannelMix:     channelMix(paymentNow.Rows, revenueNow),
+		ChannelMix:     channelMix(paymentNow.Rows),
 		TopProducts:    productsByAmount(productsNow.Rows, topProductsN, false),
 		BottomProducts: productsByAmount(productsNow.Rows, bottomProductsN, true),
 	}
@@ -117,19 +117,34 @@ func avgCheckOf(rows []dooglys.Row) float64 {
 	return totalAmount / totalReceipts
 }
 
-// channelMix возвращает ненулевые каналы оплаты, отсортированные по сумме убывания.
-// Share — доля канала в общей выручке текущего периода (%).
-func channelMix(rows []dooglys.Row, total float64) []Component {
-	out := make([]Component, 0, len(channelDefs))
+// channelMix возвращает каналы оплаты с положительными чистыми продажами,
+// отсортированные по сумме убывания. Share — доля канала в СУММЕ положительных
+// каналов (а не в payment-выручке): иначе канал, ушедший в минус из-за возвратов
+// (онлайн-возврат без онлайн-продаж), даёт отрицательную долю и толкает остальные
+// за 100%. Нормировка по положительной базе держит доли в [0,100] и в сумме = 100%.
+// Каналы с now<=0 (чистого притока нет) в расклад не показываем — возвраты отдельно
+// в returns_sum/return_rate.
+func channelMix(rows []dooglys.Row) []Component {
+	type chRow struct {
+		label string
+		now   float64
+	}
+	var pos []chRow
+	var posSum float64
 	for _, ch := range channelDefs {
 		now := sumField(rows, ch.key)
-		if now == 0 {
+		if now <= 0 {
 			continue
 		}
+		pos = append(pos, chRow{ch.label, now})
+		posSum += now
+	}
+	out := make([]Component, 0, len(pos))
+	for _, ch := range pos {
 		out = append(out, Component{
 			Label: ch.label,
-			Now:   round2(now),
-			Share: shareOf(now, total),
+			Now:   round2(ch.now),
+			Share: shareOf(ch.now, posSum),
 		})
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Now > out[j].Now })

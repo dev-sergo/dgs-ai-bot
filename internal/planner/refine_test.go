@@ -74,6 +74,50 @@ func TestRefineAdvice(t *testing.T) {
 	}
 }
 
+// Период для advice: если пользователь срок не назвал — выдуманное моделью окно чистим,
+// чтобы advise-ветка спросила период (регрессия: «на чём я теряю» молча считалось за
+// last_30_days). Если срок в тексте есть — период модели сохраняем.
+func TestRefineAdvice_ClearsInventedPeriod(t *testing.T) {
+	// Срок НЕ назван → period чистится (модель проставила last_30_days от балды).
+	noPeriod := []string{
+		"на чём я теряю",
+		"что мне улучшить",
+		"какие товары убрать из меню",
+	}
+	for _, q := range noPeriod {
+		p := plan.AnalysisPlan{Intent: "off_topic",
+			Period: plan.Period{Kind: "relative", Token: "last_30_days"}}
+		RefineAdvice(q, &p)
+		if p.Intent != "advice" {
+			t.Fatalf("%q: intent=%q, want advice", q, p.Intent)
+		}
+		if p.Period.Token != "" || p.Period.From != "" {
+			t.Errorf("%q: период не очищен: %+v", q, p.Period)
+		}
+	}
+
+	// Срок назван (относительный/месяц/явные даты/год) → период модели сохраняем.
+	withPeriod := []struct {
+		q   string
+		per plan.Period
+	}{
+		{"на чём я теряю за май 2025", plan.Period{Kind: "explicit", From: "2025-05-01", To: "2025-05-31"}},
+		{"что улучшить за прошлый месяц", plan.Period{Kind: "relative", Token: "last_month"}},
+		{"как поднять выручку за последние 7 дней", plan.Period{Kind: "relative", Token: "last_7_days"}},
+		{"на чём теряю с 01.05 по 31.05", plan.Period{Kind: "explicit", From: "2025-05-01", To: "2025-05-31"}},
+	}
+	for _, tc := range withPeriod {
+		p := plan.AnalysisPlan{Intent: "off_topic", Period: tc.per}
+		RefineAdvice(tc.q, &p)
+		if p.Intent != "advice" {
+			t.Fatalf("%q: intent=%q, want advice", tc.q, p.Intent)
+		}
+		if p.Period != tc.per {
+			t.Errorf("%q: период затёрт, был %+v стал %+v", tc.q, tc.per, p.Period)
+		}
+	}
+}
+
 // payment + payment_type-фильтр (баг follow-up «а по карте?») → фильтр снят, выбрана
 // колонка канала, group_by=date. Без этого валидатор бракует план в out_of_scope.
 func TestRefinePaymentChannelFilter(t *testing.T) {
