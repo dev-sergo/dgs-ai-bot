@@ -4,6 +4,8 @@ package app
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log/slog"
 	"regexp"
@@ -17,6 +19,7 @@ import (
 	"dgsbot/internal/dooglys"
 	"dgsbot/internal/engine"
 	"dgsbot/internal/envelope"
+	"dgsbot/internal/feedback"
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/plan"
 	"dgsbot/internal/planner"
@@ -50,6 +53,7 @@ const confirmConfidence = 0.7
 
 // Answer — результат обработки запроса.
 type Answer struct {
+	ID         string                `json:"id"`
 	TenantID   string                `json:"tenant_id"`
 	Plan       plan.AnalysisPlan     `json:"plan"`
 	Validation plan.ValidationResult `json:"validation"`
@@ -75,6 +79,9 @@ type App struct {
 	// QueryLog — дозапись датасета «вопрос → план → ответ» в JSONL (аналитика/дообучение).
 	// nil → выключено. Включается в main по env QUERY_LOG_PATH.
 	QueryLog *querylog.Writer
+	// FeedbackLog — дозапись оценок пользователя (👍/👎) в JSONL.
+	// nil → выключено. Включается по env FEEDBACK_LOG_PATH.
+	FeedbackLog *feedback.Writer
 }
 
 // New собирает оркестратор.
@@ -95,6 +102,7 @@ func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, re
 
 // Ask — основной вход: текст → ответ.
 func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans Answer, err error) {
+	ans.ID = newID()
 	ans.TenantID = tenantID
 
 	// Структурный лог исхода — один раз на любой ветке возврата (аудит/наблюдаемость).
@@ -462,6 +470,7 @@ func (a *App) recordQuery(tenantID, sessionID, text string, ans Answer, err erro
 	}
 	rec := querylog.Record{
 		TS:        a.Now().UTC().Format(time.RFC3339),
+		ID:        ans.ID,
 		Tenant:    tenantID,
 		Session:   sessionID,
 		Text:      text,
@@ -875,6 +884,24 @@ func extractGoal(query string) float64 {
 		val *= 1_000
 	}
 	return val
+}
+
+// RecordFeedback записывает оценку пользователя в FeedbackLog.
+// source — "ui" или "telegram". No-op если FeedbackLog выключен или id пустой.
+func (a *App) RecordFeedback(ts, id, rating, source string) {
+	if a.FeedbackLog == nil || id == "" {
+		return
+	}
+	a.FeedbackLog.Write(feedback.Record{TS: ts, ID: id, Rating: rating, Source: source})
+}
+
+// newID генерирует короткий уникальный идентификатор ответа (12-char hex).
+func newID() string {
+	b := make([]byte, 6)
+	if _, err := rand.Read(b); err != nil {
+		return "000000000000"
+	}
+	return hex.EncodeToString(b)
 }
 
 // ruDateToISO конвертирует DD.MM.YYYY (формат Dooglys/resolvePeriod) в YYYY-MM-DD (ISO).

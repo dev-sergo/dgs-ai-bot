@@ -34,6 +34,7 @@ export interface Validation {
 }
 
 export interface AskResponse {
+  id?: string
   tenant_id?: string
   plan?: unknown
   validation?: Validation

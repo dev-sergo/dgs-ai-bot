@@ -67,6 +67,28 @@ export async function ask(text: string, signal?: AbortSignal): Promise<AskRespon
 }
 
 /**
+ * sendFeedback отправляет оценку пользователя (👍/👎) на сервер.
+ * Ошибки проглатываются: фидбэк не должен ломать UI.
+ */
+export async function sendFeedback(id: string, rating: 'up' | 'down'): Promise<void> {
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Tenant-ID': TENANT_ID,
+    }
+    const tok = authToken()
+    if (tok) headers['X-Auth-Token'] = tok
+    await fetch(`${API_BASE}/feedback`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ id, rating }),
+    })
+  } catch {
+    // тихо: потеря оценки не должна мешать работе
+  }
+}
+
+/**
  * downloadExport скачивает отчёт по тому же текстовому запросу как .xlsx.
  * Бэкенд (GET /export) переигрывает тот же пайплайн и отдаёт файл; токен и тенант —
  * заголовками (не в URL), имя файла берём из Content-Disposition.

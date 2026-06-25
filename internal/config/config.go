@@ -66,8 +66,9 @@ type Config struct {
 	HTTPAddr     string
 	PlannerMode  PlannerMode
 	FixturesPath string
-	AuthToken    string // общий токен демо-гейта (env AUTH_TOKEN); пусто → гейт выключен
-	QueryLogPath string // JSONL-датасет вопросов/ответов (env QUERY_LOG_PATH); пусто → лог выключен
+	AuthToken       string // общий токен демо-гейта (env AUTH_TOKEN); пусто → гейт выключен
+	QueryLogPath    string // JSONL-датасет вопросов/ответов (env QUERY_LOG_PATH); пусто → лог выключен
+	FeedbackLogPath string // JSONL оценок пользователя (env FEEDBACK_LOG_PATH); пусто → лог выключен
 	LLM          LLM
 	Dooglys      Dooglys
 	Telegram     Telegram
@@ -79,8 +80,9 @@ func Load() Config {
 		HTTPAddr:     env("HTTP_ADDR", ":8088"),
 		PlannerMode:  PlannerMode(env("PLANNER_MODE", string(PlannerLLM))),
 		FixturesPath: env("FIXTURES_PATH", "docs/contracts/fixtures"),
-		AuthToken:    env("AUTH_TOKEN", ""),
-		QueryLogPath: env("QUERY_LOG_PATH", ""),
+		AuthToken:       env("AUTH_TOKEN", ""),
+		QueryLogPath:    env("QUERY_LOG_PATH", ""),
+		FeedbackLogPath: env("FEEDBACK_LOG_PATH", ""),
 		LLM: LLM{
 			BaseURL:   env("LLM_BASE_URL", "http://172.20.10.2:8080"),
 			Model:     env("LLM_MODEL", "qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"),
@@ -117,12 +119,16 @@ func (c Config) Summary() string {
 	if c.QueryLogPath != "" {
 		qlog = c.QueryLogPath
 	}
+	flog := "off"
+	if c.FeedbackLogPath != "" {
+		flog = c.FeedbackLogPath
+	}
 	tg := "off"
 	if c.Telegram.Token != "" {
 		tg = fmt.Sprintf("on(tenant=%s allowlist=%d)", c.Telegram.DefaultTenant, len(c.Telegram.Allowlist))
 	}
-	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s telegram=%s",
-		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, tg)
+	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s feedbacklog=%s telegram=%s",
+		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, flog, tg)
 }
 
 func env(key, def string) string {

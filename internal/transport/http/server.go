@@ -16,6 +16,8 @@ import (
 	"dgsbot/internal/export"
 )
 
+var validRatings = map[string]bool{"up": true, "down": true}
+
 // Server — HTTP-сервер сервиса.
 type Server struct {
 	cfg config.Config
@@ -30,6 +32,7 @@ func New(cfg config.Config, a *app.App) *Server {
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("POST /ask", s.handleAsk)
 	mux.HandleFunc("GET /export", s.handleExport)
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
 	s.srv = &http.Server{
 		Addr:         cfg.HTTPAddr,
 		Handler:      s.gate(mux),
@@ -170,6 +173,26 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(data)
 }
 
+
+type feedbackRequest struct {
+	ID     string `json:"id"`
+	Rating string `json:"rating"`
+}
+
+func (s *Server) handleFeedback(w http.ResponseWriter, r *http.Request) {
+	var req feedbackRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ожидается JSON {\"id\":\"...\",\"rating\":\"up|down\"}"})
+		return
+	}
+	if req.ID == "" || !validRatings[req.Rating] {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id обязателен, rating должен быть up или down"})
+		return
+	}
+	ts := time.Now().UTC().Format(time.RFC3339)
+	s.app.RecordFeedback(ts, req.ID, req.Rating, "ui")
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
 
 func firstNonEmpty(vals ...string) string {
 	for _, v := range vals {

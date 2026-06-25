@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { HistoryEntry } from '../App'
-import { downloadExport, AskError } from '../api'
+import { downloadExport, sendFeedback, AskError } from '../api'
 import { headingFromSummary } from '../summary'
 import { Typewriter } from './Typewriter'
 import { SummaryChips } from './SummaryChips'
@@ -44,6 +44,7 @@ function DoneBody({ entry }: { entry: HistoryEntry }) {
   const res = entry.response
   const validation = res?.validation
   const envelope = res?.envelope
+  const answerID = res?.id
 
   if (validation?.NeedClarify) {
     const prompt = validation.ClarifyPrompt || res?.answer || 'Уточните, пожалуйста, запрос.'
@@ -53,6 +54,7 @@ function DoneBody({ entry }: { entry: HistoryEntry }) {
           ?
         </span>
         <Typewriter text={prompt} animate={entry.animate} className="clarify-text" />
+        {answerID && <FeedbackRow id={answerID} />}
       </div>
     )
   }
@@ -62,7 +64,12 @@ function DoneBody({ entry }: { entry: HistoryEntry }) {
   }
 
   if (res?.answer) {
-    return <Typewriter text={res.answer} animate={entry.animate} className="plain-answer" />
+    return (
+      <>
+        <Typewriter text={res.answer} animate={entry.animate} className="plain-answer" />
+        {answerID && <FeedbackRow id={answerID} />}
+      </>
+    )
   }
 
   return <p className="muted">Пустой ответ.</p>
@@ -70,6 +77,7 @@ function DoneBody({ entry }: { entry: HistoryEntry }) {
 
 function EnvelopeBody({ entry }: { entry: HistoryEntry }) {
   const envelope = entry.response!.envelope!
+  const answerID = entry.response?.id
   const narrative = (envelope.narrative ?? '').trim()
   const heading = narrative || headingFromSummary(envelope)
   const isNarrative = Boolean(narrative)
@@ -103,8 +111,44 @@ function EnvelopeBody({ entry }: { entry: HistoryEntry }) {
               {envelope.rows?.length != null ? ` · строк: ${envelope.rows.length}` : ''}
             </div>
           )}
+          {answerID && <FeedbackRow id={answerID} />}
         </div>
       )}
+    </div>
+  )
+}
+
+/** Кнопки 👍/👎 для оценки ответа. Одноразовые — после тапа блокируются. */
+function FeedbackRow({ id }: { id: string }) {
+  const [voted, setVoted] = useState<'up' | 'down' | null>(null)
+
+  async function vote(rating: 'up' | 'down') {
+    if (voted) return
+    setVoted(rating)
+    await sendFeedback(id, rating)
+  }
+
+  return (
+    <div className="feedback-row">
+      <button
+        className={`feedback-btn ${voted === 'up' ? 'feedback-btn--active' : ''}`}
+        onClick={() => vote('up')}
+        disabled={voted !== null}
+        type="button"
+        aria-label="Полезный ответ"
+      >
+        👍
+      </button>
+      <button
+        className={`feedback-btn ${voted === 'down' ? 'feedback-btn--active' : ''}`}
+        onClick={() => vote('down')}
+        disabled={voted !== null}
+        type="button"
+        aria-label="Бесполезный ответ"
+      >
+        👎
+      </button>
+      {voted && <span className="feedback-thanks">Спасибо!</span>}
     </div>
   )
 }

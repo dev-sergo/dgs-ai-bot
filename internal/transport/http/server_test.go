@@ -3,8 +3,10 @@ package http
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"dgsbot/internal/app"
 	"dgsbot/internal/config"
 )
 
@@ -67,5 +69,63 @@ func TestGate_RejectsWrongToken(t *testing.T) {
 	h := gateFor("secret")
 	if code := do(h, "POST", "/ask?key=nope", nil); code != http.StatusUnauthorized {
 		t.Errorf("неверный токен → 401, got %d", code)
+	}
+}
+
+func feedbackServer() *Server {
+	a := app.New(nil, nil, nil, nil, nil, nil, nil)
+	return New(config.Config{}, a)
+}
+
+func doBody(h http.Handler, method, target, body string) int {
+	req := httptest.NewRequest(method, target, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec.Code
+}
+
+func TestFeedback_ValidUp(t *testing.T) {
+	s := feedbackServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
+	if code := doBody(mux, "POST", "/feedback", `{"id":"abc123","rating":"up"}`); code != http.StatusOK {
+		t.Errorf("ожидали 200, got %d", code)
+	}
+}
+
+func TestFeedback_ValidDown(t *testing.T) {
+	s := feedbackServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
+	if code := doBody(mux, "POST", "/feedback", `{"id":"abc123","rating":"down"}`); code != http.StatusOK {
+		t.Errorf("ожидали 200, got %d", code)
+	}
+}
+
+func TestFeedback_MissingID(t *testing.T) {
+	s := feedbackServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
+	if code := doBody(mux, "POST", "/feedback", `{"rating":"up"}`); code != http.StatusBadRequest {
+		t.Errorf("без id ожидали 400, got %d", code)
+	}
+}
+
+func TestFeedback_InvalidRating(t *testing.T) {
+	s := feedbackServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
+	if code := doBody(mux, "POST", "/feedback", `{"id":"abc123","rating":"meh"}`); code != http.StatusBadRequest {
+		t.Errorf("неверный rating ожидали 400, got %d", code)
+	}
+}
+
+func TestFeedback_BadJSON(t *testing.T) {
+	s := feedbackServer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /feedback", s.handleFeedback)
+	if code := doBody(mux, "POST", "/feedback", `not json`); code != http.StatusBadRequest {
+		t.Errorf("битый JSON ожидали 400, got %d", code)
 	}
 }

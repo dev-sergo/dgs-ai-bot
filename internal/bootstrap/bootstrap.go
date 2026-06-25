@@ -14,6 +14,7 @@ import (
 	"dgsbot/internal/app"
 	"dgsbot/internal/config"
 	"dgsbot/internal/dooglys"
+	"dgsbot/internal/feedback"
 	"dgsbot/internal/llm"
 	"dgsbot/internal/narrator"
 	"dgsbot/internal/planner"
@@ -119,8 +120,19 @@ func App(cfg config.Config) (*app.App, func(), error) {
 				"(проверь права на каталог: chown 65532:65532)", cfg.QueryLogPath, err)
 		} else {
 			a.QueryLog = ql
-			cleanup = func() { ql.Close() }
+			prev := cleanup
+			cleanup = func() { prev(); ql.Close() }
 			log.Printf("query log: пишем датасет вопрос→план→ответ → %s", cfg.QueryLogPath)
+		}
+	}
+	if cfg.FeedbackLogPath != "" {
+		if fl, err := feedback.Open(cfg.FeedbackLogPath); err != nil {
+			log.Printf("WARNING: feedback log отключён — не открыть %s: %v", cfg.FeedbackLogPath, err)
+		} else {
+			a.FeedbackLog = fl
+			prev := cleanup
+			cleanup = func() { prev(); fl.Close() }
+			log.Printf("feedback log: пишем оценки → %s", cfg.FeedbackLogPath)
 		}
 	}
 

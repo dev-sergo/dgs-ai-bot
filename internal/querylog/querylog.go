@@ -22,6 +22,7 @@ import (
 // Record — одна строка датасета: что спросили, как поняли, что ответили.
 type Record struct {
 	TS        string            `json:"ts"`      // RFC3339, момент завершения обработки
+	ID        string            `json:"id"`      // уникальный id ответа; совпадает с id в feedback.jsonl
 	Tenant    string            `json:"tenant"`  // арендатор (X-Tenant-ID)
 	Session   string            `json:"session"` // ключ диалоговой сессии
 	Text      string            `json:"text"`    // исходный вопрос пользователя — как ввёл
