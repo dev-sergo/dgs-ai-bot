@@ -436,3 +436,97 @@ func equalStrings(a, b []string) bool {
 	}
 	return true
 }
+
+// RefineForecast — прогнозные запросы → method=forecast, report=payment.
+func TestRefineForecast_Triggers(t *testing.T) {
+	triggers := []string{
+		"прогноз выручки за текущий месяц",
+		"прогноз оборота на месяц",
+		"дойду ли я до плана?",
+		"дойдём ли до выручки миллион?",
+		"если ничего не менять, сколько выручки будет",
+		"к концу месяца какая будет выручка",
+		"сколько заработаю к концу периода",
+		"ожидаемая выручка за месяц",
+		"выручка к концу месяца",
+		"сколько выйдет за месяц",
+	}
+	for _, q := range triggers {
+		p := plan.AnalysisPlan{Intent: "report"}
+		RefineForecast(q, &p)
+		if p.Method != "forecast" {
+			t.Errorf("%q: method=%q, want forecast", q, p.Method)
+		}
+		if p.Report != "payment" {
+			t.Errorf("%q: report=%q, want payment", q, p.Report)
+		}
+	}
+}
+
+// Не-прогнозные формулировки guard НЕ трогает.
+func TestRefineForecast_NoFalsePositives(t *testing.T) {
+	notForecast := []string{
+		"выручка за месяц",
+		"выручка за вчера",
+		"топ товаров за неделю",
+		"как изменилась выручка",
+		"доля безналичных",
+		"прогноз погоды",        // «прогноз» без revenue-якоря
+		"к концу смены успею",   // «к концу» без revenue-якоря рядом
+		"как поднять выручку",   // совет, а не прогноз
+	}
+	for _, q := range notForecast {
+		p := plan.AnalysisPlan{Intent: "report"}
+		RefineForecast(q, &p)
+		if p.Method == "forecast" {
+			t.Errorf("%q: ошибочно помечен forecast", q)
+		}
+	}
+}
+
+// advice/off_topic — guard не трогает.
+func TestRefineForecast_SkipsNonReport(t *testing.T) {
+	for _, intent := range []string{"advice", "off_topic", "help"} {
+		p := plan.AnalysisPlan{Intent: intent}
+		RefineForecast("прогноз выручки за месяц", &p)
+		if p.Method == "forecast" {
+			t.Errorf("intent=%q: не должен стать forecast", intent)
+		}
+	}
+}
+
+// this_month → this_month_full при forecast.
+func TestRefineForecast_UpgradesThisMonth(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Intent: "report",
+		Period: plan.Period{Kind: "relative", Token: "this_month"},
+	}
+	RefineForecast("прогноз выручки за текущий месяц", &p)
+	if p.Period.Token != "this_month_full" {
+		t.Errorf("period.token=%q, want this_month_full", p.Period.Token)
+	}
+}
+
+// Без периода → this_month_full по умолчанию.
+func TestRefineForecast_DefaultPeriod(t *testing.T) {
+	p := plan.AnalysisPlan{Intent: "report"}
+	RefineForecast("если ничего не менять, сколько выручки", &p)
+	if p.Period.Token != "this_month_full" || p.Period.Kind != "relative" {
+		t.Errorf("period=%+v, want {Kind:relative Token:this_month_full}", p.Period)
+	}
+}
+
+// Явный период при прогнозе — не трогаем (пользователь сам назвал даты).
+func TestRefineForecast_KeepsExplicitPeriod(t *testing.T) {
+	p := plan.AnalysisPlan{
+		Intent: "report",
+		Period: plan.Period{Kind: "explicit", From: "01.06.2026", To: "30.06.2026"},
+	}
+	RefineForecast("прогноз выручки за июнь", &p)
+	if p.Method != "forecast" {
+		t.Errorf("method=%q, want forecast", p.Method)
+	}
+	if p.Period.From != "01.06.2026" || p.Period.To != "30.06.2026" {
+		t.Errorf("явный период изменён: %+v", p.Period)
+	}
+}

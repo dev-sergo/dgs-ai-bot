@@ -275,6 +275,13 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 		// Доля каналов оплаты за период (не сравнение): p.Metrics — выделенные каналы
 		// (безнал/онлайн/карта), пусто → общая структура. Нарратив строит движок.
 		env = engine.ChannelShare(resNow, p.Metrics, tenantID, currency, period)
+	case "forecast":
+		// Run-rate прогноз выручки поверх payment-ряда. asOf — «сегодня» в TZ тенанта;
+		// from/to — полный целевой период (to = конец месяца, проставляется в A5).
+		loc := t.Location()
+		asOf := a.Now().In(loc).Format("2006-01-02")
+		fc := engine.RunRateForecast(resNow.Rows, from, to, asOf)
+		env = engine.ForecastEnvelope(fc, from, to, tenantID, currency, t.Timezone)
 	default:
 		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
 		// иначе таблица потеряет смысловую колонку (строки без подписи).
@@ -499,6 +506,8 @@ func isEmptyResult(method string, e envelope.Envelope) bool {
 		}
 		// Не удалось разложить метрику на компоненты (нет components у отчёта).
 		return method == "contribution" && len(e.Rows) == 0
+	case "forecast":
+		return false // нарратив всегда есть — строки пустые намеренно
 	default:
 		return len(e.Rows) == 0
 	}

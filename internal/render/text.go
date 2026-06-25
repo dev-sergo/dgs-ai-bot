@@ -206,6 +206,8 @@ func reportTitle(t string) string {
 		return "Чеки"
 	case "orders":
 		return "Заказы"
+	case "forecast":
+		return "Прогноз выручки"
 	default:
 		return t
 	}

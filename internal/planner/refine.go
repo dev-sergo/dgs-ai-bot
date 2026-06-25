@@ -51,6 +51,7 @@ func Refine(query string, p *plan.AnalysisPlan) {
 	RefineChannelShare(query, p)
 	RefineEmployeeRanking(query, p)
 	RefineProductContribution(query, p)
+	RefineForecast(query, p)
 	RefinePaymentChannelFilter(p)
 	RefineTopNOrder(query, p)
 	RefineDefaultMethod(p)
@@ -328,5 +329,61 @@ func RefineProductContribution(query string, p *plan.AnalysisPlan) {
 	p.GroupBy = []string{"name"}
 	if p.CompareTo == nil {
 		p.CompareTo = &plan.Period{Kind: "relative", Token: "prev_period"}
+	}
+}
+
+// forecastRe — детектор ПРОГНОЗНЫХ запросов: «прогноз выручки», «дойду до плана»,
+// «к концу месяца», «если ничего не менять», «сколько заработаю» и т.п.
+// Требует revenue-якоря ИЛИ явного слова «прогноз»: «к концу месяца» без контекста
+// выручки намеренно не ловим (может быть про товары, события и т.п.).
+// \w в Go RE2 кириллицу не матчит — хвосты задаём явно.
+var forecastRe = regexp.MustCompile(
+	// «прогноз/ожидаемая» + якорь выручки:
+	`прогноз[а-яё]*\s+(выручк|оборот|продаж|дохода)` +
+		`|ожидаем[а-яё]*\s+(выручк|оборот|сумм)` +
+		// «дойду/дойдём/дойдёт до плана/цели/выручки», допускаем «ли я» между:
+		`|дойд[а-яё]+[^.?!]{0,20}(до\s|план|цел|выручк|миллион|тысяч)` +
+		// «к концу (месяца/недели/периода)» + выручка рядом:
+		`|к\s+концу\s+(месяц[а-яё]*|недел[а-яё]*|период[а-яё]*)[^.?!]{0,40}(выручк|оборот|заработ|продаж)` +
+		`|(выручк|оборот|заработ|продаж)[^.?!]{0,40}к\s+концу\s+(месяц|недел|период)` +
+		// «если ничего не менять»:
+		`|если\s+ничего\s+не\s+менять` +
+		// «сколько заработаю/выйдет/получится за месяц/к концу»:
+		`|сколько\s+(заработа[юе][а-яё]*|выйдет|получится)[^.?!]{0,30}(месяц|недел|период|к\s+концу)`)
+
+// forecastPeriodTokens — токены «текущего»/«этого» периода, которые upgrade'им до full
+// при прогнозе: this_month обрезает to=сегодня, для горизонта нужен конец месяца.
+var forecastPeriodTokens = map[string]string{
+	"this_month": "this_month_full",
+	"this_week":  "this_week", // this_week не меняем: прогноз до конца недели = до воскресенья; dates.Resolve для него нужен отдельный full-токен позже
+}
+
+// RefineForecast детерминированно переводит прогнозные запросы в method=forecast + report=payment.
+// Срабатывает только если forecastRe совпал И план ещё не является advice/off_topic.
+// Период: если задан this_month — апгрейдится до this_month_full (горизонт = конец месяца);
+// если не задан вообще — выставляем this_month_full по умолчанию.
+// «Прогноз за прошлый месяц» (явно прошлый период) → метод прогнозом, но RunRateForecast
+// сам вернёт status=fact (период закрыт) → нарратив честно скажет «это факт, не прогноз».
+func RefineForecast(query string, p *plan.AnalysisPlan) {
+	if p.Intent != "" && p.Intent != "report" {
+		return // advice/off_topic/help — не трогаем
+	}
+	if !forecastRe.MatchString(strings.ToLower(query)) {
+		return
+	}
+	p.Report = "payment"
+	p.Method = "forecast"
+	if p.Intent == "" {
+		p.Intent = "report"
+	}
+	// Апгрейд токена this_month → this_month_full (полный горизонт, а не до сегодня).
+	if p.Period.Kind == "relative" {
+		if full, ok := forecastPeriodTokens[p.Period.Token]; ok {
+			p.Period.Token = full
+		}
+	}
+	// Период не задан вообще → ставим this_month_full по умолчанию.
+	if p.Period.Kind == "" && p.Period.Token == "" && p.Period.From == "" {
+		p.Period = plan.Period{Kind: "relative", Token: "this_month_full"}
 	}
 }

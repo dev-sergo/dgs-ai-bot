@@ -52,6 +52,10 @@ func Resolve(token string, loc *time.Location, now time.Time) (Range, error) {
 	case "this_month":
 		first := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc)
 		return Range{df(first), df(today)}, nil
+	case "this_month_full": // полный текущий месяц [1-е .. последний день]; для прогноза
+		first := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc)
+		last := first.AddDate(0, 1, -1)
+		return Range{df(first), df(last)}, nil
 	case "last_month":
 		firstThis := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc)
 		lastPrev := firstThis.AddDate(0, 0, -1)
