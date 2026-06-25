@@ -266,6 +266,68 @@ func TestRefinePaymentChannelFilter_KeepsAnalyticMetric(t *testing.T) {
 	}
 }
 
+// «выручка сотрудника/товара/категории» → payment с фильтром, который payment не
+// держит. Guard переводит на products (тоже несёт выручку amount), чистит payment-метрики.
+func TestRefinePaymentEntityReport(t *testing.T) {
+	for _, field := range []string{"user", "product", "product_category"} {
+		p := plan.AnalysisPlan{
+			Intent: "report", Report: "payment", Method: "plain",
+			Metrics: []string{"sum_all"}, GroupBy: []string{"date"},
+			Filters: []plan.Filter{{Field: field, Values: []string{"Иванов"}}},
+		}
+		RefinePaymentEntityReport(&p)
+		if p.Report != "products" {
+			t.Errorf("%s: report=%s, ожидался products", field, p.Report)
+		}
+		if len(p.Metrics) != 0 {
+			t.Errorf("%s: payment-метрики не очищены: %v", field, p.Metrics)
+		}
+		if len(p.GroupBy) != 0 {
+			t.Errorf("%s: payment group_by не очищен: %v", field, p.GroupBy)
+		}
+		// Фильтр со значением должен уцелеть — это и есть суть («не потеряли сотрудника»).
+		if len(p.Filters) != 1 || p.Filters[0].Values[0] != "Иванов" {
+			t.Errorf("%s: фильтр потерян: %+v", field, p.Filters)
+		}
+	}
+}
+
+// sale_point/locality payment держит сам → рероута быть не должно.
+func TestRefinePaymentEntityReport_KeepsPaymentForOwnFilters(t *testing.T) {
+	for _, field := range []string{"sale_point", "locality"} {
+		p := plan.AnalysisPlan{
+			Intent: "report", Report: "payment", Method: "plain",
+			Filters: []plan.Filter{{Field: field, Values: []string{"Выкса"}}},
+		}
+		RefinePaymentEntityReport(&p)
+		if p.Report != "payment" {
+			t.Errorf("%s: payment не должен рероутиться, got %s", field, p.Report)
+		}
+	}
+}
+
+// Аналитику B-класса (compare/contribution) и не-payment отчёты guard не трогает.
+func TestRefinePaymentEntityReport_SkipsAnalyticAndNonPayment(t *testing.T) {
+	// contribution на payment с user-фильтром — method не plain, не трогаем.
+	p := plan.AnalysisPlan{
+		Intent: "report", Report: "payment", Method: "contribution",
+		Filters: []plan.Filter{{Field: "user", Values: []string{"Иванов"}}},
+	}
+	RefinePaymentEntityReport(&p)
+	if p.Report != "payment" {
+		t.Errorf("contribution не должен рероутиться, got %s", p.Report)
+	}
+	// products c user-фильтром — уже верный отчёт, не трогаем.
+	p2 := plan.AnalysisPlan{
+		Intent: "report", Report: "products", Method: "plain",
+		Filters: []plan.Filter{{Field: "user", Values: []string{"Иванов"}}},
+	}
+	RefinePaymentEntityReport(&p2)
+	if p2.Report != "products" {
+		t.Errorf("products должен остаться products, got %s", p2.Report)
+	}
+}
+
 // «какой товар виноват» → products+contribution с ВАЛИДНЫМИ полями products
 // (иначе остаётся sum_all от модели и план не проходит валидацию).
 func TestRefineProductContribution(t *testing.T) {

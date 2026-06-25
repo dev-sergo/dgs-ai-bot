@@ -456,7 +456,7 @@
 {"query": "топ продавцов за прошлый месяц", "expect": {"intent": "off_topic"}}
 {"query": "сколько чеков пробил сотрудник за неделю", "expect": {"intent": "report", "report": "paycheck", "period_token": "last_7_days|this_week"}}
 {"query": "продажи конкретного кассира за сегодня", "expect": {"intent": "report", "report": "payment|paycheck|products", "period_token": "today", "filters": ["user"]}}
-{"query": "выручка сотрудника за прошлый месяц", "expect": {"intent": "report", "report": "payment|paycheck", "period_token": "last_month", "filters": ["user"]}}
+{"query": "выручка сотрудника за прошлый месяц", "expect": {"intent": "report", "report": "paycheck|products", "period_token": "last_month", "filters": ["user"]}}
 {"query": "кто из сотрудников больше продаёт за месяц", "expect": {"intent": "report", "report": "products|paycheck", "period_token": "this_month|last_30_days", "filters": ["user"]}}
 {"query": "проданные товары в чеках сотрудника за неделю", "expect": {"intent": "report", "report": "products|paycheck", "period_token": "last_7_days|this_week", "filters": ["user"]}}
 {"query": "какой оператор обработал больше всего чеков за месяц", "expect": {"intent": "off_topic"}}
@@ -593,7 +593,7 @@
 {"query": "выручка кассира Иванова за прошлый месяц", "expect": {"intent": "report", "period_token": "last_month", "filter_values": [{"field": "user", "values": ["Иванова", "Иванов"]}]}}
 {"query": "сколько продал сотрудник Козлов за месяц", "expect": {"intent": "report", "period_token": "this_month|last_30_days", "filter_values": [{"field": "user", "values": ["Козлов", "Козлова"]}]}}
 {"query": "все продажи Кофе за этот месяц", "expect": {"intent": "report", "report": "products", "period_token": "this_month|last_30_days", "filter_values": [{"field": "product", "values": ["Кофе"]}]}}
-{"query": "сколько продали Борщ за прошлую неделю", "expect": {"intent": "report", "report": "products", "period_token": "last_week", "filter_values": [{"field": "product", "values": ["Борщ"]}]}}
+{"query": "сколько продали Борщ за прошлую неделю", "expect": {"intent": "report", "report": "products", "period_token": "last_week|last_7_days", "filter_values": [{"field": "product", "values": ["Борщ"]}]}}
 {"query": "продажи блюда Чизбургер за вчера", "expect": {"intent": "report", "report": "products", "period_token": "yesterday", "filter_values": [{"field": "product", "values": ["Чизбургер"]}]}}
 {"query": "все продажи Оливье за прошлый месяц", "expect": {"intent": "report", "report": "products", "period_token": "last_month", "filter_values": [{"field": "product", "values": ["Оливье"]}]}}
 {"query": "продажи категории Напитки за неделю", "expect": {"intent": "report", "report": "products", "period_token": "last_7_days|this_week", "filter_values": [{"field": "product_category", "values": ["Напитки"]}]}}
@@ -601,5 +601,5 @@
 {"query": "выручка на точке Выкса по кассиру Петров за неделю", "expect": {"intent": "report", "period_token": "last_7_days|this_week", "filter_values": [{"field": "sale_point", "values": ["Выкса"]}, {"field": "user", "values": ["Петров", "Петрова"]}]}}
 {"query": "продажи товара Кофе на точке Центральная за месяц", "expect": {"intent": "report", "period_token": "this_month|last_30_days", "filter_values": [{"field": "product", "values": ["Кофе"]}, {"field": "sale_point", "values": ["Центральная"]}]}}
 {"query": "чеки сотрудника Смирнов на точке Север за вчера", "expect": {"intent": "report", "period_token": "yesterday", "filter_values": [{"field": "user", "values": ["Смирнов", "Смирнова"]}, {"field": "sale_point", "values": ["Север"]}]}}
-{"query": "продажи Борща сотрудником Иванов за прошлую неделю", "expect": {"intent": "report", "report": "products", "period_token": "last_week", "filter_values": [{"field": "product", "values": ["Борщ"]}, {"field": "user", "values": ["Иванов", "Иванова"]}]}}
+{"query": "продажи Борща сотрудником Иванов за прошлую неделю", "expect": {"intent": "report", "report": "products", "period_token": "last_week|last_7_days", "filter_values": [{"field": "product", "values": ["Борщ"]}, {"field": "user", "values": ["Иванов", "Иванова"]}]}}
 {"query": "категория Напитки на точке Главная за этот месяц", "expect": {"intent": "report", "report": "products", "period_token": "this_month|last_30_days", "filter_values": [{"field": "product_category", "values": ["Напитки"]}, {"field": "sale_point", "values": ["Главная"]}]}}

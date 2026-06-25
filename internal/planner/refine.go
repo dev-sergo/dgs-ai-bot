@@ -52,6 +52,7 @@ func Refine(query string, p *plan.AnalysisPlan) {
 	RefineEmployeeRanking(query, p)
 	RefineProductContribution(query, p)
 	RefineForecast(query, p)
+	RefinePaymentEntityReport(p)
 	RefinePaymentChannelFilter(p)
 	RefineTopNOrder(query, p)
 	RefineDefaultMethod(p)
@@ -245,6 +246,43 @@ func RefinePaymentChannelFilter(p *plan.AnalysisPlan) {
 		p.Metrics = metrics
 		if len(p.GroupBy) == 0 {
 			p.GroupBy = []string{"date"}
+		}
+	}
+}
+
+// productsOnlyFilters — поля-фильтры, которых у payment в каталоге НЕТ, но есть у
+// products (см. catalog.Default: user/product/product_category). Если модель повесила
+// такой фильтр на payment («выручка сотрудника Иванова», «выручка по категории Десерты»),
+// план невалиден: payment их не держит. Раньше валидатор молча снимал фильтр —
+// получалось «спросил про сотрудника, показали всю выручку».
+var productsOnlyFilters = map[string]bool{
+	"user":             true,
+	"product":          true,
+	"product_category": true,
+}
+
+// RefinePaymentEntityReport переводит отчёт payment→products, когда на нём висит фильтр
+// по сотруднику/товару/категории, которого payment не поддерживает, а products —
+// поддерживает (и тоже несёт метрику выручки amount). Узко: фильтр sale_point/locality
+// payment держит сам → не трогаем; аналитику B-класса (compare/contribution со своей
+// семантикой) не ломаем — только plain/пустой method. При рероуте чистим Metrics/GroupBy:
+// payment-метрики (sum_all) и group_by=date у products невалидны → дефолтная размерность name.
+func RefinePaymentEntityReport(p *plan.AnalysisPlan) {
+	if p.Report != "payment" {
+		return
+	}
+	if p.Intent != "" && p.Intent != "report" {
+		return
+	}
+	if p.Method != "" && p.Method != "plain" {
+		return
+	}
+	for _, f := range p.Filters {
+		if productsOnlyFilters[f.Field] {
+			p.Report = "products"
+			p.Metrics = nil
+			p.GroupBy = nil
+			return
 		}
 	}
 }
