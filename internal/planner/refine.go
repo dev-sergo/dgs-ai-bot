@@ -195,17 +195,21 @@ func PremiseDirection(query string) string {
 	return ""
 }
 
-// paymentChannelMetric маппит канал оплаты в КОЛОНКУ отчёта payment.
+// paymentChannelMetric маппит канал оплаты в КОЛОНКУ(и) отчёта payment.
 // В payment тип оплаты — это колонки (sum_card/sum_cash/onlayn/sbp), а не фильтр:
 // фильтр payment_type есть только у paycheck/orders. В follow-up «а по карте?» модель
 // иногда ставит payment_type-фильтр на payment → валидатор бракует план → ложный
 // out_of_scope на легальный запрос. Принимаем и enum-значения (card/cash/online/sbp),
-// и русские формы, которые модель порой кладёт в values.
-var paymentChannelMetric = map[string]string{
-	"card": "sum_card", "карта": "sum_card", "картой": "sum_card", "по карте": "sum_card",
-	"cash": "sum_cash", "наличные": "sum_cash", "наличными": "sum_cash",
-	"online": "onlayn", "онлайн": "onlayn",
-	"sbp": "sbp", "сбп": "sbp", "по сбп": "sbp", "через сбп": "sbp",
+// и русские формы, которые модель порой кладёт в values. Значение — срез колонок:
+// «безнал» раскладывается в card+online+sbp (как cashlessKeys в channelShareFocus).
+var paymentChannelMetric = map[string][]string{
+	"card": {"sum_card"}, "карта": {"sum_card"}, "картой": {"sum_card"},
+	"по карте": {"sum_card"}, "карточка": {"sum_card"}, "по карточке": {"sum_card"},
+	"cash": {"sum_cash"}, "наличные": {"sum_cash"}, "наличными": {"sum_cash"},
+	"наличка": {"sum_cash"}, "наличкой": {"sum_cash"}, "налик": {"sum_cash"}, "нал": {"sum_cash"},
+	"online": {"onlayn"}, "онлайн": {"onlayn"},
+	"sbp": {"sbp"}, "сбп": {"sbp"}, "по сбп": {"sbp"}, "через сбп": {"sbp"},
+	"безнал": {"sum_card", "onlayn", "sbp"}, "безналом": {"sum_card", "onlayn", "sbp"},
 }
 
 // RefinePaymentChannelFilter снимает невалидный payment_type-фильтр с отчёта payment
@@ -217,12 +221,12 @@ func RefinePaymentChannelFilter(p *plan.AnalysisPlan) {
 		return
 	}
 	kept := p.Filters[:0]
-	metric := ""
+	var metrics []string
 	for _, f := range p.Filters {
 		if f.Field == "payment_type" {
 			for _, v := range f.Values {
-				if m, ok := paymentChannelMetric[strings.ToLower(strings.TrimSpace(v))]; ok {
-					metric = m
+				if cols, ok := paymentChannelMetric[strings.ToLower(strings.TrimSpace(v))]; ok {
+					metrics = cols
 					break
 				}
 			}
@@ -231,14 +235,14 @@ func RefinePaymentChannelFilter(p *plan.AnalysisPlan) {
 		kept = append(kept, f)
 	}
 	p.Filters = kept
-	if metric == "" {
+	if metrics == nil {
 		return
 	}
-	// Канал распознан: для простого отчёта показываем его колонку. Для аналитики
+	// Канал распознан: для простого отчёта показываем его колонку(и). Для аналитики
 	// (compare/contribution) метрику не трогаем — там канал раскладывает движок,
 	// важно лишь снять невалидный фильтр.
 	if p.Method == "" || p.Method == "plain" {
-		p.Metrics = []string{metric}
+		p.Metrics = metrics
 		if len(p.GroupBy) == 0 {
 			p.GroupBy = []string{"date"}
 		}

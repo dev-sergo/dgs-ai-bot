@@ -184,8 +184,11 @@ func TestRefinePaymentChannelFilter(t *testing.T) {
 	}{
 		{"card→sum_card", "card", "sum_card"},
 		{"карта→sum_card", "карта", "sum_card"},
+		{"карточка→sum_card", "карточка", "sum_card"},
 		{"cash→sum_cash", "cash", "sum_cash"},
 		{"наличными→sum_cash", "наличными", "sum_cash"},
+		{"наличка→sum_cash", "наличка", "sum_cash"},
+		{"налик→sum_cash", "налик", "sum_cash"},
 		{"online→onlayn", "online", "onlayn"},
 		{"sbp→sbp", "сбп", "sbp"},
 	}
@@ -204,6 +207,31 @@ func TestRefinePaymentChannelFilter(t *testing.T) {
 		}
 		if len(p.GroupBy) != 1 || p.GroupBy[0] != "date" {
 			t.Errorf("%s: group_by=%v, want [date]", c.name, p.GroupBy)
+		}
+	}
+}
+
+// «безнал» раскладывается в три колонки (card+online+sbp), не одну.
+func TestRefinePaymentChannelFilter_Cashless(t *testing.T) {
+	for _, v := range []string{"безнал", "безналом"} {
+		p := plan.AnalysisPlan{
+			Report:  "payment",
+			Method:  "plain",
+			Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{v}}},
+		}
+		RefinePaymentChannelFilter(&p)
+		if len(p.Filters) != 0 {
+			t.Errorf("%s: payment_type-фильтр не снят: %+v", v, p.Filters)
+		}
+		want := []string{"sum_card", "onlayn", "sbp"}
+		if len(p.Metrics) != len(want) {
+			t.Fatalf("%s: metrics=%v, want %v", v, p.Metrics, want)
+		}
+		for i, m := range want {
+			if p.Metrics[i] != m {
+				t.Errorf("%s: metrics=%v, want %v", v, p.Metrics, want)
+				break
+			}
 		}
 	}
 }
