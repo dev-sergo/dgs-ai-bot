@@ -557,3 +557,29 @@
 {"query": "в чём у меня проблема с продажами", "expect": {"intent": "advice"}}
 {"query": "где слабые места", "expect": {"intent": "advice"}}
 {"query": "что оптимизировать", "expect": {"intent": "advice"}}
+{"query": "прогноз выручки на июнь", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "если ничего не менять, сколько выйдет", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "при текущем темпе сколько выйдет", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "ожидаемая выручка за июнь", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "сколько выручки будет к концу месяца", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "прогноз на конец месяца", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "что ожидается к 30 июня", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "куда мы выйдем при текущем темпе", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "предсказание по выручке за июнь", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "как дела с выручкой к концу июня", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "оцени выручку к концу месяца", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "какой будет выручка если темп сохранится", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "дойду ли я до плана к концу месяца", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "дойду ли я до плана в 2 миллиона к концу месяца", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "дойдём ли до плана в 1.5 млн", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "план 500 тысяч — выйдем?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "цель 1 миллион — дойдём?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "выйдем ли на план 800 тысяч", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "план 2 млн — реально?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "цель 300к — достижима?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "дойти до 1 миллиона реально?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "дотянем ли до 500 тыс к концу июня", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "выйти на 700 тысяч — успеем?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "при текущем темпе выйдем на миллион?", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "сможем ли выполнить план в 1.2 млн", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
+{"query": "хватит ли темпа до плана 600 тыс", "expect": {"intent": "report", "report": "payment", "method": "forecast"}}
