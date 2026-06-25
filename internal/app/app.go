@@ -128,7 +128,9 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 	// Детерминированная пост-обработка плана: маршрутизация «какой товар виноват»
 	// → products+contribution и направление рейтинга (худшие/лучшие) для top_n —
 	// то, что модель делает нестабильно.
+	planBefore := p // value-копия плана ДО refine — для трассировки шва
 	planner.Refine(text, &p)
+	a.logRefineDiff(text, planBefore, p)
 
 	// Возобновление консультации: на прошлом ходу для разбора спросили период.
 	// Если новая реплика несёт период — продолжаем advice (планировщик на голом
@@ -462,6 +464,60 @@ func (a *App) logAsk(tenantID, sessionID, text string, ans Answer, err error, du
 	a.Logger.Info("ask", attrs...)
 }
 
+// logRefineDiff трассирует детерминированную пост-обработку плана (refine): logAsk
+// пишет только ФИНАЛьный план, поэтому «так сказала модель» и «так переписал refine»
+// неразличимы. Логируем before/after ключевых полей (intent/report/method/metrics)
+// и только когда что-то реально изменилось — иначе шум на каждый запрос.
+func (a *App) logRefineDiff(text string, before, after plan.AnalysisPlan) {
+	if a.Logger == nil {
+		return
+	}
+	attrs := []any{"query", refineSnippet(text)}
+	changed := false
+	if before.EffectiveIntent() != after.EffectiveIntent() {
+		changed = true
+		attrs = append(attrs, "intent_before", before.EffectiveIntent(), "intent_after", after.EffectiveIntent())
+	}
+	if before.Report != after.Report {
+		changed = true
+		attrs = append(attrs, "report_before", before.Report, "report_after", after.Report)
+	}
+	if before.Method != after.Method {
+		changed = true
+		attrs = append(attrs, "method_before", before.Method, "method_after", after.Method)
+	}
+	if !sameStrings(before.Metrics, after.Metrics) {
+		changed = true
+		attrs = append(attrs, "metrics_before", strings.Join(before.Metrics, ","), "metrics_after", strings.Join(after.Metrics, ","))
+	}
+	if !changed {
+		return
+	}
+	a.Logger.Info("planner.refine_changed", attrs...)
+}
+
+// refineSnippet обрезает текст запроса для лога (без раздувания строки).
+func refineSnippet(s string) string {
+	s = strings.TrimSpace(s)
+	if len(s) <= 120 {
+		return s
+	}
+	return s[:120] + "…"
+}
+
+// sameStrings сравнивает срезы поэлементно (nil и [] эквивалентны).
+func sameStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // recordQuery дозаписывает строку датасета «вопрос → план → ответ» для аналитики
 // и дообучения. Пишется на любой ветке Ask; nil QueryLog (лог выключен) — no-op.
 func (a *App) recordQuery(tenantID, sessionID, text string, ans Answer, err error, dur time.Duration) {
@@ -778,8 +834,10 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 				m, err := a.resolver.Resolve(pf.Field, name)
 				if err != nil {
 					if re, ok := err.(*resolver.ResolveError); ok && re.Ambiguous {
+						a.logResolverMiss(pf.Field, name, "ambiguous", re.Candidates)
 						return nil, "Уточните " + pf.Field + " «" + name + "»: подходят " + joinRu(re.Candidates) + "."
 					}
+					a.logResolverMiss(pf.Field, name, "not_found", nil)
 					return nil, "Не нашёл " + pf.Field + " «" + name + "». Проверьте название."
 				}
 				qf.UUIDs = append(qf.UUIDs, m.UUID)
@@ -792,6 +850,20 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 
 func joinRu(ss []string) string {
 	return strings.Join(ss, ", ")
+}
+
+// logResolverMiss структурно логирует промах имя→uuid. В outcome-логе и not_found,
+// и ambiguous слиты в outcome=clarify вместе с period/low-confidence clarify —
+// неразличимо. Отдельная строка с kind/именем/типом промаха даёт точечный сигнал.
+func (a *App) logResolverMiss(kind, name, missType string, candidates []string) {
+	if a.Logger == nil {
+		return
+	}
+	attrs := []any{"kind", kind, "name", name, "type", missType}
+	if len(candidates) > 0 {
+		attrs = append(attrs, "candidates", strings.Join(candidates, ","))
+	}
+	a.Logger.Warn("resolver.miss", attrs...)
 }
 
 // dedupStrings убирает повторы, сохраняя порядок (один фильтр пропущен в нескольких

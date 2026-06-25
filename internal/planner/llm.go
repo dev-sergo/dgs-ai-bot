@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"dgsbot/internal/catalog"
@@ -19,11 +20,22 @@ type LLMPlanner struct {
 	model     string
 	cat       *catalog.Catalog
 	forceJSON bool
+	// logger — наблюдаемость шва (parse-fail). nil → slog.Default() через log().
+	logger *slog.Logger
 }
 
 // NewLLM создаёт планировщик поверх LLM-клиента.
 func NewLLM(cli *llm.Client, model string, forceJSON bool) *LLMPlanner {
-	return &LLMPlanner{cli: cli, model: model, cat: defaultCatalog(), forceJSON: forceJSON}
+	return &LLMPlanner{cli: cli, model: model, cat: defaultCatalog(), forceJSON: forceJSON, logger: slog.Default()}
+}
+
+// log возвращает логгер планировщика; nil-гард на случай конструирования
+// через struct-literal (тесты), чтобы parse-fail-лог не паниковал.
+func (p *LLMPlanner) log() *slog.Logger {
+	if p.logger == nil {
+		return slog.Default()
+	}
+	return p.logger
 }
 
 func (p *LLMPlanner) Plan(ctx context.Context, history []session.Message, query string) (plan.AnalysisPlan, error) {
@@ -44,6 +56,14 @@ func (p *LLMPlanner) Plan(ctx context.Context, history []session.Message, query 
 	}
 	pl, perr := parsePlan(raw)
 	if perr != nil {
+		// Наблюдаемость шва: сырой ответ модели иначе молча выбрасывается, а в
+		// outcome-логе это выглядит как smalltalk (см. batch-лог: «спасибо»/«пока»/
+		// «дойду ли»). Логируем причину + обрезанный raw, чтобы отличить битый JSON
+		// модели от настоящей болтовни.
+		p.log().Warn("planner.parse_fail",
+			"query", snippet(query, 120),
+			"err", perr.Error(),
+			"raw", snippet(raw, 200))
 		// Fail-closed: вместо технического сбоя возвращаем запрос уточнения.
 		// Confidence ниже порога → оркестратор переспросит у пользователя.
 		// Сырой ответ пишем в warn-поле reply, чтобы не потерять для отладки.
