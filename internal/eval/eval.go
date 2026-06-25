@@ -17,14 +17,23 @@ import (
 	"dgsbot/internal/planner"
 )
 
+// FilterExpect — ожидаемое значение конкретного фильтра.
+// Field: имя поля (sale_point, user, product, …).
+// Values: хотя бы одно из них должно присутствовать в filter.Values (без учёта регистра).
+type FilterExpect struct {
+	Field  string   `json:"field"`
+	Values []string `json:"values"`
+}
+
 // Expect — ожидаемые свойства плана (проверяются только заданные поля).
 type Expect struct {
-	Intent      string   `json:"intent,omitempty"` // report|help|smalltalk|off_topic
-	Report      string   `json:"report,omitempty"`
-	Class       string   `json:"class,omitempty"`
-	Method      string   `json:"method,omitempty"`
-	PeriodToken string   `json:"period_token,omitempty"`
-	Filters     []string `json:"filters,omitempty"` // имена фильтров, которые должны присутствовать
+	Intent       string        `json:"intent,omitempty"`        // report|help|smalltalk|off_topic
+	Report       string        `json:"report,omitempty"`
+	Class        string        `json:"class,omitempty"`
+	Method       string        `json:"method,omitempty"`
+	PeriodToken  string        `json:"period_token,omitempty"`
+	Filters      []string      `json:"filters,omitempty"`       // имена фильтров, которые должны присутствовать
+	FilterValues []FilterExpect `json:"filter_values,omitempty"` // фильтры с проверкой значений
 }
 
 // Case — один кейс набора.
@@ -72,6 +81,16 @@ func Check(p plan.AnalysisPlan, e Expect) []string {
 			add("нет фильтра " + want)
 		}
 	}
+	for _, fe := range e.FilterValues {
+		f, ok := findFilter(p.Filters, fe.Field)
+		if !ok {
+			add("нет фильтра " + fe.Field)
+			continue
+		}
+		if !anyValueMatch(f.Values, fe.Values) {
+			add("фильтр " + fe.Field + ": ожидалось одно из " + strings.Join(fe.Values, "|") + ", получено " + strings.Join(f.Values, ","))
+		}
+	}
 	return m
 }
 
@@ -86,9 +105,25 @@ func matchAlt(got, spec string) bool {
 }
 
 func hasFilter(fs []plan.Filter, field string) bool {
+	_, ok := findFilter(fs, field)
+	return ok
+}
+
+func findFilter(fs []plan.Filter, field string) (plan.Filter, bool) {
 	for _, f := range fs {
 		if f.Field == field {
-			return true
+			return f, true
+		}
+	}
+	return plan.Filter{}, false
+}
+
+func anyValueMatch(actual, expected []string) bool {
+	for _, e := range expected {
+		for _, a := range actual {
+			if strings.EqualFold(e, a) {
+				return true
+			}
 		}
 	}
 	return false

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"dgsbot/internal/catalog"
 	"dgsbot/internal/config"
@@ -47,8 +48,16 @@ func main() {
 			fmt.Printf("        ошибка: %v\n", r.Err)
 			continue
 		}
-		fmt.Printf("        план: report=%s class=%s method=%s period=%s\n",
-			r.Plan.Report, r.Plan.Class, r.Plan.Method, r.Plan.Period.Token)
+		var fStr string
+		if len(r.Plan.Filters) > 0 {
+			parts := make([]string, 0, len(r.Plan.Filters))
+			for _, f := range r.Plan.Filters {
+				parts = append(parts, f.Field+"=["+strings.Join(f.Values, ",")+"]")
+			}
+			fStr = " filters=" + strings.Join(parts, " ")
+		}
+		fmt.Printf("        план: report=%s class=%s method=%s period=%s%s\n",
+			r.Plan.Report, r.Plan.Class, r.Plan.Method, r.Plan.Period.Token, fStr)
 		for _, m := range r.Mismatch {
 			fmt.Printf("        ✗ %s\n", m)
 		}
