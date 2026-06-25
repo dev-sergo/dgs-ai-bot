@@ -32,6 +32,8 @@ services:
       AUTH_TOKEN: "${AUTH_TOKEN:-}"
       # Датасет вопрос→план→ответ (JSONL). Пишется в /app/data → на хост в ./data. Пусто → выкл.
       QUERY_LOG_PATH: "${QUERY_LOG_PATH:-/app/data/queries.jsonl}"
+      # Оценки пользователя 👍/👎 (JSONL). Пусто → выкл.
+      FEEDBACK_LOG_PATH: "${FEEDBACK_LOG_PATH:-/app/data/feedback.jsonl}"
     volumes:
       - ./data:/app/data
     extra_hosts:
@@ -50,6 +52,7 @@ services:
       TELEGRAM_ALLOWLIST: "${TELEGRAM_ALLOWLIST:-}"
       # Свой файл датасета, чтобы два процесса не писали в один JSONL вперемешку.
       QUERY_LOG_PATH: "${TELEGRAM_QUERY_LOG_PATH:-/app/data/queries-telegram.jsonl}"
+      FEEDBACK_LOG_PATH: "${TELEGRAM_FEEDBACK_LOG_PATH:-/app/data/feedback-telegram.jsonl}"
     volumes:
       - ./data:/app/data
     extra_hosts:
