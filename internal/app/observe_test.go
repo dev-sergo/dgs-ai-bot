@@ -98,7 +98,7 @@ func TestApp_ResolverMissLogsWarn(t *testing.T) {
 	if !ok {
 		t.Fatal("нет отчёта products в каталоге")
 	}
-	pfs := []plan.Filter{{Field: "product", Op: "in", Values: []string{"несуществующий товар"}}}
+	pfs := []plan.Filter{{Field: "product", Values: []string{"несуществующий товар"}}}
 	_, clarify := a.resolveFilters(rep, pfs)
 	if clarify == "" {
 		t.Fatal("ожидался текст уточнения при ненайденном товаре")

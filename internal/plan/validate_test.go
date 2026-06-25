@@ -46,7 +46,7 @@ func TestValidateBadEnum(t *testing.T) {
 	p := base()
 	p.Report = "paycheck"
 	p.Metrics = []string{"paid"}
-	p.Filters = []Filter{{Field: "payment_type", Op: "in", Values: []string{"bitcoin"}}}
+	p.Filters = []Filter{{Field: "payment_type", Values: []string{"bitcoin"}}}
 	res := Validate(&p, catalog.Default())
 	if res.OK {
 		t.Fatalf("недопустимое enum-значение должно отклоняться: %+v", res)
@@ -64,7 +64,7 @@ func TestValidateNeedClarifyWhenNoPeriod(t *testing.T) {
 
 func TestValidateUnknownFilter(t *testing.T) {
 	p := base()
-	p.Filters = []Filter{{Field: "secret_field", Op: "in", Values: []string{"x"}}}
+	p.Filters = []Filter{{Field: "secret_field", Values: []string{"x"}}}
 	res := Validate(&p, catalog.Default())
 	if res.OK {
 		t.Fatalf("неизвестный фильтр должен отклоняться: %+v", res)
@@ -76,7 +76,7 @@ func TestValidateUnknownFilter(t *testing.T) {
 func TestValidateRefFilterEmptyValues(t *testing.T) {
 	p := base()
 	p.Report = "payment"
-	p.Filters = []Filter{{Field: "locality", Op: "in", Values: []string{"", "  "}}}
+	p.Filters = []Filter{{Field: "locality", Values: []string{"", "  "}}}
 	res := Validate(&p, catalog.Default())
 	if res.OK {
 		t.Fatalf("ref-фильтр с пустыми values должен отклоняться: %+v", res)

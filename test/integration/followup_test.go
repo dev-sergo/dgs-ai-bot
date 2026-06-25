@@ -48,7 +48,7 @@ func ordersThinPlan(filters ...plan.Filter) plan.AnalysisPlan {
 // period и sale_point=Выкса переносятся из последнего плана.
 func TestFollowUpPeriodCarried(t *testing.T) {
 	pl := &stubSeqPlanner{plans: []plan.AnalysisPlan{
-		ordersWeekPlan(plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}),
+		ordersWeekPlan(plan.Filter{Field: "sale_point", Values: []string{"Выкса"}}),
 		ordersThinPlan(), // период пуст, sale_point отсутствует
 	}}
 	a := newAppWith(t, pl)
@@ -87,9 +87,9 @@ func TestFollowUpPeriodCarried(t *testing.T) {
 // period переносится И sale_point=Выкса мержится к payment_type.
 func TestFollowUpFilterMerged(t *testing.T) {
 	pl := &stubSeqPlanner{plans: []plan.AnalysisPlan{
-		ordersWeekPlan(plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}),
+		ordersWeekPlan(plan.Filter{Field: "sale_point", Values: []string{"Выкса"}}),
 		// второй ход: модель ставит payment_type (enum, valid для orders), период пуст
-		ordersThinPlan(plan.Filter{Field: "payment_type", Op: "in", Values: []string{"card"}}),
+		ordersThinPlan(plan.Filter{Field: "payment_type", Values: []string{"card"}}),
 	}}
 	a := newAppWith(t, pl)
 	ctx := context.Background()
@@ -128,7 +128,7 @@ func TestFollowUpFilterMerged(t *testing.T) {
 // новый независимый запрос не должен тащить фильтры предыдущего.
 func TestFollowUpNoCarryWhenOwnPeriod(t *testing.T) {
 	pl := &stubSeqPlanner{plans: []plan.AnalysisPlan{
-		ordersWeekPlan(plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}),
+		ordersWeekPlan(plan.Filter{Field: "sale_point", Values: []string{"Выкса"}}),
 		ordersWeekPlan(), // свой period, нет фильтра — новый независимый запрос
 	}}
 	a := newAppWith(t, pl)

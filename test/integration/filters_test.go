@@ -27,7 +27,7 @@ func ordersPlan(filters ...plan.Filter) plan.AnalysisPlan {
 
 func TestOrdersFilteredBySalePoint(t *testing.T) {
 	a := newAppWith(t, fakePlanner{ordersPlan(
-		plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Выкса"}},
+		plan.Filter{Field: "sale_point", Values: []string{"Выкса"}},
 	)})
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "заказы по точке Выкса")
 	if err != nil {
@@ -78,7 +78,7 @@ func TestSkippedFilterIsHonest(t *testing.T) {
 		Metrics: []string{"sum_all"}, GroupBy: []string{"date"},
 		Period: plan.Period{Kind: "relative", Token: "last_30_days"},
 		Method: "plain", Output: plan.Output{Format: "text"},
-		Filters: []plan.Filter{{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}},
+		Filters: []plan.Filter{{Field: "sale_point", Values: []string{"Выкса"}}},
 	}
 	a := newAppWith(t, fakePlanner{p})
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "выручка по точке Выкса за месяц")
@@ -95,7 +95,7 @@ func TestSkippedFilterIsHonest(t *testing.T) {
 
 func TestUnresolvedFilterAsksClarify(t *testing.T) {
 	a := newAppWith(t, fakePlanner{ordersPlan(
-		plan.Filter{Field: "sale_point", Op: "in", Values: []string{"Несуществующая Точка"}},
+		plan.Filter{Field: "sale_point", Values: []string{"Несуществующая Точка"}},
 	)})
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "заказы по точке X")
 	if err != nil {

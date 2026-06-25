@@ -196,7 +196,7 @@ func TestRefinePaymentChannelFilter(t *testing.T) {
 		p := plan.AnalysisPlan{
 			Report:  "payment",
 			Method:  "plain",
-			Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{c.value}}},
+			Filters: []plan.Filter{{Field: "payment_type", Values: []string{c.value}}},
 		}
 		RefinePaymentChannelFilter(&p)
 		if len(p.Filters) != 0 {
@@ -217,7 +217,7 @@ func TestRefinePaymentChannelFilter_Cashless(t *testing.T) {
 		p := plan.AnalysisPlan{
 			Report:  "payment",
 			Method:  "plain",
-			Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{v}}},
+			Filters: []plan.Filter{{Field: "payment_type", Values: []string{v}}},
 		}
 		RefinePaymentChannelFilter(&p)
 		if len(p.Filters) != 0 {
@@ -241,7 +241,7 @@ func TestRefinePaymentChannelFilter_SkipsNonPayment(t *testing.T) {
 	p := plan.AnalysisPlan{
 		Report:  "paycheck",
 		Method:  "plain",
-		Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{"card"}}},
+		Filters: []plan.Filter{{Field: "payment_type", Values: []string{"card"}}},
 	}
 	RefinePaymentChannelFilter(&p)
 	if len(p.Filters) != 1 {
@@ -255,7 +255,7 @@ func TestRefinePaymentChannelFilter_KeepsAnalyticMetric(t *testing.T) {
 		Report:  "payment",
 		Method:  "contribution",
 		Metrics: []string{"sum_all"},
-		Filters: []plan.Filter{{Field: "payment_type", Op: "in", Values: []string{"card"}}},
+		Filters: []plan.Filter{{Field: "payment_type", Values: []string{"card"}}},
 	}
 	RefinePaymentChannelFilter(&p)
 	if len(p.Filters) != 0 {

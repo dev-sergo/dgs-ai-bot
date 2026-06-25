@@ -29,12 +29,11 @@ type Period struct {
 }
 
 // Filter — один фильтр. Для uuid-полей values содержат ИМЕНА (резолвятся в uuid отдельно).
+// Все фильтры трактуются как "in" по Values; op/range исторически были в схеме, но
+// исполнения за ними нет — поля выпилены, чтобы не давать LLM повод ошибаться (узел #5).
 type Filter struct {
 	Field  string   `json:"field"`
-	Op     string   `json:"op"` // "in" | "eq" | "range"
 	Values []string `json:"values,omitempty"`
-	From   string   `json:"from,omitempty"`
-	To     string   `json:"to,omitempty"`
 }
 
 // Output — желаемый формат вывода.

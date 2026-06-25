@@ -49,7 +49,7 @@ func TestDescribePlanAndConfirmPrompt(t *testing.T) {
 	p := plan.AnalysisPlan{
 		Report: "payment", Method: "plain",
 		Period:  plan.Period{Kind: "relative", Token: "this_month"},
-		Filters: []plan.Filter{{Field: "sale_point", Op: "in", Values: []string{"Выкса"}}},
+		Filters: []plan.Filter{{Field: "sale_point", Values: []string{"Выкса"}}},
 	}
 	got := describePlan(p, c)
 	for _, want := range []string{"Выручка", "этот месяц", "точка: Выкса"} {

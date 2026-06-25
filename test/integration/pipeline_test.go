@@ -206,7 +206,7 @@ func TestAdviceFilterUnsupportedScopeIsHonest(t *testing.T) {
 		Intent: "advice", Report: "payment", Method: "plain",
 		Metrics: []string{"sum_all"},
 		Period:  plan.Period{Kind: "relative", Token: "this_month"},
-		Filters: []plan.Filter{{Field: "sale_point", Op: "in", Values: []string{"Казанский вокзал"}}},
+		Filters: []plan.Filter{{Field: "sale_point", Values: []string{"Казанский вокзал"}}},
 	}}
 	a := newAppWith(t, pl)
 	ans, err := a.Ask(context.Background(), "mock_single", "s", "что улучшить на точке Казанский вокзал за месяц")
