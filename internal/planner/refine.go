@@ -365,15 +365,19 @@ var forecastPeriodTokens = map[string]string{
 // «Прогноз за прошлый месяц» (явно прошлый период) → метод прогнозом, но RunRateForecast
 // сам вернёт status=fact (период закрыт) → нарратив честно скажет «это факт, не прогноз».
 func RefineForecast(query string, p *plan.AnalysisPlan) {
-	if p.Intent != "" && p.Intent != "report" {
-		return // advice/off_topic/help — не трогаем
+	// Не трогаем help/smalltalk/advice — там свой обработчик. off_topic перехватываем:
+	// LLM часто не распознаёт «дойду ли до плана» как аналитику и помечает off_topic,
+	// тогда как это легальный прогнозный вопрос → guard его вытаскивает.
+	switch p.Intent {
+	case "help", "smalltalk", "advice":
+		return
 	}
 	if !forecastRe.MatchString(strings.ToLower(query)) {
 		return
 	}
 	p.Report = "payment"
 	p.Method = "forecast"
-	if p.Intent == "" {
+	if p.Intent == "" || p.Intent == "off_topic" {
 		p.Intent = "report"
 	}
 	// Апгрейд токена this_month → this_month_full (полный горизонт, а не до сегодня).

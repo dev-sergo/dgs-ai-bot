@@ -278,9 +278,11 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	case "forecast":
 		// Run-rate прогноз выручки поверх payment-ряда. asOf — «сегодня» в TZ тенанта;
 		// from/to — полный целевой период (to = конец месяца, проставляется в A5).
+		// resolvePeriod даёт DD.MM.YYYY; payment-ряд и RunRateForecast ждут ISO YYYY-MM-DD.
 		loc := t.Location()
 		asOf := a.Now().In(loc).Format("2006-01-02")
-		fc := engine.RunRateForecast(resNow.Rows, from, to, asOf)
+		fromISO, toISO := ruDateToISO(from), ruDateToISO(to)
+		fc := engine.RunRateForecast(resNow.Rows, fromISO, toISO, asOf)
 		env = engine.ForecastEnvelope(fc, from, to, tenantID, currency, t.Timezone)
 	default:
 		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
@@ -843,4 +845,14 @@ func currencyOr(c string) string {
 		return "RUB"
 	}
 	return c
+}
+
+// ruDateToISO конвертирует DD.MM.YYYY (формат Dooglys/resolvePeriod) в YYYY-MM-DD (ISO).
+// RunRateForecast и payment-ряд используют ISO; resolvePeriod отдаёт DD.MM.YYYY.
+func ruDateToISO(s string) string {
+	t, err := time.Parse("02.01.2006", s)
+	if err != nil {
+		return s // не разобрали — возвращаем как есть; RunRateForecast вернёт no_data
+	}
+	return t.Format("2006-01-02")
 }

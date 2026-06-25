@@ -484,14 +484,26 @@ func TestRefineForecast_NoFalsePositives(t *testing.T) {
 	}
 }
 
-// advice/off_topic — guard не трогает.
+// help/smalltalk/advice — guard не трогает; off_topic перехватывает (LLM-мисклассификация).
 func TestRefineForecast_SkipsNonReport(t *testing.T) {
-	for _, intent := range []string{"advice", "off_topic", "help"} {
+	for _, intent := range []string{"advice", "help", "smalltalk"} {
 		p := plan.AnalysisPlan{Intent: intent}
 		RefineForecast("прогноз выручки за месяц", &p)
 		if p.Method == "forecast" {
 			t.Errorf("intent=%q: не должен стать forecast", intent)
 		}
+	}
+}
+
+// off_topic от LLM — guard перехватывает и переводит в forecast.
+func TestRefineForecast_OverridesOffTopic(t *testing.T) {
+	p := plan.AnalysisPlan{Intent: "off_topic"}
+	RefineForecast("дойду ли я до плана к концу месяца", &p)
+	if p.Method != "forecast" {
+		t.Errorf("off_topic прогнозный вопрос: method=%q, want forecast", p.Method)
+	}
+	if p.Intent != "report" {
+		t.Errorf("off_topic прогнозный вопрос: intent=%q, want report", p.Intent)
 	}
 }
 
