@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -282,8 +283,9 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 		loc := t.Location()
 		asOf := a.Now().In(loc).Format("2006-01-02")
 		fromISO, toISO := ruDateToISO(from), ruDateToISO(to)
+		goal := extractGoal(text)
 		fc := engine.RunRateForecast(resNow.Rows, fromISO, toISO, asOf)
-		env = engine.ForecastEnvelope(fc, from, to, tenantID, currency, t.Timezone)
+		env = engine.ForecastEnvelope(fc, from, to, tenantID, currency, t.Timezone, goal)
 	default:
 		// Если модель не задала измерение — берём дефолтное из каталога (напр. date),
 		// иначе таблица потеряет смысловую колонку (строки без подписи).
@@ -845,6 +847,34 @@ func currencyOr(c string) string {
 		return "RUB"
 	}
 	return c
+}
+
+// goalRe извлекает явно названную сумму-план из прогнозного запроса:
+// «план 2 миллиона», «цель 500 тысяч», «выйти на 300к», «дойти до 1.5 млн».
+// Группы: 1=число (пробелы внутри допустимы), 2=множитель (млн/тыс/к).
+var goalRe = regexp.MustCompile(
+	`(?:план|цель|выйти\s+на|дойти?\s+до)\s+(?:в\s+)?(\d[\d\s]*(?:[.,]\d+)?)\s*` +
+		`(млн|миллион[а-яё]*|тысяч[а-яё]*|тыс\.?|к)?`)
+
+// extractGoal извлекает сумму-цель из текста запроса; 0 если цель не названа.
+func extractGoal(query string) float64 {
+	m := goalRe.FindStringSubmatch(strings.ToLower(query))
+	if m == nil {
+		return 0
+	}
+	numStr := strings.NewReplacer(" ", "", ",", ".").Replace(strings.TrimSpace(m[1]))
+	val, err := strconv.ParseFloat(numStr, 64)
+	if err != nil || val <= 0 {
+		return 0
+	}
+	mult := strings.TrimSpace(m[2])
+	switch {
+	case strings.HasPrefix(mult, "млн"), strings.HasPrefix(mult, "миллион"):
+		val *= 1_000_000
+	case strings.HasPrefix(mult, "тыс"), mult == "к":
+		val *= 1_000
+	}
+	return val
 }
 
 // ruDateToISO конвертирует DD.MM.YYYY (формат Dooglys/resolvePeriod) в YYYY-MM-DD (ISO).

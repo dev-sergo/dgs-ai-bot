@@ -123,7 +123,9 @@ func daysInclusive(a, b time.Time) int {
 // Числа — источник истины из движка; нарратив строится здесь же (sandwich: LLM не нужна
 // для детерминированного прогнозного числа). UI получает envelope.Type="forecast" и
 // Summary с ключевыми метриками; Rows пустые — таблица не нужна, вся суть в нарративе.
-func ForecastEnvelope(f Forecast, fromISO, toISO, tenantID, currency, tz string) envelope.Envelope {
+// ForecastEnvelope оборачивает Forecast в Envelope — единый формат для render/UI.
+// goal > 0 — явно названная пользователем цель (план); 0 — цель не названа, только проекция.
+func ForecastEnvelope(f Forecast, fromISO, toISO, tenantID, currency, tz string, goal float64) envelope.Envelope {
 	e := envelope.Envelope{
 		Type:     "forecast",
 		TenantID: tenantID,
@@ -133,9 +135,10 @@ func ForecastEnvelope(f Forecast, fromISO, toISO, tenantID, currency, tz string)
 	}
 	switch f.Status {
 	case ForecastFact:
+		goalLine := goalVsFact(f.Actual, goal, currency)
 		e.Narrative = fmt.Sprintf(
-			"Период уже завершён — это факт, не прогноз.\nВыручка за период: %s.",
-			render.Money(f.Actual, currency))
+			"Период уже завершён — это факт, не прогноз.\nВыручка за период: %s.%s",
+			render.Money(f.Actual, currency), goalLine)
 		e.Summary = map[string]float64{"projected": f.Projected, "actual": f.Actual}
 	case ForecastTooEarly:
 		e.Narrative = "Период только начался — ещё нет ни одного полного дня, прогнозировать пока не из чего."
@@ -150,15 +153,16 @@ func ForecastEnvelope(f Forecast, fromISO, toISO, tenantID, currency, tz string)
 				" ⚠️ Оговорка: в основе прогноза всего %d %s — неполная неделя не покрывает цикл будни/выходные, погрешность высокая.",
 				f.CompleteDays, dayWord(f.CompleteDays))
 		}
+		goalLine := goalVsProjected(f.Projected, goal, currency)
 		e.Narrative = fmt.Sprintf(
 			"Прогноз выручки к концу периода: %s (run-rate).\n"+
-				"Факт за %d %s: %s → среднесуточный темп %s → ещё %d %s.%s",
+				"Факт за %d %s: %s → среднесуточный темп %s → ещё %d %s.%s%s",
 			render.Money(f.Projected, currency),
 			f.CompleteDays, dayWord(f.CompleteDays),
 			render.Money(f.Actual, currency),
 			render.Money(f.DailyRate, currency),
 			f.RemainingDays, dayWord(f.RemainingDays),
-			disclaimer)
+			goalLine, disclaimer)
 		e.Summary = map[string]float64{
 			"projected":  f.Projected,
 			"actual":     f.Actual,
@@ -166,6 +170,34 @@ func ForecastEnvelope(f Forecast, fromISO, toISO, tenantID, currency, tz string)
 		}
 	}
 	return e
+}
+
+// goalVsProjected формирует строку сравнения прогноза с целью (для статуса ok).
+func goalVsProjected(projected, goal float64, currency string) string {
+	if goal <= 0 {
+		return ""
+	}
+	gap := goal - projected
+	if gap <= 0 {
+		return fmt.Sprintf("\n✅ До плана %s дойдёшь — прогноз превысит на %s.",
+			render.Money(goal, currency), render.Money(-gap, currency))
+	}
+	return fmt.Sprintf("\n❌ До плана %s не дойдёшь — разрыв %s.",
+		render.Money(goal, currency), render.Money(gap, currency))
+}
+
+// goalVsFact формирует строку сравнения факта с целью (для статуса fact).
+func goalVsFact(actual, goal float64, currency string) string {
+	if goal <= 0 {
+		return ""
+	}
+	gap := goal - actual
+	if gap <= 0 {
+		return fmt.Sprintf("\n✅ План %s выполнен — факт превысил на %s.",
+			render.Money(goal, currency), render.Money(-gap, currency))
+	}
+	return fmt.Sprintf("\n❌ План %s не выполнен — недобор %s.",
+		render.Money(goal, currency), render.Money(gap, currency))
 }
 
 // dayWord — склонение «день/дня/дней» для русского нарратива.

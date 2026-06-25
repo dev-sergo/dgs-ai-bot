@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"strings"
 	"testing"
 
 	"dgsbot/internal/dooglys"
@@ -122,6 +123,33 @@ func TestRunRateForecast_NoData(t *testing.T) {
 	}
 	if f.CompleteDays != 9 {
 		t.Errorf("CompleteDays = %d, want 9", f.CompleteDays)
+	}
+}
+
+func TestForecastEnvelope_GoalMet(t *testing.T) {
+	f := Forecast{Status: ForecastOK, Actual: 8000, DailyRate: 1000, Projected: 10000, CompleteDays: 8, RemainingDays: 2, TotalDays: 10}
+	env := ForecastEnvelope(f, "2026-06-01", "2026-06-10", "T", "RUB", "Europe/Moscow", 9000)
+	if !strings.Contains(env.Narrative, "✅") {
+		t.Errorf("прогноз превышает план — ожидался ✅: %s", env.Narrative)
+	}
+}
+
+func TestForecastEnvelope_GoalMissed(t *testing.T) {
+	f := Forecast{Status: ForecastOK, Actual: 8000, DailyRate: 1000, Projected: 10000, CompleteDays: 8, RemainingDays: 2, TotalDays: 10}
+	env := ForecastEnvelope(f, "2026-06-01", "2026-06-10", "T", "RUB", "Europe/Moscow", 15000)
+	if !strings.Contains(env.Narrative, "❌") {
+		t.Errorf("прогноз ниже плана — ожидался ❌: %s", env.Narrative)
+	}
+	if !strings.Contains(env.Narrative, "5 000") {
+		t.Errorf("разрыв 5000 не найден в нарративе: %s", env.Narrative)
+	}
+}
+
+func TestForecastEnvelope_NoGoal(t *testing.T) {
+	f := Forecast{Status: ForecastOK, Actual: 8000, DailyRate: 1000, Projected: 10000, CompleteDays: 8, RemainingDays: 2, TotalDays: 10}
+	env := ForecastEnvelope(f, "2026-06-01", "2026-06-10", "T", "RUB", "Europe/Moscow", 0)
+	if strings.Contains(env.Narrative, "план") {
+		t.Errorf("цель не названа — слово «план» не должно появляться: %s", env.Narrative)
 	}
 }
 
