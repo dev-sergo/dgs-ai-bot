@@ -453,6 +453,145 @@ func TestPremiseDirection(t *testing.T) {
 	}
 }
 
+// refineCorpusEntry — структура строки корпуса eval для corpus-стражей.
+type refineCorpusEntry struct {
+	Query  string `json:"query"`
+	Expect struct {
+		Intent string `json:"intent"`
+		Method string `json:"method"`
+		Report string `json:"report"`
+	} `json:"expect"`
+}
+
+// loadRefineCorpus загружает корпус eval и пропускает тест, если файл недоступен.
+func loadRefineCorpus(t *testing.T) []refineCorpusEntry {
+	t.Helper()
+	f, err := os.Open("../../test/eval/prompts.jsonl")
+	if err != nil {
+		t.Skipf("корпус недоступен: %v", err)
+		return nil
+	}
+	defer f.Close()
+	var out []refineCorpusEntry
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for sc.Scan() {
+		line := sc.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+		var e refineCorpusEntry
+		if err := json.Unmarshal(line, &e); err != nil {
+			t.Fatalf("битая строка %q: %v", string(line), err)
+		}
+		out = append(out, e)
+	}
+	if err := sc.Err(); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// Corpus-страж: RefineForecast не должен помечать forecast ни один кейс корпуса
+// с явным non-forecast методом. Расширение forecastRe не может тихо утянуть
+// отчётный/compare/contribution запрос в forecast.
+func TestRefineForecast_CorpusNoFalsePositive(t *testing.T) {
+	for _, e := range loadRefineCorpus(t) {
+		if e.Expect.Method == "forecast" || e.Expect.Method == "" {
+			continue // пропускаем forecast-кейсы и кейсы без явного ожидаемого метода
+		}
+		p := plan.AnalysisPlan{Intent: e.Expect.Intent}
+		RefineForecast(e.Query, &p)
+		if p.Method == "forecast" {
+			t.Errorf("%q (ожидался method=%q) ошибочно стал forecast", e.Query, e.Expect.Method)
+		}
+	}
+}
+
+// Corpus-страж: RefineChannelShare не должен переводить в channel_share кейсы
+// с явным non-channel_share методом. «Доля» в нефинансовом контексте не должна
+// ломать compare/contribution/top_n-запросы.
+func TestRefineChannelShare_CorpusNoFalsePositive(t *testing.T) {
+	for _, e := range loadRefineCorpus(t) {
+		if e.Expect.Method == "channel_share" || e.Expect.Method == "" {
+			continue
+		}
+		p := plan.AnalysisPlan{Intent: e.Expect.Intent, Report: e.Expect.Report, Method: e.Expect.Method}
+		RefineChannelShare(e.Query, &p)
+		if p.Method == "channel_share" {
+			t.Errorf("%q (ожидался method=%q) ошибочно стал channel_share", e.Query, e.Expect.Method)
+		}
+	}
+}
+
+// Corpus-страж: RefineEmployeeRanking не должен отклонять (off_topic) кейсы корпуса
+// с ожидаемым intent=report/advice/help/smalltalk. Слова «сотрудник/продавец» в
+// легальном контексте (фильтр по имени, отчёт без рейтинга) не должны давать off_topic.
+func TestRefineEmployeeRanking_CorpusNoFalsePositive(t *testing.T) {
+	for _, e := range loadRefineCorpus(t) {
+		if e.Expect.Intent == "off_topic" || e.Expect.Intent == "" {
+			continue
+		}
+		p := plan.AnalysisPlan{Intent: e.Expect.Intent}
+		RefineEmployeeRanking(e.Query, &p)
+		if p.Intent == "off_topic" {
+			t.Errorf("%q (ожидался intent=%q) ошибочно стал off_topic", e.Query, e.Expect.Intent)
+		}
+	}
+}
+
+// Corpus-страж: RefineProductContribution не должен переводить в contribution кейсы
+// корпуса с явным non-contribution методом. «Товар» + «вырос/упал» без «виноват/вклад»
+// не должны ломать compare/top_n/plain-запросы.
+func TestRefineProductContribution_CorpusNoFalsePositive(t *testing.T) {
+	for _, e := range loadRefineCorpus(t) {
+		if e.Expect.Method == "contribution" || e.Expect.Method == "" {
+			continue
+		}
+		p := plan.AnalysisPlan{Intent: e.Expect.Intent, Method: e.Expect.Method}
+		RefineProductContribution(e.Query, &p)
+		if p.Method == "contribution" {
+			t.Errorf("%q (ожидался method=%q) ошибочно стал contribution", e.Query, e.Expect.Method)
+		}
+	}
+}
+
+// Расширенный pos-корпус RefineProductContribution — формулировки «виноват/вклад/из-за»
+// по товарам. Дополняет единственный ранее написанный тест.
+func TestRefineProductContribution_Corpus(t *testing.T) {
+	triggers := []string{
+		"какой товар виноват в падении выручки за месяц",
+		"из-за каких товаров упала выручка",
+		"вклад товаров в рост продаж",
+		"какой товар повлиял на снижение оборота",
+		"из-за какого товара просела выручка",
+	}
+	for _, q := range triggers {
+		p := plan.AnalysisPlan{Intent: "report", Report: "payment", Method: "compare",
+			Metrics: []string{"sum_all"}}
+		RefineProductContribution(q, &p)
+		if p.Method != "contribution" || p.Report != "products" {
+			t.Errorf("%q: method=%q report=%q, want contribution/products", q, p.Method, p.Report)
+		}
+	}
+	// Легальные рейтинги/отчёты по товарам contribution НЕ получают.
+	notTriggers := []string{
+		"топ товаров за месяц",
+		"какой товар самый популярный за неделю",
+		"какой товар приносит больше всего выручки",
+		"сравни продажи за два месяца",
+		"какие товары продавались за прошлый месяц",
+		"лучший товар по прибыли",
+	}
+	for _, q := range notTriggers {
+		p := plan.AnalysisPlan{Intent: "report", Report: "products", Method: "top_n"}
+		RefineProductContribution(q, &p)
+		if p.Method == "contribution" {
+			t.Errorf("%q: ошибочно стал contribution", q)
+		}
+	}
+}
+
 func equalStrings(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
