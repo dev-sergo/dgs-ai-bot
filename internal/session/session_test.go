@@ -1,6 +1,10 @@
 package session
 
-import "testing"
+import (
+	"testing"
+
+	"dgsbot/internal/plan"
+)
 
 func TestAppendAndHistory(t *testing.T) {
 	s := NewStore()
@@ -41,5 +45,41 @@ func TestHistoryIsCopy(t *testing.T) {
 	h[0].Content = "mutated"
 	if s.History("a")[0].Content != "q" {
 		t.Error("History должна возвращать копию, а не ссылку на внутренний срез")
+	}
+}
+
+func TestLastPlanRoundTrip(t *testing.T) {
+	s := NewStore()
+	_, ok := s.LastPlan("x")
+	if ok {
+		t.Fatal("LastPlan должен возвращать ok=false для новой сессии")
+	}
+	p := plan.AnalysisPlan{Report: "payment", Method: "plain"}
+	s.SetLastPlan("x", p)
+	got, ok := s.LastPlan("x")
+	if !ok {
+		t.Fatal("LastPlan должен вернуть ok=true после SetLastPlan")
+	}
+	if got.Report != "payment" {
+		t.Errorf("Report=%q, want payment", got.Report)
+	}
+}
+
+func TestLastPlanSessionIsolation(t *testing.T) {
+	s := NewStore()
+	s.SetLastPlan("a", plan.AnalysisPlan{Report: "payment"})
+	_, ok := s.LastPlan("b")
+	if ok {
+		t.Error("last plan сессии a не должен быть виден в сессии b")
+	}
+}
+
+func TestLastPlanOverwritten(t *testing.T) {
+	s := NewStore()
+	s.SetLastPlan("a", plan.AnalysisPlan{Report: "payment"})
+	s.SetLastPlan("a", plan.AnalysisPlan{Report: "orders"})
+	got, _ := s.LastPlan("a")
+	if got.Report != "orders" {
+		t.Errorf("ожидался перезаписанный план orders, got %q", got.Report)
 	}
 }

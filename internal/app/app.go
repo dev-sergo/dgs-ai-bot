@@ -142,6 +142,33 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 		}
 		p = pend
 	}
+
+	// Follow-up carry-over: для report-реплик без периода переносим период и фильтры
+	// из последнего успешно исполненного плана. Триггер — отсутствие собственного периода
+	// (сигнал уточняющей реплики). Фильтры мержатся по полю: поля из last.Filters, которых
+	// нет в текущем плане, дополняют его (sale_point=Выкса переживает «а по карте?»).
+	if p.IsReport() {
+		if last, ok := a.lastPlan(sessionID); ok {
+			noOwnPeriod := !hasPeriod(p.Period)
+			if noOwnPeriod {
+				p.Period = last.Period
+			}
+			if p.Report == "" {
+				p.Report = last.Report
+			}
+			if noOwnPeriod && len(last.Filters) > 0 {
+				byField := make(map[string]bool, len(p.Filters))
+				for _, f := range p.Filters {
+					byField[f.Field] = true
+				}
+				for _, f := range last.Filters {
+					if !byField[f.Field] {
+						p.Filters = append(p.Filters, f)
+					}
+				}
+			}
+		}
+	}
 	ans.Plan = p
 
 	// Консультационный запрос («на чём теряю», «что улучшить») — отдельный режим:
@@ -318,6 +345,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	if isEmptyResult(p.Method, env) {
 		ans.Text = emptyResultMessage(env)
 		a.remember(sessionID, text, ans.Text)
+		a.setLastPlan(sessionID, p)
 		return ans, nil
 	}
 
@@ -335,6 +363,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	ans.Envelope = &env
 	ans.Text = render.Text(env)
 	a.remember(sessionID, text, ans.Text)
+	a.setLastPlan(sessionID, p)
 	return ans, nil
 }
 
@@ -782,6 +811,19 @@ func (a *App) remember(sessionID, userText, assistantText string) {
 	if a.sessions != nil {
 		a.sessions.Append(sessionID, userText, assistantText)
 	}
+}
+
+func (a *App) setLastPlan(sessionID string, p plan.AnalysisPlan) {
+	if a.sessions != nil {
+		a.sessions.SetLastPlan(sessionID, p)
+	}
+}
+
+func (a *App) lastPlan(sessionID string) (plan.AnalysisPlan, bool) {
+	if a.sessions == nil {
+		return plan.AnalysisPlan{}, false
+	}
+	return a.sessions.LastPlan(sessionID)
 }
 
 // setPending запоминает план, ждущий подтверждения «да» (plan-confirm).

@@ -26,6 +26,7 @@ type Store struct {
 	data     map[string][]Message
 	pending  map[string]plan.AnalysisPlan // план, ждущий подтверждения «да» (plan-confirm)
 	awaiting map[string]plan.AnalysisPlan // advice-план, ждущий ответа про период (clarify-resume)
+	last     map[string]plan.AnalysisPlan // последний успешно исполненный план (carry-over для follow-up)
 }
 
 // NewStore создаёт пустое хранилище.
@@ -34,6 +35,7 @@ func NewStore() *Store {
 		data:     map[string][]Message{},
 		pending:  map[string]plan.AnalysisPlan{},
 		awaiting: map[string]plan.AnalysisPlan{},
+		last:     map[string]plan.AnalysisPlan{},
 	}
 }
 
@@ -96,5 +98,22 @@ func (s *Store) TakeAwaitingPeriod(sessionID string) (plan.AnalysisPlan, bool) {
 	if ok {
 		delete(s.awaiting, sessionID)
 	}
+	return p, ok
+}
+
+// SetLastPlan запоминает последний успешно исполненный план отчёта. Перезаписывается
+// при каждом успешном ответе; используется для детерминированного переноса фильтров/
+// периода в follow-up («а по карте?», «а за прошлую неделю?»).
+func (s *Store) SetLastPlan(sessionID string, p plan.AnalysisPlan) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.last[sessionID] = p
+}
+
+// LastPlan возвращает последний успешно исполненный план. ok=false, если его нет.
+func (s *Store) LastPlan(sessionID string) (plan.AnalysisPlan, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.last[sessionID]
 	return p, ok
 }
