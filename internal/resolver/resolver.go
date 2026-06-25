@@ -198,6 +198,9 @@ func (s *Store) Resolve(kind, name string) (Match, error) {
 	entries := s.byKind[kind]
 	s.mu.RUnlock()
 	q := strings.ToLower(strings.TrimSpace(name))
+	if q == "" {
+		return Match{}, &ResolveError{Kind: kind, Query: name}
+	}
 
 	// 1) точное совпадение по любому имени.
 	for _, e := range entries {

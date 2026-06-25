@@ -830,7 +830,13 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 		}
 		qf := dooglys.QueryFilter{Field: pf.Field, Param: cf.Param, Names: pf.Values}
 		if cf.Kind == "ref" {
+			seen := make(map[string]bool)
 			for _, name := range pf.Values {
+				name = strings.TrimSpace(name)
+				if name == "" || seen[name] {
+					continue
+				}
+				seen[name] = true
 				m, err := a.resolver.Resolve(pf.Field, name)
 				if err != nil {
 					if re, ok := err.(*resolver.ResolveError); ok && re.Ambiguous {

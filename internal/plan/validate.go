@@ -28,8 +28,12 @@ func Validate(p *AnalysisPlan, c *catalog.Catalog) ValidationResult {
 		return res // дальше проверять нечего
 	}
 
-	// Метрики — только non-PII поля отчёта.
+	// Метрики — только non-PII поля отчёта; пустые строки (LLM-мусор) отклоняем.
 	for _, m := range p.Metrics {
+		if strings.TrimSpace(m) == "" {
+			res.Errors = append(res.Errors, "metrics содержит пустую строку")
+			continue
+		}
 		if !rep.HasNonPIIField(m) {
 			res.Errors = append(res.Errors, fmt.Sprintf("metric %q недоступна (нет в отчёте или PII)", m))
 		}
@@ -48,7 +52,19 @@ func Validate(p *AnalysisPlan, c *catalog.Catalog) ValidationResult {
 			res.Errors = append(res.Errors, fmt.Sprintf("filter %q вне white-list отчёта", f.Field))
 			continue
 		}
-		if cf.Kind == "enum" {
+		switch cf.Kind {
+		case "ref":
+			hasValue := false
+			for _, v := range f.Values {
+				if strings.TrimSpace(v) != "" {
+					hasValue = true
+					break
+				}
+			}
+			if !hasValue {
+				res.Errors = append(res.Errors, fmt.Sprintf("filter %q: values пустые", f.Field))
+			}
+		case "enum":
 			for _, v := range f.Values {
 				if !contains(cf.Enum, v) {
 					res.Errors = append(res.Errors, fmt.Sprintf("filter %q: значение %q недопустимо", f.Field, v))

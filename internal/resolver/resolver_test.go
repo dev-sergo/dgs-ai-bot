@@ -43,6 +43,17 @@ func TestResolveNotFound(t *testing.T) {
 	}
 }
 
+// Пустая строка — ранний NotFound (страховка от Contains(n,"")).
+func TestResolveEmptyQuery(t *testing.T) {
+	for _, q := range []string{"", "  "} {
+		_, err := store(t).Resolve("sale_point", q)
+		re, ok := err.(*ResolveError)
+		if !ok || re.Ambiguous {
+			t.Fatalf("Resolve(%q): ожидалась ошибка not-found, получено: %v", q, err)
+		}
+	}
+}
+
 func TestResolveAmbiguous(t *testing.T) {
 	// «Авто» встречается в нескольких точках (АвтоPizza, Автосуши №1).
 	_, err := store(t).Resolve("sale_point", "Авто")

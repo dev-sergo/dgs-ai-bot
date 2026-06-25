@@ -70,3 +70,25 @@ func TestValidateUnknownFilter(t *testing.T) {
 		t.Fatalf("неизвестный фильтр должен отклоняться: %+v", res)
 	}
 }
+
+// ref-фильтр с пустыми values — LLM иногда выдаёт values:[""].
+// Contains(n,"") матчит всё → такой фильтр пропускал бы весь справочник.
+func TestValidateRefFilterEmptyValues(t *testing.T) {
+	p := base()
+	p.Report = "payment"
+	p.Filters = []Filter{{Field: "locality", Op: "in", Values: []string{"", "  "}}}
+	res := Validate(&p, catalog.Default())
+	if res.OK {
+		t.Fatalf("ref-фильтр с пустыми values должен отклоняться: %+v", res)
+	}
+}
+
+// Пустая строка в metrics — LLM-мусор, не должна проходить валидацию.
+func TestValidateEmptyMetricString(t *testing.T) {
+	p := base()
+	p.Metrics = []string{""}
+	res := Validate(&p, catalog.Default())
+	if res.OK {
+		t.Fatalf("пустая строка в metrics должна отклоняться: %+v", res)
+	}
+}
