@@ -30,10 +30,18 @@ type Tenant struct {
 	loc *time.Location
 }
 
-// Location возвращает таймзону тенанта (Europe/Moscow по умолчанию).
+// Location возвращает таймзону тенанта. Если *time.Location не закэширован
+// (тенант собран вручную, минуя Load — напр. дефолт «не найден» в app), лениво
+// парсим строковое поле Timezone, чтобы Tenant{Timezone:"Europe/Moscow"} реально
+// считал период по Москве, а не молча по UTC. Невалидная/пустая зона → UTC.
 func (t Tenant) Location() *time.Location {
 	if t.loc != nil {
 		return t.loc
+	}
+	if t.Timezone != "" {
+		if loc, err := time.LoadLocation(t.Timezone); err == nil {
+			return loc
+		}
 	}
 	return time.UTC
 }

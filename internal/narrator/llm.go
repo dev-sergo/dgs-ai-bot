@@ -3,6 +3,7 @@ package narrator
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"dgsbot/internal/envelope"
 	"dgsbot/internal/llm"
@@ -13,6 +14,10 @@ import (
 type LLM struct {
 	cli   *llm.Client
 	model string
+	// Logger — наблюдаемость fallback'а на детерминированный Compose. nil → молча.
+	// Без него срыв модели (ошибка/пустой ответ/нерусский вывод qwen) неотличим от
+	// штатного нарратива: в логе исхода видно «answer», а не тихую деградацию.
+	Logger *slog.Logger
 }
 
 // NewLLM создаёт LLM-нарратор.
@@ -41,9 +46,30 @@ func (n *LLM) Narrate(ctx context.Context, e envelope.Envelope) (string, error) 
 	if err != nil || out == "" || llm.HasNonRussian(out) {
 		// Fallback: детерминированная формулировка из тех же чисел (в т.ч. если модель сорвалась
 		// в другой язык — qwen иногда вставляет китайский в нарратив, см. roadmap 5.5).
+		n.logFallback(err, out)
 		return Compose(e), nil
 	}
 	return out, nil
+}
+
+// logFallback фиксирует причину деградации на Compose, чтобы тихий срыв модели был
+// виден в логах (частоту легко агрегировать по reason). nil-логгер — no-op.
+func (n *LLM) logFallback(err error, out string) {
+	if n.Logger == nil {
+		return
+	}
+	reason := "non_russian"
+	switch {
+	case err != nil:
+		reason = "error"
+	case out == "":
+		reason = "empty"
+	}
+	attrs := []any{"reason", reason}
+	if err != nil {
+		attrs = append(attrs, "err", err.Error())
+	}
+	n.Logger.Warn("narrator.fallback", attrs...)
 }
 
 const systemPrompt = `Ты — аналитик кафе. На входе JSON с УЖЕ посчитанными числами (summary, rows).

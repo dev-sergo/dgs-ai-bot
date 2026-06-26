@@ -9,7 +9,6 @@ import (
 	"errors"
 	"log/slog"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -230,7 +229,19 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
 	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
 
-	rep, _ := a.cat.Report(p.Report)
+	// Отчёт обязан быть в каталоге: и прямой путь, и plan-confirm валидируют план до сюда.
+	// Если каталог разъехался с планом — честный отказ и сигнал в лог, а НЕ молчаливый
+	// пустой отчёт (rep=zero → все фильтры отброшены, Fetch по пустому отчёту).
+	rep, ok := a.cat.Report(p.Report)
+	if !ok {
+		if a.Logger != nil {
+			a.Logger.Warn("executeReport.unknown_report", "report", p.Report)
+		}
+		ans.Validation = plan.ValidationResult{OK: false}
+		ans.Text = a.outOfScopeMessage()
+		a.remember(sessionID, text, ans.Text)
+		return ans, nil
+	}
 
 	// Применимость метода: contribution возможен только для отчётов с раскладкой
 	// на компоненты (напр. payment). Иначе понижаем до compare — суммарное изменение
@@ -249,10 +260,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	}
 
 	// Контекст тенанта (таймзона/валюта). Неизвестный → дефолт Москва/RUB.
-	t, ok := a.tenants.Lookup(tenantID)
-	if !ok {
-		t = tenantctx.Tenant{Timezone: "Europe/Moscow", Currency: "RUB", CurrencyPrecision: 2}
-	}
+	t := a.tenant(tenantID)
 
 	// Резолв периода в абсолютные даты по таймзоне тенанта.
 	// Неизвестный токен — clarify, а не 500: модель иногда генерирует токены вне
@@ -377,10 +385,7 @@ const advicePeriodPrompt = "За какой период подготовить 
 func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
 	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
 
-	t, ok := a.tenants.Lookup(tenantID)
-	if !ok {
-		t = tenantctx.Tenant{Timezone: "Europe/Moscow", Currency: "RUB", CurrencyPrecision: 2}
-	}
+	t := a.tenant(tenantID)
 
 	// Период обязателен: пустой/неизвестный токен → уточняем, а не угадываем.
 	from, to, err := a.resolvePeriod(p.Period, t, text)
@@ -674,114 +679,6 @@ func (a *App) outOfScopeMessage() string {
 		"и их стандартные разбивки. " + a.helpHint()
 }
 
-// confirmPrompt — эхо интерпретации плана для подтверждения (plan-confirm).
-// Показываем, КАК мы поняли запрос, и просим подтвердить, прежде чем исполнять.
-func confirmPrompt(p plan.AnalysisPlan, c *catalog.Catalog) string {
-	return "Правильно понимаю: " + describePlan(p, c) +
-		"? Ответьте «да» — выполню, или уточните запрос."
-}
-
-// describePlan собирает человекочитаемую интерпретацию плана (отчёт + период +
-// разрезы) для эха подтверждения. Числа не считает — только переводит план в слова.
-func describePlan(p plan.AnalysisPlan, c *catalog.Catalog) string {
-	name := p.Report
-	if r, ok := c.Report(p.Report); ok {
-		name = r.Name
-	}
-	var b strings.Builder
-	switch p.Method {
-	case "top_n":
-		if p.Order == "asc" {
-			b.WriteString("антирейтинг по отчёту «" + name + "»")
-		} else {
-			b.WriteString("топ по отчёту «" + name + "»")
-		}
-	case "compare":
-		b.WriteString("сравнение периодов по отчёту «" + name + "»")
-	case "contribution":
-		b.WriteString("разбор вклада по отчёту «" + name + "»")
-	default:
-		b.WriteString("отчёт «" + name + "»")
-	}
-	if ph := periodPhrase(p.Period); ph != "" {
-		b.WriteString(" за " + ph)
-	}
-	for _, f := range p.Filters {
-		if len(f.Values) == 0 {
-			continue
-		}
-		label := filterLabels[f.Field]
-		if label == "" {
-			label = f.Field
-		}
-		b.WriteString(", " + label + ": " + strings.Join(f.Values, ", "))
-	}
-	return b.String()
-}
-
-// periodTokenPhrases — человеческие названия токенов периода для эха подтверждения.
-var periodTokenPhrases = map[string]string{
-	"today":         "сегодня",
-	"yesterday":     "вчера",
-	"last_7_days":   "последние 7 дней",
-	"last_14_days":  "последние 14 дней",
-	"last_30_days":  "последние 30 дней",
-	"last_90_days":  "последние 90 дней",
-	"last_3_months": "последние 3 месяца",
-	"this_week":     "эту неделю",
-	"last_week":     "прошлую неделю",
-	"this_month":    "этот месяц",
-	"last_month":    "прошлый месяц",
-}
-
-// periodPhrase переводит период плана в человеческую фразу для эха.
-func periodPhrase(p plan.Period) string {
-	if p.Kind == "explicit" {
-		if p.From != "" && p.To != "" {
-			return "период с " + p.From + " по " + p.To
-		}
-		return ""
-	}
-	if ph, ok := periodTokenPhrases[p.Token]; ok {
-		return ph
-	}
-	return p.Token // неизвестный токен — показываем как есть, чем молчим
-}
-
-// isAffirmation распознаёт короткое подтверждение («да», «верно», «ага», «ок»…)
-// в ответ на эхо плана. Намеренно консервативна: подтверждением считается только
-// реплика, целиком состоящая из утвердительных слов (≤3). «да, покажи товары» НЕ
-// подтверждает устаревший план — такая реплика перепланируется заново.
-func isAffirmation(text string) bool {
-	t := strings.ToLower(text)
-	t = strings.Map(func(r rune) rune {
-		switch r {
-		case ',', '.', '!', ';', '…':
-			return ' '
-		}
-		return r
-	}, t)
-	fields := strings.Fields(t)
-	if len(fields) == 0 || len(fields) > 3 {
-		return false
-	}
-	for _, f := range fields {
-		if !affirmationWords[f] {
-			return false
-		}
-	}
-	return true
-}
-
-// affirmationWords — закрытый набор утвердительных слов (config-as-data, не фаззи).
-var affirmationWords = map[string]bool{
-	"да": true, "ага": true, "угу": true, "верно": true, "точно": true,
-	"именно": true, "правильно": true, "подтверждаю": true, "согласен": true,
-	"давай": true, "поехали": true, "погнали": true, "ок": true, "окей": true,
-	"всё": true, "все": true, "так": true,
-	"yes": true, "yep": true, "yeah": true, "ok": true, "okay": true, "sure": true,
-}
-
 // helpText — список возможностей, собранный из каталога (не выдумывается моделью).
 func (a *App) helpText() string {
 	var names []string
@@ -971,40 +868,21 @@ func (a *App) resolvePeriod(p plan.Period, t tenantctx.Tenant, rawText string) (
 	return r.From, r.To, nil
 }
 
+// tenant возвращает контекст тенанта (таймзона/валюта). Неизвестный идентификатор —
+// дефолт Москва/RUB: один источник дефолта для executeReport и advise, чтобы они
+// не разъехались. Timezone строкой — Location() лениво его парсит (см. tenantctx).
+func (a *App) tenant(id string) tenantctx.Tenant {
+	if t, ok := a.tenants.Lookup(id); ok {
+		return t
+	}
+	return tenantctx.Tenant{Timezone: "Europe/Moscow", Currency: "RUB", CurrencyPrecision: 2}
+}
+
 func currencyOr(c string) string {
 	if c == "" {
 		return "RUB"
 	}
 	return c
-}
-
-// goalRe извлекает явно названную сумму-план из прогнозного запроса:
-// «план 2 миллиона», «цель 500 тысяч», «выйти на 300к», «дойти до 1.5 млн».
-// Группы: 1=число (пробелы внутри допустимы), 2=множитель (млн/тыс/к).
-var goalRe = regexp.MustCompile(
-	`(?:план[а-яё]*|цель|выйти\s+на|дойт[а-яё]*\s+до|дойд[а-яё]*\s+до)\s+(?:в\s+)?` +
-		`(\d[\d\s]*(?:[.,]\d+)?)\s*` +
-		`(млн|миллион[а-яё]*|тысяч[а-яё]*|тыс\.?|к)?`)
-
-// extractGoal извлекает сумму-цель из текста запроса; 0 если цель не названа.
-func extractGoal(query string) float64 {
-	m := goalRe.FindStringSubmatch(strings.ToLower(query))
-	if m == nil {
-		return 0
-	}
-	numStr := strings.NewReplacer(" ", "", ",", ".").Replace(strings.TrimSpace(m[1]))
-	val, err := strconv.ParseFloat(numStr, 64)
-	if err != nil || val <= 0 {
-		return 0
-	}
-	mult := strings.TrimSpace(m[2])
-	switch {
-	case strings.HasPrefix(mult, "млн"), strings.HasPrefix(mult, "миллион"):
-		val *= 1_000_000
-	case strings.HasPrefix(mult, "тыс"), mult == "к":
-		val *= 1_000
-	}
-	return val
 }
 
 // RecordFeedback записывает оценку пользователя в FeedbackLog.

@@ -204,6 +204,8 @@ func reportTitle(t string) string {
 		return "Товары"
 	case "paycheck":
 		return "Чеки"
+	case "personnel":
+		return "Персонал"
 	case "orders":
 		return "Заказы"
 	case "forecast":
