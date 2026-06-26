@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"path/filepath"
 	"time"
 
@@ -45,7 +46,9 @@ func App(cfg config.Config) (*app.App, func(), error) {
 	default:
 		cli := llm.New(cfg.LLM)
 		pl = planner.NewLLM(cli, cfg.LLM.Model, cfg.LLM.ForceJSON)
-		nar = narrator.NewLLM(cli, cfg.LLM.Model)
+		llmNar := narrator.NewLLM(cli, cfg.LLM.Model)
+		llmNar.Logger = slog.Default() // наблюдаемость fallback'а на Compose (срыв qwen)
+		nar = llmNar
 		adv = advisor.NewLLM(cli, cfg.LLM.Model)
 	}
 

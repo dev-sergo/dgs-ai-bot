@@ -64,7 +64,7 @@ func TestEnvBool(t *testing.T) {
 		{"1", false, true}, {"true", false, true}, {"TRUE", false, true}, {"yes", false, true},
 		{"0", true, false}, {"false", true, false}, {"no", true, false},
 		{"", true, true}, {"", false, false}, // пусто → дефолт
-		{"garbage", true, true},               // мусор → дефолт
+		{"garbage", true, true}, // мусор → дефолт
 	}
 	for _, tc := range cases {
 		t.Setenv("X_BOOL", tc.val)

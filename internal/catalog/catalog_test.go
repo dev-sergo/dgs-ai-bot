@@ -92,7 +92,7 @@ func TestSummable(t *testing.T) {
 	}{
 		{Field{Unit: "RUB"}, true},
 		{Field{Unit: "count"}, true},
-		{Field{Unit: "RUB", Agg: "avg"}, false},   // средний чек суммировать нельзя
+		{Field{Unit: "RUB", Agg: "avg"}, false}, // средний чек суммировать нельзя
 		{Field{Unit: "string"}, false},
 		{Field{Unit: "date"}, false},
 		{Field{Unit: "RUB", Agg: "none"}, false},
