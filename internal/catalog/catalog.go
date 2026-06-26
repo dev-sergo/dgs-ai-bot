@@ -114,6 +114,20 @@ func Default() *Catalog {
 			),
 		},
 		{
+			// name — ФИО сотрудника; показывать владельцу можно (его персонал, не PII клиента).
+			Slug: "personnel", Name: "Персонал", DefaultDim: "name",
+			Fields: []Field{
+				{Key: "name",            Label: "Сотрудник",        Unit: "string"},
+				{Key: "revenue",         Label: "Выручка",           Unit: "RUB"},
+				{Key: "profit",          Label: "Ожидаемая прибыль", Unit: "RUB"},
+				{Key: "total_count",     Label: "Кол-во чеков",      Unit: "count"},
+				{Key: "average_revenue", Label: "Средний чек",       Unit: "RUB", Agg: "avg"},
+			},
+			Filters: append(append([]Filter{}, common...),
+				Filter{Field: "user", Param: "user_id", Kind: "ref", IsMulti: true},
+			),
+		},
+		{
 			Slug: "orders", Name: "Заказы", DefaultDim: "number",
 			Fields: []Field{
 				{Key: "number", Label: "№", Unit: "string"},
