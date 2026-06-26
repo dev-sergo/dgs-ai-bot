@@ -356,8 +356,8 @@ func TestRefineProductContribution_SkipsPlainRanking(t *testing.T) {
 	}
 }
 
-// Рейтинг по сотрудникам → честный отказ (off_topic с готовым текстом).
-func TestRefineEmployeeRanking_Refuses(t *testing.T) {
+// Рейтинг по сотрудникам → перенаправление в personnel (каталог теперь поддерживает).
+func TestRefineEmployeeRanking_RoutesToPersonnel(t *testing.T) {
 	queries := []string{
 		"топ продавцов за прошлый месяц",
 		"лучшие официанты за неделю",
@@ -370,11 +370,11 @@ func TestRefineEmployeeRanking_Refuses(t *testing.T) {
 	for _, q := range queries {
 		p := plan.AnalysisPlan{Intent: "report", Report: "products", Method: "top_n"}
 		RefineEmployeeRanking(q, &p)
-		if p.Intent != "off_topic" {
-			t.Errorf("%q: intent=%q, ожидался off_topic", q, p.Intent)
+		if p.Report != "personnel" {
+			t.Errorf("%q: report=%q, ожидался personnel", q, p.Report)
 		}
-		if p.Reply != EmployeeRankingReply {
-			t.Errorf("%q: Reply не выставлен", q)
+		if p.Intent == "off_topic" {
+			t.Errorf("%q: intent не должен быть off_topic", q)
 		}
 	}
 }
@@ -594,7 +594,7 @@ func TestRefineEmployeeRanking_CorpusNoFalsePositive(t *testing.T) {
 		if e.Expect.Intent == "off_topic" || e.Expect.Intent == "" {
 			continue
 		}
-		p := plan.AnalysisPlan{Intent: e.Expect.Intent}
+		p := plan.AnalysisPlan{Intent: e.Expect.Intent, Report: e.Expect.Report}
 		RefineEmployeeRanking(e.Query, &p)
 		if p.Intent == "off_topic" {
 			t.Errorf("%q (ожидался intent=%q) ошибочно стал off_topic", e.Query, e.Expect.Intent)

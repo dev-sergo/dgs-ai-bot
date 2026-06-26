@@ -310,19 +310,16 @@ func RefineDefaultMethod(p *plan.AnalysisPlan) {
 	p.Method = "plain"
 }
 
-// EmployeeRankingReply — честный отказ на рейтинг по сотрудникам. Объясняем границу
-// (нет разреза по людям) и подсказываем, что доступно, включая фильтр по имени.
-const EmployeeRankingReply = "Рейтинг по сотрудникам (продавцам, официантам, кассирам) " +
-	"пока недоступен — в каталоге нет разреза по сотрудникам. Я могу показать выручку, " +
-	"товары, чеки и заказы за период, а также чеки конкретного сотрудника по имени."
-
-// RefineEmployeeRanking детерминированно переводит запрос рейтинга по сотрудникам
+// RefineEmployeeRanking перенаправляет запрос рейтинга по сотрудникам
 // («топ продавцов», «лучшие официанты», «какой оператор обработал больше всего чеков»)
-// в честный отказ: помечает план off_topic с готовым текстом (app отдаёт его как ответ).
-// Без этого модель выдаёт топ товаров — уверенно, но мимо запроса.
+// в report=personnel, если модель ошибочно выбрала products/payment.
+// Без этого модель подставляет топ товаров — уверенно, но мимо запроса.
 func RefineEmployeeRanking(query string, p *plan.AnalysisPlan) {
 	if p.Intent != "" && p.Intent != "report" {
 		return
+	}
+	if p.Report == "personnel" {
+		return // уже смаршрутизирован верно
 	}
 	q := strings.ToLower(query)
 	if !employeeRankWordRe.MatchString(q) || !employeePersonRe.MatchString(q) {
@@ -331,9 +328,9 @@ func RefineEmployeeRanking(query string, p *plan.AnalysisPlan) {
 	if employeeNameRe.MatchString(query) {
 		return // «чеки сотрудника Иванова» — фильтр по имени, не рейтинг
 	}
-	p.Intent = "off_topic"
-	p.Reply = EmployeeRankingReply
-	p.Confidence = 1
+	p.Report = "personnel"
+	p.Metrics = nil // могли быть метрики products — сбросить
+	p.GroupBy = nil // и group_by тоже
 }
 
 // RefineTopNOrder выставляет направление рейтинга (asc — худшие, desc — лучшие)
