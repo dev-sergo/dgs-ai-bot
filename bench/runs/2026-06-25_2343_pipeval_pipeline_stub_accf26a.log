@@ -1,0 +1,47 @@
+docker run --rm -v /Users/admin/work/dgs-ai-bot:/app -w /app -v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build -e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 golang:1.23 sh -c "PLANNER_MODE=stub go run ./cmd/pipeval"
+pipeval: 18 кейсов, planner=stub, данные=фикстуры(docs/contracts/fixtures)
+
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-0 intent=report outcome=answer latency_ms=0 report=payment method=plain period=yesterday
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-1 intent=report outcome=answer latency_ms=0 report=payment method=plain period=last_7_days
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-2 intent=report outcome=answer latency_ms=0 report=payment method=plain period=today
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-3 intent=report outcome=answer latency_ms=0 report=paycheck method=plain period=last_7_days
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-4 intent=report outcome=answer latency_ms=0 report=orders method=plain period=last_7_days
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-5 intent=report outcome=answer latency_ms=0 report=products method=plain period=this_month
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-6 intent=report outcome=answer latency_ms=0 report=products method=top_n period=this_month
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-7 intent=report outcome=answer latency_ms=0 report=products method=top_n period=this_month
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-8 intent=report outcome=answer latency_ms=0 report=payment method=compare period=this_month
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-9 intent=report outcome=answer latency_ms=0 report=payment method=contribution period=last_7_days
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-10 intent=report outcome=answer latency_ms=0 report=payment method=contribution period=this_month
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-11 intent=report outcome=clarify latency_ms=0 report=payment method=plain period=""
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-12 intent=help outcome=help latency_ms=0
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-13 intent=smalltalk outcome=smalltalk latency_ms=0
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-14 intent=off_topic outcome=off_topic latency_ms=0
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-15 intent=report outcome=clarify latency_ms=0 report=payment method=plain period=""
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-15 intent=report outcome=answer latency_ms=0 report=payment method=plain period=last_7_days
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-16 intent=report outcome=clarify latency_ms=0 report=payment method=plain period=""
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-16 intent=help outcome=help latency_ms=0
+2026/06/25 16:43:30 INFO planner.refine_changed query="какой товар виноват в падении выручки за месяц" method_before=plain method_after=contribution metrics_before=amount,quantity metrics_after=amount
+2026/06/25 16:43:30 INFO ask tenant=mock_single session=pipeval-17 intent=report outcome=answer latency_ms=0 report=products method=contribution period=this_month
+[PASS]     0ms  выручка за вчера
+[PASS]     0ms  покажи выручку за последнюю неделю
+[PASS]     0ms  выручка за сегодня
+[PASS]     0ms  покажи чеки за неделю
+[PASS]     0ms  покажи заказы за неделю
+[PASS]     0ms  какие товары продавались за месяц
+[PASS]     0ms  топ товаров за месяц
+[PASS]     0ms  какой товар самый популярный за месяц
+[PASS]     0ms  сравни выручку за этот месяц
+[PASS]     0ms  почему упала выручка за неделю
+[PASS]     0ms  почему выросла выручка за этот месяц
+[PASS]     0ms  покажи выручку
+[PASS]     0ms  что ты умеешь
+[PASS]     0ms  привет
+[PASS]     0ms  расскажи анекдот
+[PASS]     0ms  покажи выручку за последнюю неделю
+[PASS]     0ms  что ты умеешь
+[PASS]     0ms  какой товар виноват в падении выручки за месяц
+
+— итог —
+прошло: 18/18
+ошибок: 0
+латентность: p50=0ms p95=0ms max=0ms

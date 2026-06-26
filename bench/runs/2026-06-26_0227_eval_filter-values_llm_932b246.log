@@ -1,0 +1,54 @@
+docker run --rm -v /Users/admin/work/dgs-ai-bot:/app -w /app -v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build -e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 golang:1.23 sh -c "GOOS=darwin GOARCH=arm64 go build -o bin/eval-host ./cmd/eval"
+PLANNER_MODE=llm \
+	LLM_BASE_URL=${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	EVAL_PROMPTS=${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
+	./bin/eval-host
+eval: 20 кейсов, модель=qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07, эндпоинт=http://172.20.10.2:8080
+
+[PASS] 12556ms  выручка по точке Выкса за неделю
+        план: report=payment class=A method=plain period=last_7_days filters=sale_point=[Выкса]
+[PASS]  4406ms  продажи в точке Центральная за вчера
+        план: report=payment class=A method=plain period=yesterday filters=sale_point=[Центральная]
+[PASS]  4667ms  выручка на точке Север за этот месяц
+        план: report=payment class=A method=plain period=this_month filters=sale_point=[Север]
+[PASS]  3589ms  сколько заработала точка Главная за прошлую неделю
+        план: report=payment class=A method=plain period=last_week filters=sale_point=[Главная]
+[PASS]  5501ms  итоги точки Казанский вокзал за последние 7 дней
+        план: report=payment class=A method=plain period=last_7_days filters=sale_point=[Казанский вокзал]
+[PASS]  4687ms  чеки кассира Петрова за эту неделю
+        план: report=paycheck class=A method=plain period=this_week filters=user=[Петров]
+[PASS]  3921ms  продажи сотрудника Смирнов за вчера
+        план: report=products class=A method=plain period=yesterday filters=user=[Смирнов]
+[PASS]  3653ms  выручка кассира Иванова за прошлый месяц
+        план: report=products class=A method=plain period=last_month filters=user=[Иванов]
+[PASS]  3852ms  сколько продал сотрудник Козлов за месяц
+        план: report=products class=A method=plain period=last_30_days filters=user=[Козлов]
+[PASS]  4410ms  все продажи Кофе за этот месяц
+        план: report=products class=A method=plain period=this_month filters=product=[Кофе]
+[PASS]  4237ms  сколько продали Борщ за прошлую неделю
+        план: report=products class=A method=plain period=last_7_days filters=product=[Борщ]
+[PASS]  4251ms  продажи блюда Чизбургер за вчера
+        план: report=products class=A method=plain period=yesterday filters=product=[Чизбургер]
+[PASS]  5499ms  все продажи Оливье за прошлый месяц
+        план: report=products class=A method=plain period=last_month filters=product=[Оливье]
+[PASS]  6314ms  продажи категории Напитки за неделю
+        план: report=products class=A method=plain period=last_7_days filters=product_category=[Напитки]
+[PASS]  5733ms  выручка по категории Десерты за месяц
+        план: report=products class=A method=plain period=last_30_days filters=product_category=[Десерты]
+[PASS]  6740ms  выручка на точке Выкса по кассиру Петров за неделю
+        план: report=products class=A method=plain period=last_7_days filters=sale_point=[Выкса] user=[Петров]
+[PASS]  6456ms  продажи товара Кофе на точке Центральная за месяц
+        план: report=products class=A method=plain period=last_30_days filters=product=[Кофе] sale_point=[Центральная]
+[PASS]  5294ms  чеки сотрудника Смирнов на точке Север за вчера
+        план: report=paycheck class=A method=plain period=yesterday filters=user=[Смирнов] sale_point=[Север]
+[PASS]  4736ms  продажи Борща сотрудником Иванов за прошлую неделю
+        план: report=products class=A method=plain period=last_7_days filters=product=[Борщ] user=[Иванов]
+[PASS]  4989ms  категория Напитки на точке Главная за этот месяц
+        план: report=products class=A method=plain period=this_month filters=product_category=[Напитки] sale_point=[Главная]
+
+— итог —
+прошло:   20/20
+валидных: 20/20
+ошибок:   0
+латентность: p50=4736ms p95=12556ms max=12556ms

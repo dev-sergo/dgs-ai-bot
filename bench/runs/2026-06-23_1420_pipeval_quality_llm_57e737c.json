@@ -1,0 +1,1 @@
+{"date":"2026-06-23","time":"1420","harness":"pipeval","corpus":"quality","mode":"llm","commit":"57e737c","pass":85,"total":86,"valid":null,"rate":0.988,"p50_ms":4481,"p95_ms":13727,"model":""}

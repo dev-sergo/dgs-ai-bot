@@ -1,0 +1,1 @@
+{"date":"2026-06-25","time":"1358","harness":"eval","corpus":"prompts","mode":"llm","commit":"ddb6369","pass":516,"total":559,"valid":531,"rate":0.923,"p50_ms":4215,"p95_ms":5732,"model":"qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"}

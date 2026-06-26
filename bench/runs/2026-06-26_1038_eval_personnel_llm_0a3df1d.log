@@ -1,0 +1,42 @@
+docker run --rm -v /Users/admin/work/dgs-ai-bot:/app -w /app -v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build -e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 golang:1.23 sh -c "GOOS=darwin GOARCH=arm64 go build -o bin/eval-host ./cmd/eval"
+PLANNER_MODE=llm \
+	LLM_BASE_URL=${LLM_BASE_URL:-http://172.20.10.2:8080} \
+	LLM_MODEL=${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07} \
+	EVAL_PROMPTS=${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
+	./bin/eval-host
+eval: 13 кейсов, модель=qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07, эндпоинт=http://172.20.10.2:8080
+
+[PASS] 13117ms  как сработал персонал за неделю
+        план: report=personnel class=A method=plain period=last_7_days
+[PASS]  3844ms  покажи отчёт по персоналу за прошлый месяц
+        план: report=personnel class=A method=plain period=last_month
+[PASS]  3435ms  выручка сотрудников за сегодня
+        план: report=personnel class=A method=plain period=today
+[PASS]  4553ms  кто из сотрудников заработал больше всего за этот месяц
+        план: report=personnel class=B method=top_n period=this_month
+[PASS]  4691ms  топ кассиров по выручке за неделю
+        план: report=personnel class=B method=top_n period=last_7_days
+[PASS]  5011ms  как сработала Петрова за прошлую неделю
+        план: report=personnel class=B method=compare period=last_week filters=user=[Петрова]
+[PASS]  3897ms  сводка по сотрудникам за сегодня
+        план: report=personnel class=A method=plain period=today
+[PASS]  4653ms  рейтинг сотрудников по выручке за прошлый месяц
+        план: report=personnel class=B method=top_n period=last_month
+[FAIL]  3723ms  выручка Иванова за вчера
+        план: report=products class=A method=plain period=yesterday filters=user=[Иванов]
+        ✗ report=products ожидался personnel
+[PASS]  5018ms  кто из кассиров лучший за этот месяц
+        план: report=personnel class=B method=top_n period=this_month
+[PASS]  4606ms  топ сотрудников по продажам за месяц
+        план: report=personnel class=B method=top_n period=last_30_days
+[PASS]  3860ms  выручка сотрудника за прошлый месяц
+        план: report=personnel class=A method=plain period=last_month filters=user=[сотрудник]
+[PASS]  4369ms  кто из сотрудников больше продаёт за месяц
+        план: report=personnel class=B method=compare period=last_30_days
+
+— итог —
+прошло:   12/13
+валидных: 13/13
+ошибок:   0
+латентность: p50=4553ms p95=13117ms max=13117ms
+make: *** [eval-host] Error 2
