@@ -68,12 +68,18 @@ func App(cfg config.Config) (*app.App, func(), error) {
 		log.Printf("dooglys: using JSON API client → %s (domain=%s); payment+products via API, прочее — фикстуры",
 			cfg.Dooglys.Base, cfg.Dooglys.Domain)
 		api := dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
-		// Гибрид: payment + products — живой API (из тех же заказов/order_items),
-		// paycheck/orders — фикстуры (ещё не на API).
-		client = dooglys.NewComposite(
-			map[string]dooglys.Client{"payment": api, "products": api},
-			dooglys.NewFixtureClient(cfg.FixturesPath),
-		)
+		// Гибрид: payment+products — живой JSON API; paycheck/orders — фикстуры.
+		// personnel — Report-API если DGS_XCONTEXT задан, иначе тоже фикстура.
+		byReport := map[string]dooglys.Client{"payment": api, "products": api}
+		if cfg.Dooglys.XContext != "" {
+			rb := cfg.Dooglys.ReportBase
+			if rb == "" {
+				rb = cfg.Dooglys.Base
+			}
+			byReport["personnel"] = dooglys.NewReportAPIClient(rb, cfg.Dooglys.XContext)
+			log.Printf("dooglys: Report-API personnel → %s", rb)
+		}
+		client = dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
 		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с
 		// таймаутом, чтобы транспорт слушал сразу: до готовности товары резолвятся из
 		// фикстур, потом SetOptions атомарно заменяет их живыми (Store под RWMutex).

@@ -44,6 +44,7 @@ type LLM struct {
 // Dooglys — настройки клиента Dooglys.
 //   - http: SSR-HTML + Cookie (legacy/fallback) — Base + Cookie.
 //   - api:  JSON API v1 token-auth — Base + Domain + Login + Password.
+//   - Report-API (x-context): ортогонален mode; включается когда XContext != "".
 type Dooglys struct {
 	Mode     DooglysMode
 	Base     string // URL тенанта, напр. https://google.dooglys.com
@@ -51,6 +52,9 @@ type Dooglys struct {
 	Domain   string // api: Tenant-Domain, напр. "google" (из DGS_DOMAIN)
 	Login    string // api: логин для get-token (из DGS_LOGIN)
 	Password string // api: пароль для get-token (из DGS_PASSWORD)
+	// Report-API (personnel/kitchen): отдельная auth через x-context.
+	ReportBase string // DGS_REPORT_BASE; пусто → использует Base
+	XContext   string // DGS_XCONTEXT — JSON {"tenant_id":"...","tenant_domain":"..."}; пусто → выключен
 }
 
 // Telegram — настройки Telegram-транспорта (тонкий адаптер поверх app.Ask).
@@ -91,12 +95,14 @@ func Load() Config {
 			ForceJSON: envBool("LLM_FORCE_JSON", true),
 		},
 		Dooglys: Dooglys{
-			Mode:     DooglysMode(env("DGS_CLIENT", string(DooglysFixture))),
-			Base:     env("DGS_BASE", "https://google.dooglys.com"),
-			Cookie:   env("DGS_COOKIE", ""),
-			Domain:   env("DGS_DOMAIN", "google"),
-			Login:    env("DGS_LOGIN", ""),
-			Password: env("DGS_PASSWORD", ""),
+			Mode:       DooglysMode(env("DGS_CLIENT", string(DooglysFixture))),
+			Base:       env("DGS_BASE", "https://google.dooglys.com"),
+			Cookie:     env("DGS_COOKIE", ""),
+			Domain:     env("DGS_DOMAIN", "google"),
+			Login:      env("DGS_LOGIN", ""),
+			Password:   env("DGS_PASSWORD", ""),
+			ReportBase: env("DGS_REPORT_BASE", ""),
+			XContext:   env("DGS_XCONTEXT", ""),
 		},
 		Telegram: Telegram{
 			Token:         env("TELEGRAM_TOKEN", ""),
