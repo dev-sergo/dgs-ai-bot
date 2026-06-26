@@ -3,39 +3,79 @@
 Аналитический AI-ассистент над POS-платформой [Dooglys](https://dooglys.com): принимает
 произвольный текстовый запрос владельца заведения и возвращает аналитику по его данным.
 
-> **Статус:** фаза 1–2 — работающий MVP на боевых данных. Планировщик (LLM) + детерминированный движок;
-> отчёты **Выручка** и **Товары** идут из живого Dooglys JSON API (token-auth), drill-down по товару,
-> режим-консультант («на чём я теряю»), plan-confirm, demo auth-gate, xlsx-экспорт, docker-compose + nginx +
-> web-фронт + Cloudflare Tunnel. На фикстурах пока: paycheck/orders. Журнал итераций и точка «где мы сейчас» —
-> в [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md).
+> **Якорный документ** (MVP, демо, дорожная карта): **[11-mvp-and-roadmap.md](11-mvp-and-roadmap.md)**
+>
+> **Тренд качества** (история прогонов бенчмарков): **[../bench/LEDGER.md](../bench/LEDGER.md)**
+>
+> **Статус качества и журнал итераций** (где мы сейчас): [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md)
+
+---
+
+## Для нового участника — с чего читать
+
+1. [11-mvp-and-roadmap.md](11-mvp-and-roadmap.md) — что строим, что работает сейчас, граница MVP, дорожная карта
+2. [01-architecture.md](01-architecture.md) — архитектура, путь запроса, sandwich-безопасность
+3. [next-session.md](next-session.md) — текущий фокус разработки + рабочие правила
+
+Для деплоя: [DEPLOYMENT.md](DEPLOYMENT.md) *(создаётся)*.
+
+---
 
 ## Состав документации
 
+### Стратегия и продукт
+
 | Документ | О чём |
 |---|---|
-| [00-pilot-vision.md](00-pilot-vision.md) | Продуктовое видение пилота: идеология, граница MVP, демо-сценарий, план месяц1/2/3 — то, что показываем заказчику |
-| [01-architecture.md](01-architecture.md) | Архитектура: слои, диаграммы, путь запроса, логика планирования, конструктор, безопасность, шаблонизация |
-| [02-data-contracts-and-open-questions.md](02-data-contracts-and-open-questions.md) | Что мы ждём от заказчика: endpoints, контракты, модель тенанта, mock-данные |
-| [03-testing-strategy.md](03-testing-strategy.md) | Тестирование локально без реальных запросов и без GPU: моки, фикстуры, eval-harness |
-| [04-development-plan.md](04-development-plan.md) | Итоговый план: white-list, AnalysisPlan, дерево приложения, майлстоуны, фикстуры, тесты, масштабирование |
-| [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md) | Живой чек-лист доработок качества и безопасности + журнал итераций (где мы сейчас) |
-| [06-assistant-design.md](06-assistant-design.md) | Дизайн ассистента-консультанта: insight-bundle, intent=advice, advisor-промпт, eval совета |
-| [07-customer-overview.md](07-customer-overview.md) | Что умеет бот и куда развивается — обзор для заказчика |
-| [08-telegram-transport.md](08-telegram-transport.md) | Telegram-транспорт: развязка с ядром, базовые решения, рендер отчётов, поэтапный план, границы |
+| [11-mvp-and-roadmap.md](11-mvp-and-roadmap.md) | **Якорь.** Что строим, что есть сейчас, граница MVP, дорожная карта фаз, открытые вопросы |
+| [00-pilot-vision.md](00-pilot-vision.md) | Продуктовое видение пилота: идеология, демо-сценарий, план месяц1/2/3 |
+| [07-customer-overview.md](07-customer-overview.md) | Что умеет бот — обзор для заказчика |
+
+### Архитектура и разработка
+
+| Документ | О чём |
+|---|---|
+| [01-architecture.md](01-architecture.md) | Архитектура: слои, путь запроса, планировщик, sandwich-безопасность |
+| [02-data-contracts-and-open-questions.md](02-data-contracts-and-open-questions.md) | Контракты Dooglys API: три режима (fixture / JSON API v1 / Report-API) |
+| [03-testing-strategy.md](03-testing-strategy.md) | Стратегия тестирования: пирамида, корпуса, eval без GPU |
+| [04-development-plan.md](04-development-plan.md) | White-list, AnalysisPlan, дерево приложения, майлстоуны |
+| [08-telegram-transport.md](08-telegram-transport.md) | Telegram-транспорт: развязка с ядром, рендер, рабочие решения |
+| [glossary.md](glossary.md) | Глоссарий: этапы запроса, архитектурные термины, концепты LLM/тестирования |
+
+### Качество и операции
+
+| Документ | О чём |
+|---|---|
+| [05-quality-and-security-roadmap.md](05-quality-and-security-roadmap.md) | Живой журнал итераций качества и безопасности |
+| [next-session.md](next-session.md) | Текущий статус, следующие шаги, рабочие правила |
+| [DEPLOYMENT.md](DEPLOYMENT.md) *(создаётся)* | Деплой: env-переменные, docker-compose, LLM, режимы клиента |
+| [API.md](API.md) *(создаётся)* | HTTP API: `/ask`, `/export`, `/feedback`, `/healthz`, auth, envelope |
+| [BENCHMARKS.md](BENCHMARKS.md) *(создаётся)* | Реестр корпусов eval/bench, схемы Expect, команды запуска |
+
+### Дизайн-документы (не реализовано)
+
+| Документ | О чём |
+|---|---|
+| [design/quality-judge.md](design/quality-judge.md) | LLM-судья Tier 0: рубрика, калибровка, угрозы — **дизайн, кода нет** |
+| [design/feedback-signal.md](design/feedback-signal.md) | 👍/👎 петля обратной связи: логирование, UI-кнопки — **дизайн, кода нет** |
+| [06-assistant-design.md](06-assistant-design.md) | Консультант (advisor): insight-bundle, intent=advice, eval — **реализован, заморожен как точка входа MVP** |
+
+### Референсы
+
+| Документ | О чём |
+|---|---|
+| [report.yml](report.yml) | Спека Report-API Dooglys (server-side отчёты: payment/personnel/kitchen/abc/…) |
+| [contracts/fixtures/_structure.md](contracts/fixtures/_structure.md) | Схема нормализованных данных Dooglys (~50 отчётов, PII redacted) |
+| [reference/](reference/) | Бинарные референсы: ТЗ Пети, дашборды, обзор `.docx` |
+| [research/restik-competitive.md](research/restik-competitive.md) | Конкурентный анализ Restik AI |
+| [archive/](archive/) | Устаревшие handoff-доки (для истории) |
+
+---
 
 ## Ключевые решения (одной строкой)
 
 - **LLM не считает числа.** LLM = планировщик + нарратор. Вся математика — детерминированный Go.
 - **Sandwich-безопасность.** LLM зажат между валидируемыми слоями; `tenant_id` и токены — только server-side.
-- **Конструктор из white-list.** Произвольный запрос → структурированный план из разрешённого словаря → тысячи комбинаций при сохранении контроля.
-- **Лестница гибкости.** Tier 0 (канонические отчёты) → Tier 1 (композируемый план, MVP) → Tier 2 (sandbox, 2-я итерация).
-- **Канало-независимость.** Бэкенд получает готовый текст; источник (Telegram/VK/моб./админка) ему безразличен.
-- **Локальные модели.** vLLM + Qwen2.5 на 48 ГБ VRAM. Облако не используется.
-
-## Дорожная карта (фазы)
-
-- **Фаза 0 — done:** документация + ТЗ.
-- **Фаза 1 — done (MVP):** read-only канонические отчёты (выручка, товары), Tier 1 конструктор, единый envelope, текст-вывод, docker-compose.
-- **Фаза 2 — в работе:** analysis engine (Class B — «почему упала выручка») ✅, xlsx ✅, slot-filling уточнения ✅, контекст диалога ✅, режим-консультант ✅, живой JSON API (payment+products) ✅.
-- **Фаза 3:** Tier 2 (sandbox), новые отчёты через декларативный каталог, семантический кэш.
-- **Фаза 4:** операции записи (изменить цену) с подтверждением, ролями и аудитом.
+- **Конструктор из white-list.** Произвольный запрос → структурированный план из разрешённого словаря.
+- **Report-API как источник правды.** Server-side отчёты Dooglys — наш движок считает только производные (прогноз/сравнения/синтез).
+- **Локальные модели.** vLLM + Qwen2.5; облако не используется.

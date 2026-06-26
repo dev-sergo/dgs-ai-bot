@@ -39,9 +39,18 @@ tmp/
 .tmp/
 
 # === Артефакты бенчмарков/eval ===
+# Корпуса (test/eval/*.jsonl) и сами прогоны (bench/runs/) коммитим.
+# Игнорим: результаты в старом формате (до контракта) и шум в корне.
 test/eval/results/
 bench-results/
 eval-results*.txt
+quality-run*.txt
+/pipeval*.txt
+/batch-*.log
+/server-*.log
+/bot-*.log
+/n[0-9]-*.log
+/n[0-9][0-9]-*.log
 
 # === Сырой HTML из харвестера (живые данные, не коммитим) ===
 docs/contracts/fixtures/raw/
@@ -79,3 +88,15 @@ web/dist/
 test/manual/*.log
 test/manual/*.json
 test/manual/xlsx/
+
+# local secret probe (live cookie)
+probe_report.sh
+
+# spike / ad-hoc experiments
+spike_results-*.jsonl
+/scripts/spike_*.py
+/scripts/spike_*.jsonl
+
+# === Курируемая история бенчмарков (bench/) ===
+# Прогоны качества — это документация прогресса, их коммитим (исключение из *.log выше).
+!bench/runs/*.log
