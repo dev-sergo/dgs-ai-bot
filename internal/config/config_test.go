@@ -22,6 +22,9 @@ func TestLoadDefaults(t *testing.T) {
 	if c.Dooglys.Mode != DooglysFixture {
 		t.Errorf("Dooglys.Mode = %q, want fixture", c.Dooglys.Mode)
 	}
+	if c.Dooglys.ReportAuth != "token" {
+		t.Errorf("Dooglys.ReportAuth = %q, want token (default)", c.Dooglys.ReportAuth)
+	}
 	if !c.LLM.ForceJSON {
 		t.Error("LLM.ForceJSON default must be true")
 	}
@@ -110,8 +113,10 @@ func TestSummaryNoSecrets(t *testing.T) {
 	t.Setenv("DGS_COOKIE", "session=topsecret")
 	t.Setenv("AUTH_TOKEN", "demo-token-xyz")
 	t.Setenv("TELEGRAM_TOKEN", "tg-bot-token")
+	t.Setenv("DGS_ACCESS_TOKEN", "report-access-secret")
+	t.Setenv("DGS_XCONTEXT", `{"tenant_id":"xctx-secret"}`)
 	s := Load().Summary()
-	for _, leak := range []string{"s3cret-pass", "topsecret", "demo-token-xyz", "tg-bot-token"} {
+	for _, leak := range []string{"s3cret-pass", "topsecret", "demo-token-xyz", "tg-bot-token", "report-access-secret", "xctx-secret"} {
 		if strings.Contains(s, leak) {
 			t.Errorf("Summary leaked secret %q: %s", leak, s)
 		}

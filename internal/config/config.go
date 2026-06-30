@@ -52,9 +52,13 @@ type Dooglys struct {
 	Domain   string // api: Tenant-Domain, напр. "google" (из DGS_DOMAIN)
 	Login    string // api: логин для get-token (из DGS_LOGIN)
 	Password string // api: пароль для get-token (из DGS_PASSWORD)
-	// Report-API (personnel/kitchen): отдельная auth через x-context.
-	ReportBase string // DGS_REPORT_BASE; пусто → использует Base
-	XContext   string // DGS_XCONTEXT — JSON {"tenant_id":"...","tenant_domain":"..."}; пусто → выключен
+	// Report-API: два режима авторизации, выбираются ReportAuth.
+	//   - token:    внешний api.dooglys.com — заголовки access-token + tenant-domain.
+	//   - xcontext: внутренний (в кубах) — заголовок x-context (JSON-строка).
+	ReportBase  string // DGS_REPORT_BASE; пусто → использует Base
+	ReportAuth  string // DGS_REPORT_AUTH = token|xcontext (default token)
+	AccessToken string // DGS_ACCESS_TOKEN — значение access-token (token-режим); секрет
+	XContext    string // DGS_XCONTEXT — JSON {"tenant_id":"...","tenant_domain":"..."} (xcontext-режим); секрет
 }
 
 // Telegram — настройки Telegram-транспорта (тонкий адаптер поверх app.Ask).
@@ -101,8 +105,10 @@ func Load() Config {
 			Domain:     env("DGS_DOMAIN", "google"),
 			Login:      env("DGS_LOGIN", ""),
 			Password:   env("DGS_PASSWORD", ""),
-			ReportBase: env("DGS_REPORT_BASE", ""),
-			XContext:   env("DGS_XCONTEXT", ""),
+			ReportBase:  env("DGS_REPORT_BASE", ""),
+			ReportAuth:  env("DGS_REPORT_AUTH", "token"),
+			AccessToken: env("DGS_ACCESS_TOKEN", ""),
+			XContext:    env("DGS_XCONTEXT", ""),
 		},
 		Telegram: Telegram{
 			Token:         env("TELEGRAM_TOKEN", ""),

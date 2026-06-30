@@ -29,6 +29,35 @@ import (
 // истории заказов не должен висеть бесконечно при недоступном/медленном API.
 const productIndexTimeout = 6 * time.Minute
 
+// reportClient собирает клиент Report-API из конфига Dooglys, выбирая режим
+// авторизации. Возвращает nil, если креды выбранного режима не заданы (Report-API
+// просто выключен — отчёты идут из fallback'а composite). База: ReportBase, иначе Base.
+func reportClient(d config.Dooglys) dooglys.Client {
+	rb := d.ReportBase
+	if rb == "" {
+		rb = d.Base
+	}
+	// xcontext: явно выбран и задан x-context.
+	if d.ReportAuth == string(dooglys.ReportAuthXContext) {
+		if d.XContext == "" {
+			return nil
+		}
+		log.Printf("dooglys: Report-API personnel → %s (auth=xcontext)", rb)
+		return dooglys.NewReportAPIClientXContext(rb, d.XContext)
+	}
+	// token (default): нужен access-token; tenant-domain берём из Domain.
+	if d.AccessToken == "" {
+		// Совместимость: token-режим по умолчанию, но задан только x-context — поднимаем его.
+		if d.XContext != "" {
+			log.Printf("dooglys: Report-API personnel → %s (auth=xcontext, fallback)", rb)
+			return dooglys.NewReportAPIClientXContext(rb, d.XContext)
+		}
+		return nil
+	}
+	log.Printf("dooglys: Report-API personnel → %s (auth=token, tenant=%s)", rb, d.Domain)
+	return dooglys.NewReportAPIClientToken(rb, d.AccessToken, d.Domain)
+}
+
 // App строит app.App из конфига: planner/narrator/advisor, справочник тенантов,
 // клиент данных + резолвер, querylog. Возвращает cleanup (закрыть querylog) для defer.
 // Фатальные ошибки конфигурации (нет creds, не читается справочник) — как error;
@@ -74,13 +103,10 @@ func App(cfg config.Config) (*app.App, func(), error) {
 		// Гибрид: payment+products — живой JSON API; paycheck/orders — фикстуры.
 		// personnel — Report-API если DGS_XCONTEXT задан, иначе тоже фикстура.
 		byReport := map[string]dooglys.Client{"payment": api, "products": api}
-		if cfg.Dooglys.XContext != "" {
-			rb := cfg.Dooglys.ReportBase
-			if rb == "" {
-				rb = cfg.Dooglys.Base
-			}
-			byReport["personnel"] = dooglys.NewReportAPIClient(rb, cfg.Dooglys.XContext)
-			log.Printf("dooglys: Report-API personnel → %s", rb)
+		// Report-API (personnel): включается, когда заданы креды одного из режимов.
+		// token (внешний api.dooglys.com) — primary для демо; xcontext — внутренний (кубы).
+		if rc := reportClient(cfg.Dooglys); rc != nil {
+			byReport["personnel"] = rc
 		}
 		client = dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
 		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с

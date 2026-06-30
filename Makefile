@@ -16,7 +16,7 @@ HOST_OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 HOST_UARCH := $(shell uname -m)
 HOST_ARCH := $(if $(filter x86_64,$(HOST_UARCH)),amd64,$(if $(filter arm64 aarch64,$(HOST_UARCH)),arm64,$(HOST_UARCH)))
 
-.PHONY: tidy get-tg build build-host run-host bot-host test vet run eval-host fmt sh
+.PHONY: tidy get-tg build build-host run-host bot-host test test-live vet run eval-host fmt sh
 
 tidy:        ## go mod tidy
 	$(GO_RUN) go mod tidy
@@ -48,6 +48,16 @@ bot-host:    ## поднять Telegram-бот НА ХОСТЕ (нужен TELEG
 
 test:        ## юнит/интеграционные тесты (без GPU)
 	$(GO_RUN) go test ./...
+
+test-live:   ## боевая проверка Report-API (нужны DGS_ACCESS_TOKEN, DGS_DOMAIN; опц. DGS_REPORT_BASE)
+	docker run --rm -v $(PWD_DIR):/app -w /app \
+		-v dgsbot-gomod:/go/pkg/mod -v dgsbot-gocache:/root/.cache/go-build \
+		-e GOFLAGS=-buildvcs=false -e CGO_ENABLED=0 \
+		-e DGS_REPORT_BASE='$(or $(DGS_REPORT_BASE),https://api.dooglys.com/api/v1/reports)' \
+		-e DGS_ACCESS_TOKEN='$(DGS_ACCESS_TOKEN)' \
+		-e DGS_DOMAIN='$(or $(DGS_DOMAIN),rukagreka)' \
+		$(GO_IMAGE) \
+		go test -tags live ./internal/dooglys/ -run TestLiveReport -v
 
 vet:         ## статанализ
 	$(GO_RUN) go vet ./...

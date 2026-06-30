@@ -17,46 +17,140 @@ import (
 )
 
 // reportPathMap маппит slug отчёта → путь Report-API.
-// kitchen/cooks добавится в C2 когда появится фикстура и каталог.
+// Уровень A (6 отчётов ТЗ) полностью интегрирован (каталог/нарратор), уровень B —
+// транспортно готов: путь есть, но планировщик их НЕ роутит до eval-корпуса (P1).
 var reportPathMap = map[string]string{
-	"personnel": "/report/personnel",
+	// Уровень A — 6 отчётов ТЗ.
+	"payment":             "/report/payment",
+	"source-order":        "/report/source-order",
+	"products":            "/report/products",
+	"categories":          "/report/categories",
+	"personnel":           "/report/personnel",
+	"cash-on-hand":        "/report/cash-on-hand",
+	"cash-income-outcome": "/report/cash-income-outcome",
+	// Уровень B — транспортно готовы (планировщик НЕ роутит).
+	"type-order":            "/report/type-order",
+	"expected-profit":       "/report/expected-profit",
+	"paycheck":              "/report/paycheck",
+	"sales-on-map":          "/report/sales-on-map",
+	"order-payment-hour":    "/report/order-payment-hour",
+	"special":               "/report/special",
+	"special-products":      "/report/special-products",
+	"order-processing-time": "/report/order-processing-time",
+	"kitchen/cooks":         "/report/kitchen/cooks",
 }
 
 // reportLabel — человекочитаемое название отчёта для Result.Label.
 var reportLabel = map[string]string{
-	"personnel": "Персонал",
+	"payment":             "Выручка",
+	"source-order":        "Источники заказов",
+	"products":            "Товары",
+	"categories":          "Категории",
+	"personnel":           "Персонал",
+	"cash-on-hand":        "Наличные в кассе",
+	"cash-income-outcome": "Внесения и выплаты",
+	// Уровень B.
+	"type-order":            "Типы заказов",
+	"expected-profit":       "Ожидаемая прибыль",
+	"paycheck":              "Чеки",
+	"sales-on-map":          "Продажи на карте",
+	"order-payment-hour":    "Заказы по часам",
+	"special":               "Акции",
+	"special-products":      "Товары по акциям",
+	"order-processing-time": "Время обработки заказов",
+	"kitchen/cooks":         "Кухня (повара)",
+}
+
+// reportDefaultSort — обязательный sort_by на отчёт (первое валидное значение enum
+// из docs/report.yml). Без него боевой api.dooglys.com отвечает HTTP 400 (sort_by
+// помечен required у каждого метода). sort_order по умолчанию reportSortOrder.
+var reportDefaultSort = map[string]string{
+	"payment":             "date",
+	"source-order":        "source",
+	"products":            "revenue",
+	"categories":          "name",
+	"personnel":           "name",
+	"cash-on-hand":        "name",
+	"cash-income-outcome": "close_date",
+	// Уровень B.
+	"type-order":            "shift_date",
+	"expected-profit":       "date",
+	"paycheck":              "number",
+	"sales-on-map":          "name",
+	"order-payment-hour":    "hour",
+	"special":               "name",
+	"special-products":      "special_name",
+	"order-processing-time": "sale_point_name",
+	"kitchen/cooks":         "name",
 }
 
 // reportFilterColumn — какая колонка ответа Report-API соответствует фильтру плана.
 // user → name: сотрудник идентифицируется по полю name в строке персонала.
+// Полное заполнение под 6 отчётов ТЗ — задача 4 (каталог/нарратор).
 var reportFilterColumn = map[string]string{
 	"user": "name",
 }
 
 const (
-	reportPerPage  = 100
-	reportMaxPages = 50
+	reportPerPage   = 100
+	reportMaxPages  = 50
+	reportSortOrder = "asc" // дефолтный порядок сортировки для всех отчётов
 )
 
+// ReportAuthMode — схема авторизации Report-API.
+type ReportAuthMode string
+
+const (
+	// ReportAuthToken — внешний api.dooglys.com: заголовки access-token + tenant-domain.
+	ReportAuthToken ReportAuthMode = "token"
+	// ReportAuthXContext — внутренний (в кубах): заголовок x-context (JSON-строка).
+	ReportAuthXContext ReportAuthMode = "xcontext"
+)
+
+// ReportAuth — креды Report-API для выбранного режима.
+type ReportAuth struct {
+	Mode         ReportAuthMode
+	AccessToken  string // token: значение заголовка access-token
+	TenantDomain string // token: значение заголовка tenant-domain
+	XContext     string // xcontext: сырая JSON-строка заголовка x-context
+}
+
 // ReportAPIClient реализует Client через Report-API Dooglys.
-// Auth: заголовок x-context = JSON {"tenant_id":"...","tenant_domain":"..."}.
+// Auth: два режима (см. ReportAuth) — внешний token или внутренний x-context.
 // Пагинация: X-Pagination-Page-Count (аналогично APIClient).
 // Дата: принимает DD.MM.YYYY, отправляет YYYY-MM-DD (формат Report-API).
 type ReportAPIClient struct {
 	base string
-	xctx string // значение заголовка x-context (сырая JSON-строка)
+	auth ReportAuth
 	http *http.Client
 }
 
-// NewReportAPIClient создаёт клиент Report-API.
-// base — корень (напр. https://google.dooglys.com или отдельный report-хост).
-// xctx — JSON-строка для заголовка x-context.
-func NewReportAPIClient(base, xctx string) *ReportAPIClient {
+// newReportAPIClient — общий конструктор; base нормализуется, auth.Mode — обязателен.
+func newReportAPIClient(base string, auth ReportAuth) *ReportAPIClient {
 	return &ReportAPIClient{
 		base: strings.TrimRight(base, "/"),
-		xctx: xctx,
+		auth: auth,
 		http: &http.Client{Timeout: 30 * time.Second},
 	}
+}
+
+// NewReportAPIClientToken — внешний режим (api.dooglys.com): access-token + tenant-domain.
+// base, как правило, …/api/v1/reports (внешний путь содержит префикс /reports).
+func NewReportAPIClientToken(base, accessToken, tenantDomain string) *ReportAPIClient {
+	return newReportAPIClient(base, ReportAuth{
+		Mode:         ReportAuthToken,
+		AccessToken:  accessToken,
+		TenantDomain: tenantDomain,
+	})
+}
+
+// NewReportAPIClientXContext — внутренний режим (в кубах): заголовок x-context.
+// base, как правило, …/api/v1 (без префикса /reports).
+func NewReportAPIClientXContext(base, xctx string) *ReportAPIClient {
+	return newReportAPIClient(base, ReportAuth{
+		Mode:     ReportAuthXContext,
+		XContext: xctx,
+	})
 }
 
 // Fetch реализует Client: тянет отчёт постранично и применяет клиентские фильтры.
@@ -80,6 +174,11 @@ func (c *ReportAPIClient) Fetch(ctx context.Context, q Query) (Result, error) {
 		params := url.Values{}
 		params.Set("date_from", from)
 		params.Set("date_to", to)
+		if sortBy := reportDefaultSort[q.Report]; sortBy != "" {
+			// sort_by обязателен у боевого API — без него HTTP 400.
+			params.Set("sort_by", sortBy)
+			params.Set("sort_order", reportSortOrder)
+		}
 		params.Set("per_page", strconv.Itoa(reportPerPage))
 		params.Set("page", strconv.Itoa(page))
 
@@ -125,7 +224,13 @@ func (c *ReportAPIClient) getJSON(ctx context.Context, rawURL string) ([]byte, i
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("x-context", c.xctx)
+	switch c.auth.Mode {
+	case ReportAuthToken:
+		req.Header.Set("access-token", c.auth.AccessToken)
+		req.Header.Set("tenant-domain", c.auth.TenantDomain)
+	default: // ReportAuthXContext
+		req.Header.Set("x-context", c.auth.XContext)
+	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {

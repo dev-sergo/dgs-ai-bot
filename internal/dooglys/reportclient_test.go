@@ -49,7 +49,7 @@ func TestReportAPIClient_Fetch_Personnel(t *testing.T) {
 	})
 	defer srv.Close()
 
-	cli := NewReportAPIClient(srv.URL, xctx)
+	cli := NewReportAPIClientXContext(srv.URL, xctx)
 	res, err := cli.Fetch(context.Background(), Query{
 		Report: "personnel",
 		From:   "01.06.2025",
@@ -80,7 +80,7 @@ func TestReportAPIClient_DateConversion(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cli := NewReportAPIClient(srv.URL, "{}")
+	cli := NewReportAPIClientXContext(srv.URL, "{}")
 	cli.Fetch(context.Background(), Query{Report: "personnel", From: "01.06.2025", To: "30.06.2025"})
 
 	if gotDateFrom != "2025-06-01" {
@@ -100,7 +100,7 @@ func TestReportAPIClient_Pagination(t *testing.T) {
 	srv := newPersonnelServer(t, "{}", pages)
 	defer srv.Close()
 
-	cli := NewReportAPIClient(srv.URL, "{}")
+	cli := NewReportAPIClientXContext(srv.URL, "{}")
 	res, err := cli.Fetch(context.Background(), Query{Report: "personnel", From: "01.01.2025", To: "31.01.2025"})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
@@ -120,7 +120,7 @@ func TestReportAPIClient_UserFilter(t *testing.T) {
 	})
 	defer srv.Close()
 
-	cli := NewReportAPIClient(srv.URL, "{}")
+	cli := NewReportAPIClientXContext(srv.URL, "{}")
 	res, err := cli.Fetch(context.Background(), Query{
 		Report:  "personnel",
 		From:    "01.06.2025",
@@ -142,10 +142,98 @@ func TestReportAPIClient_UserFilter(t *testing.T) {
 }
 
 func TestReportAPIClient_UnsupportedReport(t *testing.T) {
-	cli := NewReportAPIClient("http://localhost", "{}")
-	_, err := cli.Fetch(context.Background(), Query{Report: "payment"})
+	cli := NewReportAPIClientXContext("http://localhost", "{}")
+	// rfm — уровень C: POST + обязательные границы, в reportPathMap его нет.
+	_, err := cli.Fetch(context.Background(), Query{Report: "rfm"})
 	if err == nil {
 		t.Fatal("ожидалась ошибка на неподдержанный отчёт")
+	}
+}
+
+// TestReportAPIClient_TokenAuthHeaders — token-режим шлёт access-token + tenant-domain
+// и НЕ шлёт x-context. Боевой контракт api.dooglys.com.
+func TestReportAPIClient_TokenAuthHeaders(t *testing.T) {
+	var gotToken, gotTenant, gotXCtx string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotToken = r.Header.Get("access-token")
+		gotTenant = r.Header.Get("tenant-domain")
+		gotXCtx = r.Header.Get("x-context")
+		w.Header().Set("X-Pagination-Page-Count", "1")
+		json.NewEncoder(w).Encode([]map[string]any{})
+	}))
+	defer srv.Close()
+
+	cli := NewReportAPIClientToken(srv.URL, "secret-token", "rukagreka")
+	if _, err := cli.Fetch(context.Background(), Query{Report: "payment", From: "01.06.2025", To: "30.06.2025"}); err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	if gotToken != "secret-token" {
+		t.Errorf("access-token=%q, want secret-token", gotToken)
+	}
+	if gotTenant != "rukagreka" {
+		t.Errorf("tenant-domain=%q, want rukagreka", gotTenant)
+	}
+	if gotXCtx != "" {
+		t.Errorf("x-context должен быть пуст в token-режиме, got %q", gotXCtx)
+	}
+}
+
+// TestReportAPIClient_XContextAuthHeaders — xcontext-режим шлёт x-context
+// и НЕ шлёт access-token/tenant-domain. Внутренний (кубовый) контракт.
+func TestReportAPIClient_XContextAuthHeaders(t *testing.T) {
+	var gotToken, gotXCtx string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotToken = r.Header.Get("access-token")
+		gotXCtx = r.Header.Get("x-context")
+		w.Header().Set("X-Pagination-Page-Count", "1")
+		json.NewEncoder(w).Encode([]map[string]any{})
+	}))
+	defer srv.Close()
+
+	xctx := `{"tenant_id":"t1","tenant_domain":"rukagreka"}`
+	cli := NewReportAPIClientXContext(srv.URL, xctx)
+	if _, err := cli.Fetch(context.Background(), Query{Report: "personnel", From: "01.06.2025", To: "30.06.2025"}); err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	if gotXCtx != xctx {
+		t.Errorf("x-context=%q, want %q", gotXCtx, xctx)
+	}
+	if gotToken != "" {
+		t.Errorf("access-token должен быть пуст в xcontext-режиме, got %q", gotToken)
+	}
+}
+
+// TestReportAPIClient_SortBySent — клиент шлёт обязательный sort_by (дефолт отчёта)
+// и sort_order=asc. Без sort_by боевой API отвечает HTTP 400.
+func TestReportAPIClient_SortBySent(t *testing.T) {
+	cases := map[string]string{
+		"payment":             "date",
+		"source-order":        "source",
+		"products":            "revenue",
+		"categories":          "name",
+		"personnel":           "name",
+		"cash-on-hand":        "name",
+		"cash-income-outcome": "close_date",
+	}
+	for report, wantSort := range cases {
+		var gotSort, gotOrder string
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			gotSort = r.URL.Query().Get("sort_by")
+			gotOrder = r.URL.Query().Get("sort_order")
+			w.Header().Set("X-Pagination-Page-Count", "1")
+			json.NewEncoder(w).Encode([]map[string]any{})
+		}))
+		cli := NewReportAPIClientToken(srv.URL, "tok", "dom")
+		if _, err := cli.Fetch(context.Background(), Query{Report: report, From: "01.06.2025", To: "30.06.2025"}); err != nil {
+			t.Fatalf("%s Fetch: %v", report, err)
+		}
+		srv.Close()
+		if gotSort != wantSort {
+			t.Errorf("%s: sort_by=%q, want %q", report, gotSort, wantSort)
+		}
+		if gotOrder != "asc" {
+			t.Errorf("%s: sort_order=%q, want asc", report, gotOrder)
+		}
 	}
 }
 
