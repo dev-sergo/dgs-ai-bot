@@ -93,6 +93,37 @@ func TestProductsFieldContract(t *testing.T) {
 	}
 }
 
+// TestReportAPIPaymentAliasContract — после applyColumnAlias строка Report-API payment
+// (форма боевого дампа) содержит ВСЕ non-PII ключи каталога «Выручка». Шов 3a: если в
+// каталог добавят payment-поле, а в reportColumnAlias забудут алиас — тест упадёт раньше,
+// чем движок начнёт считать нули на боевом Report-API.
+func TestReportAPIPaymentAliasContract(t *testing.T) {
+	// Форма строки боевого Report-API /report/payment (live-дамп 2026-07-01).
+	rows := []Row{{
+		"date": "2025-06-01", "count": 138.0, "return_count": 0.0, "return_sum": 0.0,
+		"sum_card": 45105.0, "sum_cash": 9206.0, "sum_online": 27585.0, "sum_sbp": 0.0,
+		"sum_all": 81896.0, "revenue": 81896.0, "average_sum": 593.45, "average_revenue": 593.45,
+		"profit": 47414.28, "payback_count": 0.0, "payback_sum": 0.0,
+	}}
+	applyColumnAlias("payment", rows)
+
+	cat := catalog.Default()
+	rep, ok := cat.Report("payment")
+	if !ok {
+		t.Fatal("каталог не содержит payment")
+	}
+	produced := unionKeys(rows)
+	for _, f := range rep.Fields {
+		if f.PII {
+			continue
+		}
+		if _, ok := produced[f.Key]; !ok {
+			t.Errorf("catalog.payment field %q не покрыт Report-API/alias (produced=%v)",
+				f.Key, sortedKeys(produced))
+		}
+	}
+}
+
 // ── Шов 2: Personnel fixture→Catalog ─────────────────────────────────────────
 
 // TestPersonnelFixtureFieldContract — строки personnel.json содержат все non-PII ключи

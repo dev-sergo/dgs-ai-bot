@@ -102,11 +102,16 @@ func App(cfg config.Config) (*app.App, func(), error) {
 		api := dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
 		// Гибрид: payment+products — живой JSON API; paycheck/orders — фикстуры.
 		// personnel — Report-API если DGS_XCONTEXT задан, иначе тоже фикстура.
+		// payment/products: при доступном Report-API — server-side агрегаты (единый
+		// источник = числа админки Dooglys); иначе самосбор APIClient (fallback).
 		byReport := map[string]dooglys.Client{"payment": api, "products": api}
-		// Report-API (personnel): включается, когда заданы креды одного из режимов.
+		// Report-API: включается, когда заданы креды одного из режимов.
 		// token (внешний api.dooglys.com) — primary для демо; xcontext — внутренний (кубы).
 		if rc := reportClient(cfg.Dooglys); rc != nil {
 			byReport["personnel"] = rc
+			byReport["payment"] = rc  // 3a: снять с самосбора → server-side агрегаты
+			byReport["products"] = rc // 3a: то же; bonus — profit из Report-API
+			log.Printf("dooglys: payment/products → Report-API (server-side агрегаты)")
 		}
 		client = dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
 		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с

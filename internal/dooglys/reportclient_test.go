@@ -237,6 +237,54 @@ func TestReportAPIClient_SortBySent(t *testing.T) {
 	}
 }
 
+// TestReportAPIClient_PaymentColumnAlias — строка Report-API payment (имена count/
+// sum_online/sum_sbp/average_sum) приводится к ключам каталога (kol_vo_chekov/onlayn/
+// sbp/sredniy_chek), а совпадающие колонки проходят как есть. Форма стаба = боевой
+// дамп 2026-07-01. Без алиасов движок нашёл бы пустые ячейки и посчитал нули.
+func TestReportAPIClient_PaymentColumnAlias(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Pagination-Page-Count", "1")
+		json.NewEncoder(w).Encode([]map[string]any{{
+			"date": "2025-06-01", "count": 138.0, "return_count": 0.0, "return_sum": 0.0,
+			"sum_card": 45105.0, "sum_cash": 9206.0, "sum_online": 27585.0, "sum_sbp": 0.0,
+			"sum_all": 81896.0, "average_sum": 593.45,
+		}})
+	}))
+	defer srv.Close()
+
+	cli := NewReportAPIClientToken(srv.URL, "tok", "dom")
+	res, err := cli.Fetch(context.Background(), Query{Report: "payment", From: "01.06.2025", To: "30.06.2025"})
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	if len(res.Rows) != 1 {
+		t.Fatalf("len(Rows)=%d, want 1", len(res.Rows))
+	}
+	row := res.Rows[0]
+	// Каталожные ключи «Выручка» (catalog.Default payment): все должны присутствовать.
+	wantCatalog := map[string]float64{
+		"kol_vo_chekov": 138, "onlayn": 27585, "sbp": 0, "sredniy_chek": 593.45,
+		"sum_card": 45105, "sum_cash": 9206, "sum_all": 81896, "return_count": 0, "return_sum": 0,
+	}
+	for k, want := range wantCatalog {
+		got, ok := row[k].(float64)
+		if !ok {
+			t.Errorf("каталожный ключ %q отсутствует/не число: %v", k, row[k])
+			continue
+		}
+		if got != want {
+			t.Errorf("row[%q]=%v, want %v", k, got, want)
+		}
+	}
+	if row["date"] != "2025-06-01" {
+		t.Errorf("date=%v, want 2025-06-01", row["date"])
+	}
+	// Исходные api-колонки остаются (их читают фильтры).
+	if row["count"] != 138.0 {
+		t.Errorf("исходная колонка count должна сохраниться, got %v", row["count"])
+	}
+}
+
 func TestRuToISO(t *testing.T) {
 	cases := []struct{ in, want string }{
 		{"01.06.2025", "2025-06-01"},

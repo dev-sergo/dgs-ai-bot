@@ -91,6 +91,43 @@ var reportFilterColumn = map[string]string{
 	"user": "name",
 }
 
+// reportColumnAlias — переименование колонок ответа Report-API в ключи полей каталога
+// (per-report: api-колонка → catalog-ключ). Нужно потому, что имена колонок боевого
+// Report-API ≠ ключи каталога (унаследованы от HTML-пути): напр. payment-каталог ждёт
+// kol_vo_chekov/onlayn/sredniy_chek, а Report-API отдаёт count/sum_online/average_sum.
+// Применяется как ДОБАВЛЕНИЕ алиаса (исходная колонка остаётся — её читают фильтры).
+//
+// Карты сверены с боевым live-дампом (2026-07-01, tenant rukagreka) + семантикой
+// текущего самосбора APIClient. Колонки, совпадающие с ключами каталога 1:1
+// (payment: date/return_count/return_sum/sum_card/sum_cash/sum_all; products:
+// name/quantity/amount/profit/discount_sum), алиаса не требуют.
+var reportColumnAlias = map[string]map[string]string{
+	"payment": {
+		"count":       "kol_vo_chekov", // Кол-во чеков
+		"sum_online":  "onlayn",        // Онлайн
+		"sum_sbp":     "sbp",           // СБП
+		"average_sum": "sredniy_chek",  // Средний чек
+	},
+	// products: базовые колонки Report-API уже = ключам каталога (amount = «Сумма»,
+	// фактически уплачено, как Σ TotalCost в самосборе) → алиасы не нужны.
+}
+
+// applyColumnAlias добавляет в каждую строку алиасы-ключи каталога рядом с исходными
+// колонками Report-API. Идемпотентно; пустая карта — no-op.
+func applyColumnAlias(report string, rows []Row) {
+	alias := reportColumnAlias[report]
+	if len(alias) == 0 {
+		return
+	}
+	for _, r := range rows {
+		for apiCol, catKey := range alias {
+			if v, ok := r[apiCol]; ok {
+				r[catKey] = v
+			}
+		}
+	}
+}
+
 const (
 	reportPerPage   = 100
 	reportMaxPages  = 50
@@ -198,6 +235,10 @@ func (c *ReportAPIClient) Fetch(ctx context.Context, q Query) (Result, error) {
 			break
 		}
 	}
+
+	// Привести колонки Report-API к ключам каталога (до фильтров: фильтры читают
+	// исходные api-колонки, движок/нарратор — алиасы каталога).
+	applyColumnAlias(q.Report, rows)
 
 	res := Result{
 		Report: q.Report,
