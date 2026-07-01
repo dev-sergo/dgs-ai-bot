@@ -92,14 +92,14 @@ func TestApp_RefineLogsChanges(t *testing.T) {
 // clarify; resolver.miss должен дать отдельный структурный сигнал (kind/name/type).
 func TestApp_ResolverMissLogsWarn(t *testing.T) {
 	cap := &captureHandler{}
-	a := &App{cat: catalog.Default(), resolver: &resolver.Store{}, Logger: slog.New(cap)}
+	a := &App{cat: catalog.Default(), Logger: slog.New(cap)}
 
 	rep, ok := a.cat.Report("products")
 	if !ok {
 		t.Fatal("нет отчёта products в каталоге")
 	}
 	pfs := []plan.Filter{{Field: "product", Values: []string{"несуществующий товар"}}}
-	_, clarify := a.resolveFilters(rep, pfs)
+	_, clarify := a.resolveFilters(&resolver.Store{}, rep, pfs)
 	if clarify == "" {
 		t.Fatal("ожидался текст уточнения при ненайденном товаре")
 	}

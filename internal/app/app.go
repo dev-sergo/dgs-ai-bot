@@ -60,12 +60,26 @@ type Answer struct {
 	Text       string                `json:"answer,omitempty"`
 }
 
-// App — собранный пайплайн.
-type App struct {
-	planner  planner.Planner
-	tenants  *tenantctx.Store
+// tenantSet — данные одного тенанта: источник (client) и резолвер имён→uuid его
+// справочников. Это граница изоляции: запрос тенанта A обслуживается ТОЛЬКО его
+// набором, никогда чужим. Резолвится по tenantID (см. setFor), а не хранится один на App.
+type tenantSet struct {
 	client   dooglys.Client
 	resolver *resolver.Store
+}
+
+// App — собранный пайплайн. Ядро (planner/narrator/advisor/sessions/tenants/catalog)
+// тенант-агностично и общее; данные (client+resolver) — пер-тенантный реестр sets.
+type App struct {
+	planner planner.Planner
+	tenants *tenantctx.Store
+	// sets — реестр {client, resolver} по tenantID. Пополняется Register.
+	sets map[string]*tenantSet
+	// fallback — одно-тенантная деградация: набор, обслуживающий ЛЮБОЙ tenantID, если
+	// он не зарегистрирован в sets. Ставится New (single-tenant/eval/HTTP-fixture); в
+	// строгом мультитенантном режиме (NewMulti) nil → незарегистрированный тенант не
+	// обслуживается (изоляция: не подставляем чужой источник по-умолчанию).
+	fallback *tenantSet
 	narrator narrator.Narrator
 	advisor  advisor.Advisor
 	sessions *session.Store
@@ -83,13 +97,23 @@ type App struct {
 	FeedbackLog *feedback.Writer
 }
 
-// New собирает оркестратор.
+// New собирает одно-тенантный оркестратор: переданный client+resolver обслуживает
+// ЛЮБОЙ tenantID (fallback). Путь для eval/pipeval (корпус с разными tenant_id, один
+// фикстурный источник), одно-тенантного dev и HTTP-фикстур. Мультитенант — NewMulti.
 func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, res *resolver.Store, nar narrator.Narrator, adv advisor.Advisor, sess *session.Store) *App {
+	a := NewMulti(pl, tenants, nar, adv, sess)
+	a.fallback = &tenantSet{client: client, resolver: res}
+	return a
+}
+
+// NewMulti собирает мультитенантный оркестратор БЕЗ одно-тенантного fallback: источник
+// данных обязателен пер-тенантно (Register). Незарегистрированный тенант не обслуживается
+// — строгая изоляция (запрос тенанта A физически не может достать источник тенанта B).
+func NewMulti(pl planner.Planner, tenants *tenantctx.Store, nar narrator.Narrator, adv advisor.Advisor, sess *session.Store) *App {
 	return &App{
 		planner:  pl,
 		tenants:  tenants,
-		client:   client,
-		resolver: res,
+		sets:     map[string]*tenantSet{},
 		narrator: nar,
 		advisor:  adv,
 		sessions: sess,
@@ -98,6 +122,34 @@ func New(pl planner.Planner, tenants *tenantctx.Store, client dooglys.Client, re
 		Logger:   slog.Default(),
 	}
 }
+
+// Register привязывает источник данных (client) и резолвер к tenantID. Вызывается
+// bootstrap'ом в цикле по тенантам. Перезапись существующего tenantID допустима
+// (последняя регистрация побеждает).
+func (a *App) Register(tenantID string, client dooglys.Client, res *resolver.Store) {
+	if a.sets == nil {
+		a.sets = map[string]*tenantSet{}
+	}
+	a.sets[tenantID] = &tenantSet{client: client, resolver: res}
+}
+
+// setFor возвращает набор данных тенанта. Строгая изоляция: сначала точная регистрация,
+// затем одно-тенантный fallback (если задан). ok=false → тенант не обслуживается, и
+// вызывающий обязан отказать, а НЕ подставить чужой источник.
+func (a *App) setFor(tenantID string) (*tenantSet, bool) {
+	if s, ok := a.sets[tenantID]; ok {
+		return s, true
+	}
+	if a.fallback != nil {
+		return a.fallback, true
+	}
+	return nil, false
+}
+
+// errUnknownTenant — тенант не зарегистрирован в реестре данных. Это инвариант
+// конфигурации/изоляции (в проде боты шлют только свои зарегистрированные tenantID),
+// поэтому возвращаем ошибку, а не молчаливую подстановку чужого источника.
+var errUnknownTenant = errors.New("app: нет зарегистрированного источника данных для тенанта")
 
 // Ask — основной вход: текст → ответ.
 func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans Answer, err error) {
@@ -229,6 +281,16 @@ func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans An
 func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
 	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
 
+	// Данные тенанта резолвятся по tenantID (изоляция). Незарегистрированный тенант —
+	// ошибка, а не чужой источник по-умолчанию.
+	set, ok := a.setFor(tenantID)
+	if !ok {
+		if a.Logger != nil {
+			a.Logger.Error("executeReport.unknown_tenant", "tenant", tenantID)
+		}
+		return ans, errUnknownTenant
+	}
+
 	// Отчёт обязан быть в каталоге: и прямой путь, и plan-confirm валидируют план до сюда.
 	// Если каталог разъехался с планом — честный отказ и сигнал в лог, а НЕ молчаливый
 	// пустой отчёт (rep=zero → все фильтры отброшены, Fetch по пустому отчёту).
@@ -249,7 +311,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	engine.NormalizeMethod(&p)
 
 	// Резолв фильтров: имена → uuid (для ref). Нерезолвнутое имя → уточнение.
-	filters, clarify := a.resolveFilters(rep, p.Filters)
+	filters, clarify := a.resolveFilters(set.resolver, rep, p.Filters)
 	if clarify != "" {
 		ans.Validation.OK = false
 		ans.Validation.NeedClarify = true
@@ -279,7 +341,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 
 	period := envelope.Period{From: from, To: to, TZ: t.Timezone}
 	currency := currencyOr(t.Currency)
-	resNow, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
+	resNow, err := set.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
 	if err != nil {
 		return ans, err
 	}
@@ -301,7 +363,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 			return ans, err
 		}
 		periodPrev := envelope.Period{From: prevR.From, To: prevR.To, TZ: t.Timezone}
-		resPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: prevR.From, To: prevR.To, Filters: filters})
+		resPrev, err := set.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: prevR.From, To: prevR.To, Filters: filters})
 		if err != nil {
 			return ans, err
 		}
@@ -385,6 +447,15 @@ const advicePeriodPrompt = "За какой период подготовить 
 func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p plan.AnalysisPlan) (Answer, error) {
 	ans := Answer{TenantID: tenantID, Plan: p, Validation: plan.ValidationResult{OK: true}}
 
+	// Данные тенанта по tenantID (изоляция). Незарегистрированный тенант — ошибка.
+	set, ok := a.setFor(tenantID)
+	if !ok {
+		if a.Logger != nil {
+			a.Logger.Error("advise.unknown_tenant", "tenant", tenantID)
+		}
+		return ans, errUnknownTenant
+	}
+
 	t := a.tenant(tenantID)
 
 	// Период обязателен: пустой/неизвестный токен → уточняем, а не угадываем.
@@ -413,8 +484,8 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	// Категория есть только у products, точка — у обоих.
 	payRep, _ := a.cat.Report("payment")
 	prodRep, _ := a.cat.Report("products")
-	payFilters, clarify := a.resolveFilters(payRep, p.Filters)
-	prodFilters, clarify2 := a.resolveFilters(prodRep, p.Filters)
+	payFilters, clarify := a.resolveFilters(set.resolver, payRep, p.Filters)
+	prodFilters, clarify2 := a.resolveFilters(set.resolver, prodRep, p.Filters)
 	if clarify == "" {
 		clarify = clarify2
 	}
@@ -426,15 +497,15 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	}
 
 	// Снимок собирается из нескольких детерминированных выборок.
-	payNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to, Filters: payFilters})
+	payNow, err := set.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to, Filters: payFilters})
 	if err != nil {
 		return ans, err
 	}
-	payPrev, err := a.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To, Filters: payFilters})
+	payPrev, err := set.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To, Filters: payFilters})
 	if err != nil {
 		return ans, err
 	}
-	prodNow, err := a.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to, Filters: prodFilters})
+	prodNow, err := set.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to, Filters: prodFilters})
 	if err != nil {
 		return ans, err
 	}
@@ -678,8 +749,9 @@ func (a *App) takeAwaitingPeriod(sessionID string) (plan.AnalysisPlan, bool) {
 }
 
 // resolveFilters превращает фильтры плана в фильтры запроса.
-// Для ref-фильтров имена резолвятся в uuid; первая неудача → текст уточнения.
-func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.QueryFilter, string) {
+// Для ref-фильтров имена резолвятся в uuid через резолвер тенанта (res); первая
+// неудача → текст уточнения. res передаётся явно (пер-тенантный, из setFor).
+func (a *App) resolveFilters(res *resolver.Store, rep catalog.Report, pfs []plan.Filter) ([]dooglys.QueryFilter, string) {
 	var out []dooglys.QueryFilter
 	for _, pf := range pfs {
 		cf, ok := rep.FilterByField(pf.Field)
@@ -695,7 +767,7 @@ func (a *App) resolveFilters(rep catalog.Report, pfs []plan.Filter) ([]dooglys.Q
 					continue
 				}
 				seen[name] = true
-				m, err := a.resolver.Resolve(pf.Field, name)
+				m, err := res.Resolve(pf.Field, name)
 				if err != nil {
 					if re, ok := err.(*resolver.ResolveError); ok && re.Ambiguous {
 						a.logResolverMiss(pf.Field, name, "ambiguous", re.Candidates)
