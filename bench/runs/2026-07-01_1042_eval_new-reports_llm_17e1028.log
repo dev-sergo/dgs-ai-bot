@@ -1,0 +1,42 @@
+eval: 16 кейсов, модель=qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07, эндпоинт=http://172.20.10.2:8080
+
+[PASS]  3556ms  источники заказов за месяц
+        план: report=source-order class=A method=plain period=last_30_days
+[PASS]  4504ms  откуда приходят заказы за прошлый месяц
+        план: report=source-order class=B method=compare period=last_month
+[PASS]  4623ms  разбивка заказов по источникам за неделю
+        план: report=source-order class=B method=compare period=last_7_days
+[FAIL]  4049ms  сколько заказов с доставки за сегодня
+        план: report=orders class=A method=plain period=today filters=source=[delivery-club]
+        ✗ report=orders ожидался source-order
+[FAIL]  4738ms  по каким каналам продаём за прошлый месяц
+        план: report=payment class=B method=contribution period=last_month
+        ✗ report=payment ожидался source-order
+[PASS]  4547ms  выручка по категориям за месяц
+        план: report=categories class=B method=compare period=last_30_days
+[PASS]  4815ms  топ категорий товаров за прошлый месяц
+        план: report=categories class=B method=top_n period=last_month
+[PASS]  5231ms  какие категории продаются лучше за неделю
+        план: report=categories class=B method=compare period=last_7_days
+[PASS]  3994ms  продажи по категориям за сегодня
+        план: report=categories class=A method=plain period=today
+[PASS]  4194ms  сколько наличных в кассе за сегодня
+        план: report=cash-on-hand class=A method=plain period=today
+[PASS]  5217ms  остаток наличных по точкам за месяц
+        план: report=cash-on-hand class=A method=plain period=last_30_days filters=sale_point=[по точкам]
+[PASS]  4948ms  наличные в кассе за прошлый месяц
+        план: report=cash-on-hand class=A method=plain period=last_month
+[PASS]  4236ms  внесения и выплаты за месяц
+        план: report=cash-income-outcome class=A method=plain period=last_30_days
+[PASS]  4117ms  покажи внесения и изъятия наличных за прошлый месяц
+        план: report=cash-income-outcome class=A method=plain period=last_month
+[FAIL]  3950ms  какие были выплаты из кассы за сегодня
+        план: report=cash-income-outcome class=A method=plain period=today filters=type=[outcome]
+[PASS]  4363ms  движение наличных по кассе за неделю
+        план: report=cash-on-hand class=A method=plain period=last_7_days
+
+— итог —
+прошло:   13/16
+валидных: 14/16
+ошибок:   0
+латентность: p50=4504ms p95=5231ms max=5231ms

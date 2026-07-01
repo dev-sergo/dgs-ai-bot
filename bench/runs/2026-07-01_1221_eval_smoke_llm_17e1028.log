@@ -1,0 +1,167 @@
+eval: 76 кейсов, модель=qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07, эндпоинт=http://172.20.10.2:8080
+
+[PASS]  6012ms  покажи статистику продаж
+        план: report=payment class=A method=plain period=
+[PASS]  3829ms  дай отчёт
+        план: report=payment class=A method=plain period=
+[FAIL]  3826ms  сравни количество заказов по каналам за этот и прошлый месяц
+        план: report=orders class=B method=compare period=this_month
+[PASS]  5977ms  динамика заказов из приложения за месяц
+        план: report=orders class=B method=compare period=last_30_days filters=source=[site]
+[PASS]  4936ms  доля доставки в общей выручке за прошлый месяц
+        план: report=payment class=B method=contribution period=last_month
+[PASS]  4791ms  покажи заказы за сегодня
+        план: report=orders class=A method=plain period=today
+[PASS]  4782ms  список заказов за вчера
+        план: report=orders class=A method=plain period=yesterday
+[PASS]  4445ms  насколько изменилось количество чеков за неделю
+        план: report=payment class=B method=compare period=last_7_days
+[PASS]  4412ms  покажи чеки за сегодня
+        план: report=paycheck class=A method=plain period=today
+[PASS]  4462ms  список чеков за вчера
+        план: report=paycheck class=A method=plain period=yesterday
+[PASS]  4641ms  доля безналичных за этот месяц
+        план: report=payment class=B method=channel_share period=this_month
+[PASS]  4346ms  сравни выручку с прошлой неделей
+        план: report=payment class=B method=compare period=last_7_days
+[PASS]  4362ms  как изменилась выручка за этот месяц
+        план: report=payment class=B method=compare period=this_month
+[PASS]  4527ms  изменение выручки на точке за месяц
+        план: report=payment class=B method=contribution period=last_30_days
+[PASS]  4446ms  за счёт чего вырос средний чек за последнюю неделю
+        план: report=payment class=B method=contribution period=last_7_days
+[PASS]  4533ms  почему упала выручка за месяц
+        план: report=payment class=B method=contribution period=last_30_days
+[PASS]  4334ms  за счёт чего выросли продажи за месяц
+        план: report=payment class=B method=contribution period=last_30_days
+[PASS]  4617ms  что повлияло на рост среднего чека за прошлый месяц
+        план: report=payment class=B method=contribution period=last_month
+[PASS]  1067ms  прогноз выручки на июнь
+        план: report=payment class= method=forecast period=this_month_full
+[FAIL]  1936ms  если ничего не менять, сколько выйдет
+        план: report= class= method= period=
+        ✗ intent=smalltalk ожидался report
+        ✗ report= ожидался payment
+        ✗ method= ожидался forecast
+[PASS]  4417ms  выручка за сегодня
+        план: report=payment class=A method=plain period=today
+[PASS]  3448ms  сколько заработали сегодня
+        план: report=payment class=A method=plain period=today
+[FAIL]  5434ms  топ сотрудников по продажам за месяц
+        план: report=personnel class=B method=top_n period=last_month
+        ✗ period=last_month ожидался this_month|last_30_days
+[PASS]  4941ms  топ продавцов за прошлый месяц
+        план: report=personnel class=B method=top_n period=last_month
+[PASS]  4651ms  изменение популярности товаров за месяц
+        план: report=products class=B method=compare period=last_month
+[PASS]  4689ms  как изменились продажи по категориям за прошлый месяц
+        план: report=categories class=B method=compare period=last_month
+[PASS]  4345ms  какие товары продавались за месяц
+        план: report=products class=A method=plain period=last_30_days
+[PASS]  4327ms  покажи отчёт по товарам за неделю
+        план: report=products class=A method=plain period=last_7_days
+[PASS]  5506ms  какие товары продаются лучше всего за месяц
+        план: report=products class=B method=top_n period=last_30_days
+[PASS]  5419ms  топ товаров за месяц
+        план: report=products class=B method=top_n period=last_30_days
+[PASS]  5104ms  самые продаваемые блюда за неделю
+        план: report=products class=B method=top_n period=last_7_days
+[PASS]  5006ms  топ-10 товаров по выручке за месяц
+        план: report=products class=B method=top_n period=last_30_days
+[PASS]  5105ms  что покупают чаще всего за текущий месяц
+        план: report=products class=B method=top_n period=this_month
+[PASS]  5145ms  лучшие позиции меню за прошлый месяц
+        план: report=products class=B method=top_n period=last_month
+[PASS]  5103ms  самые популярные товары за неделю
+        план: report=products class=B method=top_n period=last_7_days
+[PASS]  4384ms  топ продаж за вчера
+        план: report=products class=B method=top_n period=yesterday
+[FAIL]  4101ms  продажи по категории за прошлый месяц
+        план: report=categories class=A method=plain period=last_month
+        ✗ нет фильтра product_category
+[PASS]  4158ms  прибыль по категории напитки за прошлый месяц
+        план: report=categories class=A method=plain period=last_month filters=product_category=[напитки]
+[PASS]  5265ms  что лучше продаётся — еда или напитки за месяц
+        план: report=categories class=B method=compare period=last_30_days filters=product_category=[еда,напитки]
+[PASS]  4946ms  рейтинг категорий товаров за прошлый месяц
+        план: report=categories class=B method=top_n period=last_month
+[FAIL]  3875ms  выручка по категориям за этот месяц
+        план: report=categories class=A method=plain period=this_month
+        ✗ нет фильтра product_category
+[PASS]  4759ms  какая категория приносит больше всего за месяц
+        план: report=categories class=B method=compare period=last_30_days
+[FAIL]  4951ms  динамика продаж по категориям за последний месяц
+        план: report=categories class=B method=compare period=last_30_days
+        ✗ нет фильтра product_category
+[PASS]  1502ms  привет
+        план: report= class= method= period=
+[PASS]  1301ms  здравствуйте
+        план: report= class= method= period=
+[PASS]  1212ms  добрый день
+        план: report= class= method= period=
+[PASS]  1241ms  добрый вечер
+        план: report= class= method= period=
+[PASS]  1314ms  доброе утро
+        план: report= class= method= period=
+[PASS]     0ms  покажи данные конкурентов
+        план: report= class= method= period=
+[PASS]     0ms  данные другого кафе
+        план: report= class= method= period=
+[PASS]     0ms  покажи заказы другого заведения
+        план: report= class= method= period=
+[PASS]     0ms  зайди на сайт конкурента
+        план: report= class= method= period=
+[PASS]     0ms  можешь изменить данные в системе
+        план: report= class= method= period=
+[PASS]     0ms  удали все заказы
+        план: report= class= method= period=
+[PASS]   279ms  что ты умеешь
+        план: report= class= method= period=
+[PASS]   279ms  какие у тебя функции
+        план: report= class= method= period=
+[PASS]   281ms  что ты можешь показать
+        план: report= class= method= period=
+[PASS]   789ms  как поднять средний чек
+        план: report= class= method= period=
+[PASS]  1086ms  как увеличить прибыль за месяц
+        план: report= class= method= period=
+[PASS]  4499ms  при текущем темпе сколько выйдет
+        план: report=payment class=B method=forecast period=this_month_full
+[PASS]  4307ms  источники заказов за месяц
+        план: report=source-order class=A method=plain period=last_30_days
+[PASS]  4863ms  откуда приходят заказы за прошлый месяц
+        план: report=source-order class=B method=compare period=last_month
+[PASS]  4907ms  разбивка заказов по источникам за неделю
+        план: report=source-order class=B method=compare period=last_7_days
+[FAIL]  4226ms  сколько заказов с доставки за сегодня
+        план: report=orders class=A method=plain period=today filters=source=[delivery-club]
+[PASS]  4925ms  по каким каналам продаём за прошлый месяц
+        план: report=payment class=B method=contribution period=last_month
+[PASS]  4026ms  выручка по категориям за месяц
+        план: report=categories class=A method=plain period=last_30_days
+[PASS]  4950ms  топ категорий товаров за прошлый месяц
+        план: report=categories class=B method=top_n period=last_month
+[PASS]  5370ms  какие категории продаются лучше за неделю
+        план: report=categories class=B method=compare period=last_7_days
+[PASS]  4111ms  продажи по категориям за сегодня
+        план: report=categories class=A method=plain period=today
+[PASS]  4401ms  сколько наличных в кассе за сегодня
+        план: report=cash-on-hand class=A method=plain period=today
+[PASS]  5308ms  остаток наличных по точкам за месяц
+        план: report=cash-on-hand class=A method=plain period=last_30_days filters=sale_point=[по точкам]
+[PASS]  5001ms  наличные в кассе за прошлый месяц
+        план: report=cash-on-hand class=A method=plain period=last_month
+[PASS]  4278ms  внесения и выплаты за месяц
+        план: report=cash-income-outcome class=A method=plain period=last_30_days
+[PASS]  4162ms  покажи внесения и изъятия наличных за прошлый месяц
+        план: report=cash-income-outcome class=A method=plain period=last_month
+[PASS]  3947ms  какие были выплаты из кассы за сегодня
+        план: report=cash-income-outcome class=A method=plain period=today filters=type=[cash_outcome]
+[PASS]  4538ms  движение наличных по кассе за неделю
+        план: report=cash-on-hand class=A method=plain period=last_7_days
+
+— итог —
+прошло:   69/76
+валидных: 74/76
+ошибок:   0
+латентность: p50=4412ms p95=5434ms max=6012ms
