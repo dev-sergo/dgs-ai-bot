@@ -55,13 +55,56 @@ curl http://localhost:8088/healthz  # проверить бэкенд
 | `QUERY_LOG_PATH` | — | Путь к JSONL-файлу лога вопросов/ответов; пусто → не пишем |
 | `FEEDBACK_LOG_PATH` | — | Путь к JSONL-файлу оценок 👍/👎; пусто → не пишем |
 
-### Telegram (опционально)
+### Telegram — один бот (legacy / dev)
+
+Если список `TENANTS` пуст, из этих переменных синтезируется **один** тенант (обратная
+совместимость и dev/фикстуры):
 
 | Переменная | Дефолт | Описание |
 |---|---|---|
 | `TELEGRAM_TOKEN` | — | Токен бота Telegram; пусто → Telegram-транспорт не запускается |
 | `TELEGRAM_ALLOWLIST` | — | CSV list chat_id (например `123456,789012`); пусто → открыт всем |
 | `TELEGRAM_TENANT` | `mock_single` | ID тенанта по умолчанию для Telegram-бота |
+
+### Telegram — 3 бота (мультитенант, production-демо)
+
+Основной путь: `TENANTS` перечисляет ключи тенантов через запятую, а креды каждого
+задаются индексированными переменными `TENANT_<ключ>_*`. `cmd/bot` поднимает по боту на
+тенанта; каждый бот жёстко привязан к своему тенанту со своим whitelist'ом, а общий
+движок резолвит источник данных по `tenant_id` (изоляция). Секреты не логируются
+(`config.Summary()` печатает только `set|unset`).
+
+| Переменная | Описание |
+|---|---|
+| `TENANTS` | CSV ключей, например `a,b,c` (пусто → одно-тенантный legacy-путь выше) |
+| `TENANT_<k>_ID` | tenant_id/domain для `tenants.example.json` и реестра (default = ключ) |
+| `TENANT_<k>_BOT_TOKEN` | токен бота @BotFather (обязателен) |
+| `TENANT_<k>_ALLOWLIST` | CSV chat_id whitelist (пусто → бот открыт всем) |
+| `TENANT_<k>_DOMAIN` | `tenant-domain` для Report-API (default = ID) |
+| `TENANT_<k>_ACCESS_TOKEN` | `access-token` Report-API; пусто → общий `DGS_ACCESS_TOKEN` |
+| `TENANT_<k>_XCONTEXT` | `x-context` (внутренний режим `DGS_REPORT_AUTH=xcontext`) |
+
+Пример (3 бота, внешний `api.dooglys.com`, общий access-token, различие — домен):
+```env
+DGS_CLIENT=api
+DGS_REPORT_AUTH=token
+DGS_REPORT_BASE=https://api.dooglys.com/api/v1/reports
+DGS_ACCESS_TOKEN=shared-access-token   # общий, либо задайте TENANT_<k>_ACCESS_TOKEN
+
+TENANTS=rukagreka,second,third
+TENANT_rukagreka_BOT_TOKEN=111:AAA
+TENANT_rukagreka_ALLOWLIST=100200300
+TENANT_second_BOT_TOKEN=222:BBB
+TENANT_second_DOMAIN=second-domain
+TENANT_second_ALLOWLIST=400500600
+TENANT_third_BOT_TOKEN=333:CCC
+TENANT_third_DOMAIN=third-domain
+TENANT_third_ALLOWLIST=700800900
+```
+
+**Валидация на старте:** битый конфиг падает сразу с внятным сообщением, а не HTTP 500
+на первом запросе — `DGS_REPORT_AUTH=token` без access-token (пер-тенантного или общего),
+`xcontext` без `XCONTEXT`, либо тенант без токена бота.
 
 ---
 
