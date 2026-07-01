@@ -10,7 +10,10 @@ import (
 func TestDefaultSlugs(t *testing.T) {
 	c := Default()
 	got := c.Slugs()
-	want := []string{"orders", "paycheck", "payment", "personnel", "products"}
+	want := []string{
+		"cash-income-outcome", "cash-on-hand", "categories", "orders",
+		"paycheck", "payment", "personnel", "products", "source-order",
+	}
 	if len(got) != len(want) {
 		t.Fatalf("slugs = %v, want %v", got, want)
 	}

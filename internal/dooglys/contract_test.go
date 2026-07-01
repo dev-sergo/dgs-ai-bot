@@ -124,6 +124,52 @@ func TestReportAPIPaymentAliasContract(t *testing.T) {
 	}
 }
 
+// TestNewReportsCatalogContract — для 4 отчётов ТЗ (задача 4) каждый non-PII ключ
+// каталога присутствует в форме строки боевого Report-API (live-дамп 2026-07-01).
+// Если Dooglys переименует колонку или каталог разойдётся с источником — тест упадёт
+// раньше, чем движок начнёт рисовать пустые ячейки/нули на демо.
+func TestNewReportsCatalogContract(t *testing.T) {
+	// Формы строк = боевой дамп TestLiveReport_NewReportsDump.
+	dumps := map[string]Row{
+		"source-order": {
+			"source": "cashier-retail", "quantity": 3481.0, "total": 1360522.0, "profit": 752275.55,
+			"delivery_quantity": 7.0, "delivery_total": 7129.0, "delivery_profit": 4301.07,
+			"hold_quantity": 3448.0, "hold_total": 1340134.0, "hold_profit": 740612.89,
+			"pickup_quantity": 20.0, "pickup_total": 10820.0, "pickup_profit": 6022.8,
+			"retail_quantity": 6.0, "retail_total": 2439.0, "retail_profit": 1338.79,
+		},
+		"categories": {
+			"id": "85f8...", "name": "Гирос", "quantity": 1444.0,
+			"amount": 471437.81, "revenue": 471437.81, "profit": 272369.66,
+		},
+		"cash-on-hand": {
+			"name": "Кочкуровская, 13а", "sale_point_id": "271d...", "sale_point_name": "Кочкуровская, 13а",
+			"sell": 146958.0, "payback": 1174.0, "income": 99508.0, "outcome": 258955.0, "total": -13663.0,
+		},
+		"cash-income-outcome": {
+			"id": "75a8...", "name": "Кочкуровская, 13а", "sale_point_id": "271d...", "sale_point_name": "Кочкуровская, 13а",
+			"close_user_id": "b2df...", "close_user_name": "Аксенова Анастасия", "cashier_name": "Аксенова Анастасия",
+			"close_date": 1.748759166e+09, "description": "Открытие смены", "sum": 1.0, "type": "cash_income",
+		},
+	}
+	cat := catalog.Default()
+	for slug, row := range dumps {
+		rep, ok := cat.Report(slug)
+		if !ok {
+			t.Errorf("каталог не содержит %q", slug)
+			continue
+		}
+		for _, f := range rep.Fields {
+			if f.PII {
+				continue
+			}
+			if _, present := row[f.Key]; !present {
+				t.Errorf("%s: каталожный ключ %q отсутствует в форме Report-API", slug, f.Key)
+			}
+		}
+	}
+}
+
 // ── Шов 2: Personnel fixture→Catalog ─────────────────────────────────────────
 
 // TestPersonnelFixtureFieldContract — строки personnel.json содержат все non-PII ключи

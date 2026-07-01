@@ -93,7 +93,7 @@ func Load() Config {
 		FeedbackLogPath: env("FEEDBACK_LOG_PATH", ""),
 		LLM: LLM{
 			BaseURL:   env("LLM_BASE_URL", "http://172.20.10.2:8080"),
-			Model:     env("LLM_MODEL", "qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07"),
+			Model:     env("LLM_MODEL", "qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07"),
 			APIKey:    env("LLM_API_KEY", ""),
 			Timeout:   envDuration("LLM_TIMEOUT", 180*time.Second),
 			ForceJSON: envBool("LLM_FORCE_JSON", true),

@@ -151,6 +151,58 @@ func Default() *Catalog {
 				Filter{Field: "cost_to", Param: "cost_to", Kind: "scalar"},
 			),
 		},
+		// ── 4 отчёта ТЗ (Блок 1, задача 4). Ключи полей = колонки боевого Report-API
+		// (live-дамп 2026-07-01) → алиасы не нужны. Рендер plain/top_n таблицей.
+		{
+			// Источники заказов: на строку — источник, разбивка по типам (delivery/hold/
+			// pickup/retail) сводится в итоговые quantity/total/profit. Для демо отдаём итоги.
+			Slug: "source-order", Name: "Источники заказов", DefaultDim: "source",
+			Fields: []Field{
+				{Key: "source", Label: "Источник", Unit: "string"},
+				{Key: "quantity", Label: "Кол-во заказов", Unit: "count"},
+				{Key: "total", Label: "Выручка", Unit: "RUB"},
+				{Key: "profit", Label: "Прибыль", Unit: "RUB"},
+			},
+			Filters: common,
+		},
+		{
+			Slug: "categories", Name: "Категории товаров", DefaultDim: "name",
+			Fields: []Field{
+				{Key: "name", Label: "Категория", Unit: "string"},
+				{Key: "quantity", Label: "Кол-во", Unit: "count"},
+				{Key: "amount", Label: "Выручка", Unit: "RUB"},
+				{Key: "profit", Label: "Прибыль", Unit: "RUB"},
+			},
+			Filters: append(append([]Filter{}, common...),
+				Filter{Field: "product_category", Param: "product_category_id", Kind: "ref", IsMulti: true},
+			),
+		},
+		{
+			Slug: "cash-on-hand", Name: "Наличные в кассе", DefaultDim: "name",
+			Fields: []Field{
+				{Key: "name", Label: "Торговая точка", Unit: "string"},
+				{Key: "sell", Label: "Продажи", Unit: "RUB"},
+				{Key: "payback", Label: "Возвраты", Unit: "RUB"},
+				{Key: "income", Label: "Внесения", Unit: "RUB"},
+				{Key: "outcome", Label: "Выплаты", Unit: "RUB"},
+				{Key: "total", Label: "Итого", Unit: "RUB"},
+			},
+			Filters: common,
+		},
+		{
+			// Внесения и выплаты: журнал кассовых операций. Группируем по типу операции
+			// (cash_income/cash_outcome) → сумма по типу. cashier_name — PII (в LLM не идёт).
+			Slug: "cash-income-outcome", Name: "Внесения и выплаты", DefaultDim: "type",
+			Fields: []Field{
+				{Key: "type", Label: "Тип операции", Unit: "string"},
+				{Key: "description", Label: "Описание", Unit: "string"},
+				{Key: "sum", Label: "Сумма", Unit: "RUB"},
+				{Key: "cashier_name", Label: "Кассир", Unit: "string", PII: true},
+			},
+			Filters: append(append([]Filter{}, common...),
+				Filter{Field: "type", Param: "type", Kind: "enum",
+					Enum: []string{"cash_income", "cash_outcome"}, IsMulti: true}),
+		},
 	}
 
 	c := &Catalog{reports: make(map[string]Report, len(reps))}

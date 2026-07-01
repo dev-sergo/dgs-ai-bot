@@ -1,0 +1,16 @@
+{"query": "источники заказов за месяц", "expect": {"intent": "report", "report": "source-order", "period_token": "this_month|last_30_days"}}
+{"query": "откуда приходят заказы за прошлый месяц", "expect": {"intent": "report", "report": "source-order", "period_token": "last_month"}}
+{"query": "разбивка заказов по источникам за неделю", "expect": {"intent": "report", "report": "source-order", "period_token": "last_7_days|this_week"}}
+{"query": "сколько заказов с доставки за сегодня", "expect": {"intent": "report", "report": "source-order|orders", "period_token": "today"}}
+{"query": "по каким каналам продаём за прошлый месяц", "expect": {"intent": "report", "report": "source-order|payment", "period_token": "last_month"}}
+{"query": "выручка по категориям за месяц", "expect": {"intent": "report", "report": "categories", "period_token": "this_month|last_30_days"}}
+{"query": "топ категорий товаров за прошлый месяц", "expect": {"intent": "report", "report": "categories", "period_token": "last_month"}}
+{"query": "какие категории продаются лучше за неделю", "expect": {"intent": "report", "report": "categories|products", "period_token": "last_7_days|this_week"}}
+{"query": "продажи по категориям за сегодня", "expect": {"intent": "report", "report": "categories", "period_token": "today"}}
+{"query": "сколько наличных в кассе за сегодня", "expect": {"intent": "report", "report": "cash-on-hand", "period_token": "today"}}
+{"query": "остаток наличных по точкам за месяц", "expect": {"intent": "report", "report": "cash-on-hand", "period_token": "this_month|last_30_days"}}
+{"query": "наличные в кассе за прошлый месяц", "expect": {"intent": "report", "report": "cash-on-hand", "period_token": "last_month"}}
+{"query": "внесения и выплаты за месяц", "expect": {"intent": "report", "report": "cash-income-outcome", "period_token": "this_month|last_30_days"}}
+{"query": "покажи внесения и изъятия наличных за прошлый месяц", "expect": {"intent": "report", "report": "cash-income-outcome", "period_token": "last_month"}}
+{"query": "какие были выплаты из кассы за сегодня", "expect": {"intent": "report", "report": "cash-income-outcome", "period_token": "today"}}
+{"query": "движение наличных по кассе за неделю", "expect": {"intent": "report", "report": "cash-income-outcome|cash-on-hand", "period_token": "last_7_days|this_week"}}

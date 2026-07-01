@@ -88,7 +88,11 @@ var reportDefaultSort = map[string]string{
 // user → name: сотрудник идентифицируется по полю name в строке персонала.
 // Полное заполнение под 6 отчётов ТЗ — задача 4 (каталог/нарратор).
 var reportFilterColumn = map[string]string{
-	"user": "name",
+	"user":       "name",            // personnel: сотрудник = колонка name
+	"sale_point": "sale_point_name", // cash-on-hand / cash-income-outcome: точка по имени
+	"type":       "type",            // cash-income-outcome: внесения/выплаты (cash_income|cash_outcome)
+	// ⚠️ карта глобальна (не per-report). Прочие фильтры (locality/product_category)
+	// без подходящей колонки → FiltersSkipped (мягко). Per-report фильтры — P1.
 }
 
 // reportColumnAlias — переименование колонок ответа Report-API в ключи полей каталога

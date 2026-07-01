@@ -100,3 +100,25 @@ func TestLiveReport_Personnel(t *testing.T) {
 		t.Logf("  %v: выручка=%v чеков=%v", r["name"], r["revenue"], r["total_count"])
 	}
 }
+
+// TestLiveReport_NewReportsDump — выгрузка формы 4 новых отчётов ТЗ под задачу 4
+// (source-order, categories, cash-on-hand, cash-income-outcome). По колонкам заполним
+// catalog.Default()/reportFilterColumn точными ключами, как сделали для payment/products.
+func TestLiveReport_NewReportsDump(t *testing.T) {
+	base := os.Getenv("DGS_REPORT_BASE")
+	token := os.Getenv("DGS_ACCESS_TOKEN")
+	tenant := os.Getenv("DGS_DOMAIN")
+	if base == "" || token == "" || tenant == "" {
+		t.Skip("creds required")
+	}
+	cli := NewReportAPIClientToken(base, token, tenant)
+	for _, report := range []string{"source-order", "categories", "cash-on-hand", "cash-income-outcome"} {
+		res, err := cli.Fetch(context.Background(), Query{Report: report, From: "01.06.2025", To: "30.06.2025"})
+		if err != nil {
+			t.Errorf("Fetch %s: %v", report, err)
+			continue
+		}
+		t.Logf("%s: %d строк", report, len(res.Rows))
+		dumpColumns(t, report, res.Rows)
+	}
+}
