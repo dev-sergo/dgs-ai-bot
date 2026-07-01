@@ -151,6 +151,26 @@ func (a *App) setFor(tenantID string) (*tenantSet, bool) {
 // поэтому возвращаем ошибку, а не молчаливую подстановку чужого источника.
 var errUnknownTenant = errors.New("app: нет зарегистрированного источника данных для тенанта")
 
+// fetchErrorPrompt — мягкий ответ при сбое обращения к источнику данных (живой API
+// флакует/таймаутит). Реальная ошибка уходит в Logger, пользователю — человеческий текст,
+// а НЕ raw error/500: и Telegram, и HTTP деградируют одинаково (см. dataUnavailable).
+const fetchErrorPrompt = "Не смог получить данные — источник временно недоступен. Попробуйте позже."
+
+// dataUnavailable — единая точка graceful-деградации при сбое client.Fetch. Логирует
+// реальную причину (аудит остаётся полным) и возвращает валидный Answer с мягким текстом
+// и err=nil: сетевой сбой источника не должен всплывать пользователю как 500 или raw error.
+// Отличается от errUnknownTenant (инвариант конфига → ошибка) — это транзиентный сбой данных.
+func (a *App) dataUnavailable(sessionID, text string, ans Answer, cause error) (Answer, error) {
+	if a.Logger != nil {
+		a.Logger.Error("fetch.unavailable",
+			"tenant", ans.TenantID, "report", ans.Plan.Report, "err", cause.Error())
+	}
+	ans.Validation = plan.ValidationResult{OK: false}
+	ans.Text = fetchErrorPrompt
+	a.remember(sessionID, text, ans.Text)
+	return ans, nil
+}
+
 // Ask — основной вход: текст → ответ.
 func (a *App) Ask(ctx context.Context, tenantID, sessionID, text string) (ans Answer, err error) {
 	ans.ID = newID()
@@ -343,7 +363,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 	currency := currencyOr(t.Currency)
 	resNow, err := set.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: from, To: to, Filters: filters})
 	if err != nil {
-		return ans, err
+		return a.dataUnavailable(sessionID, text, ans, err)
 	}
 
 	// Запрошенный фильтр построен, но отчёт его не поддерживает (нет такого разреза) —
@@ -365,7 +385,7 @@ func (a *App) executeReport(ctx context.Context, tenantID, sessionID, text strin
 		periodPrev := envelope.Period{From: prevR.From, To: prevR.To, TZ: t.Timezone}
 		resPrev, err := set.client.Fetch(ctx, dooglys.Query{Report: p.Report, From: prevR.From, To: prevR.To, Filters: filters})
 		if err != nil {
-			return ans, err
+			return a.dataUnavailable(sessionID, text, ans, err)
 		}
 		metric := primaryMetric(p, rep)
 		if p.Method == "compare" {
@@ -499,15 +519,15 @@ func (a *App) advise(ctx context.Context, tenantID, sessionID, text string, p pl
 	// Снимок собирается из нескольких детерминированных выборок.
 	payNow, err := set.client.Fetch(ctx, dooglys.Query{Report: "payment", From: from, To: to, Filters: payFilters})
 	if err != nil {
-		return ans, err
+		return a.dataUnavailable(sessionID, text, ans, err)
 	}
 	payPrev, err := set.client.Fetch(ctx, dooglys.Query{Report: "payment", From: prev.From, To: prev.To, Filters: payFilters})
 	if err != nil {
-		return ans, err
+		return a.dataUnavailable(sessionID, text, ans, err)
 	}
 	prodNow, err := set.client.Fetch(ctx, dooglys.Query{Report: "products", From: from, To: to, Filters: prodFilters})
 	if err != nil {
-		return ans, err
+		return a.dataUnavailable(sessionID, text, ans, err)
 	}
 
 	// Запрошенный фильтр построен, но отчёт его не поддерживает (нет такого разреза) —
