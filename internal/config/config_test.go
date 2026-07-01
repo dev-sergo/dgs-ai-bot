@@ -9,12 +9,15 @@ import (
 // TestLoadDefaults — без env Load даёт документированные дефолты под локалку.
 func TestLoadDefaults(t *testing.T) {
 	// Изолируем от окружения CI: явно гасим то, что может протечь.
-	for _, k := range []string{"HTTP_ADDR", "PLANNER_MODE", "DGS_CLIENT", "LLM_FORCE_JSON", "AUTH_TOKEN"} {
+	for _, k := range []string{"HTTP_ADDR", "PLANNER_MODE", "DGS_CLIENT", "LLM_FORCE_JSON", "AUTH_TOKEN", "APP_ENV"} {
 		t.Setenv(k, "")
 	}
 	c := Load()
 	if c.HTTPAddr != ":8088" {
 		t.Errorf("HTTPAddr = %q, want :8088", c.HTTPAddr)
+	}
+	if c.AppEnv != "dev" || c.IsProd() {
+		t.Errorf("AppEnv default = %q (IsProd=%v), want dev/false", c.AppEnv, c.IsProd())
 	}
 	if c.PlannerMode != PlannerLLM {
 		t.Errorf("PlannerMode = %q, want llm", c.PlannerMode)
@@ -209,6 +212,43 @@ func TestValidateTelegram(t *testing.T) {
 	c.Tenants[1].BotToken = "y"
 	if err := c.ValidateTelegram(); err != nil {
 		t.Errorf("все токены заданы: %v", err)
+	}
+}
+
+// TestValidateTelegramProdAllowlist — в проде пустой allowlist на тенанта → fail-fast;
+// в dev (и пустой APP_ENV) «пусто = открыт» допустимо.
+func TestValidateTelegramProdAllowlist(t *testing.T) {
+	// prod + тенант без allowlist → ошибка (бот иначе открыт всем).
+	prodOpen := Config{
+		AppEnv:  "prod",
+		Tenants: []TenantConfig{{ID: "t1", BotToken: "x"}},
+	}
+	if err := prodOpen.ValidateTelegram(); err == nil {
+		t.Error("prod без allowlist должен падать (бот открыт всем)")
+	}
+
+	// prod + непустой allowlist → ок. Регистр APP_ENV не важен.
+	prodOK := Config{
+		AppEnv:  "PROD",
+		Tenants: []TenantConfig{{ID: "t1", BotToken: "x", Allowlist: []int64{111}}},
+	}
+	if err := prodOK.ValidateTelegram(); err != nil {
+		t.Errorf("prod с allowlist не должен падать: %v", err)
+	}
+
+	// dev + пустой allowlist → ок (прежнее послабление для фикстур/отладки).
+	dev := Config{
+		AppEnv:  "dev",
+		Tenants: []TenantConfig{{ID: "t1", BotToken: "x"}},
+	}
+	if err := dev.ValidateTelegram(); err != nil {
+		t.Errorf("dev без allowlist не должен падать: %v", err)
+	}
+
+	// пустой APP_ENV трактуется как небоевой (не prod) → пустой allowlist допустим.
+	unset := Config{Tenants: []TenantConfig{{ID: "t1", BotToken: "x"}}}
+	if err := unset.ValidateTelegram(); err != nil {
+		t.Errorf("пустой APP_ENV не prod → без allowlist ок: %v", err)
 	}
 }
 

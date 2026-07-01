@@ -91,12 +91,16 @@ type Config struct {
 	HTTPAddr     string
 	PlannerMode  PlannerMode
 	FixturesPath string
+	// AppEnv различает боевой и dev-режим (env APP_ENV, default dev). В prod включаются
+	// строгие инварианты безопасности (напр. непустой allowlist на тенанта); dev/CI/eval
+	// сохраняют прежние послабления («пусто = открыт»).
+	AppEnv          string
 	AuthToken       string // общий токен демо-гейта (env AUTH_TOKEN); пусто → гейт выключен
 	QueryLogPath    string // JSONL-датасет вопросов/ответов (env QUERY_LOG_PATH); пусто → лог выключен
 	FeedbackLogPath string // JSONL оценок пользователя (env FEEDBACK_LOG_PATH); пусто → лог выключен
-	LLM          LLM
-	Dooglys      Dooglys
-	Telegram     Telegram
+	LLM             LLM
+	Dooglys         Dooglys
+	Telegram        Telegram
 	// Tenants — эффективный список тенантов (заполняется в Load). Из ENV TENANTS,
 	// либо один синтезированный из legacy Telegram+Dooglys, если TENANTS пуст.
 	Tenants []TenantConfig
@@ -105,9 +109,10 @@ type Config struct {
 // Load читает конфиг из ENV с разумными дефолтами под локальную разработку.
 func Load() Config {
 	c := Config{
-		HTTPAddr:     env("HTTP_ADDR", ":8088"),
-		PlannerMode:  PlannerMode(env("PLANNER_MODE", string(PlannerLLM))),
-		FixturesPath: env("FIXTURES_PATH", "docs/contracts/fixtures"),
+		HTTPAddr:        env("HTTP_ADDR", ":8088"),
+		PlannerMode:     PlannerMode(env("PLANNER_MODE", string(PlannerLLM))),
+		FixturesPath:    env("FIXTURES_PATH", "docs/contracts/fixtures"),
+		AppEnv:          env("APP_ENV", "dev"),
 		AuthToken:       env("AUTH_TOKEN", ""),
 		QueryLogPath:    env("QUERY_LOG_PATH", ""),
 		FeedbackLogPath: env("FEEDBACK_LOG_PATH", ""),
@@ -119,12 +124,12 @@ func Load() Config {
 			ForceJSON: envBool("LLM_FORCE_JSON", true),
 		},
 		Dooglys: Dooglys{
-			Mode:       DooglysMode(env("DGS_CLIENT", string(DooglysFixture))),
-			Base:       env("DGS_BASE", "https://google.dooglys.com"),
-			Cookie:     env("DGS_COOKIE", ""),
-			Domain:     env("DGS_DOMAIN", "google"),
-			Login:      env("DGS_LOGIN", ""),
-			Password:   env("DGS_PASSWORD", ""),
+			Mode:        DooglysMode(env("DGS_CLIENT", string(DooglysFixture))),
+			Base:        env("DGS_BASE", "https://google.dooglys.com"),
+			Cookie:      env("DGS_COOKIE", ""),
+			Domain:      env("DGS_DOMAIN", "google"),
+			Login:       env("DGS_LOGIN", ""),
+			Password:    env("DGS_PASSWORD", ""),
 			ReportBase:  env("DGS_REPORT_BASE", ""),
 			ReportAuth:  env("DGS_REPORT_AUTH", "token"),
 			AccessToken: env("DGS_ACCESS_TOKEN", ""),
@@ -210,8 +215,8 @@ func (c Config) Summary() string {
 	if c.FeedbackLogPath != "" {
 		flog = c.FeedbackLogPath
 	}
-	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s feedbacklog=%s auth=%s tenants=%s",
-		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, flog, c.Dooglys.ReportAuth, c.tenantsSummary())
+	return fmt.Sprintf("env=%s addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s feedbacklog=%s auth=%s tenants=%s",
+		c.AppEnv, c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, flog, c.Dooglys.ReportAuth, c.tenantsSummary())
 }
 
 // tenantsSummary — компактное описание тенантов БЕЗ секретов: id/domain, размер
@@ -279,8 +284,17 @@ func (c Config) Validate() error {
 	return nil
 }
 
-// ValidateTelegram проверяет, что каждый тенант несёт токен бота — предпосылка запуска
-// N ботов (cmd/bot). Отделено от Validate: cmd/server ботов не поднимает.
+// IsProd — боевой режим (APP_ENV=prod, регистр не важен). Включает строгие инварианты
+// безопасности; всё остальное (dev/CI/eval/пусто) считается небоевым.
+func (c Config) IsProd() bool { return strings.EqualFold(c.AppEnv, "prod") }
+
+// ValidateTelegram проверяет предпосылки запуска N ботов (cmd/bot): токен бота на каждого
+// тенанта, а в проде — ещё и непустой allowlist. Отделено от Validate: cmd/server ботов
+// не поднимает.
+//
+// Строгий allowlist в проде: пустой список молча открывает бота ВСЕМ (bot.go allowed),
+// что нарушает требование «только этот человек». В dev «пусто = открыт» остаётся ради
+// фикстур/локальной отладки — режим выбирается APP_ENV, а не молчаливым дефолтом.
 func (c Config) ValidateTelegram() error {
 	if len(c.Tenants) == 0 {
 		return fmt.Errorf("не задан ни один тенант — боту нечего запускать")
@@ -288,6 +302,10 @@ func (c Config) ValidateTelegram() error {
 	for _, t := range c.Tenants {
 		if t.BotToken == "" {
 			return fmt.Errorf("тенант %q: не задан токен бота (TENANT_<key>_BOT_TOKEN или TELEGRAM_TOKEN)", t.ID)
+		}
+		if c.IsProd() && len(t.Allowlist) == 0 {
+			return fmt.Errorf("тенант %q: APP_ENV=prod требует непустой allowlist "+
+				"(TENANT_<key>_ALLOWLIST или TELEGRAM_ALLOWLIST) — иначе бот открыт всем", t.ID)
 		}
 	}
 	return nil
