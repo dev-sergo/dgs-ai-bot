@@ -58,12 +58,98 @@ func reportClient(d config.Dooglys) dooglys.Client {
 	return dooglys.NewReportAPIClientToken(rb, d.AccessToken, d.Domain)
 }
 
+// tenantDooglys накладывает пер-тенантные креды (Domain/AccessToken/XContext) поверх
+// общих настроек Dooglys (Mode/Base/ReportBase/ReportAuth/Login/Password). Пустой
+// пер-тенантный кред НЕ затирает общий (поддержка «токен общий, различие — в домене»).
+func tenantDooglys(base config.Dooglys, tc config.TenantConfig) config.Dooglys {
+	d := base
+	if tc.Domain != "" {
+		d.Domain = tc.Domain
+	}
+	if tc.AccessToken != "" {
+		d.AccessToken = tc.AccessToken
+	}
+	if tc.XContext != "" {
+		d.XContext = tc.XContext
+	}
+	return d
+}
+
+// tenantData собирает источник данных и резолвер ОДНОГО тенанта по его кредам.
+// Источник: fixture (детерминированный, без сети) / http (SSR-HTML) / api (JSON+Report-API).
+// Каждый тенант получает свой экземпляр — это и есть граница изоляции данных.
+func tenantData(cfg config.Config, tc config.TenantConfig) (dooglys.Client, *resolver.Store) {
+	d := tenantDooglys(cfg.Dooglys, tc)
+	switch d.Mode {
+	case config.DooglysAPI:
+		if d.Login == "" || d.Password == "" {
+			// JSON API самосбора нет — но Report-API (token/xcontext) может работать сам.
+			// Не роняем тенанта: без login/password payment/products возьмёт Report-API
+			// (если есть креды) либо фикстуры. personnel — Report-API/фикстуры.
+			log.Printf("dooglys[%s]: DGS_LOGIN/PASSWORD не заданы — JSON API самосбор выключен", tc.ID)
+		}
+		byReport := map[string]dooglys.Client{}
+		var api *dooglys.APIClient
+		if d.Login != "" && d.Password != "" {
+			log.Printf("dooglys[%s]: JSON API → %s (domain=%s); payment+products via API", tc.ID, d.Base, d.Domain)
+			api = dooglys.NewAPIClient(d.Base, d.Domain, d.Login, d.Password)
+			byReport["payment"] = api
+			byReport["products"] = api
+		}
+		// Report-API: server-side агрегаты (единый источник = числа админки Dooglys).
+		// token (внешний api.dooglys.com) — primary демо; xcontext — внутренний (кубы).
+		if rc := reportClient(d); rc != nil {
+			byReport["personnel"] = rc
+			byReport["payment"] = rc  // снять с самосбора → server-side агрегаты
+			byReport["products"] = rc // то же; bonus — profit из Report-API
+			log.Printf("dooglys[%s]: payment/products/personnel → Report-API", tc.ID)
+		}
+		client := dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
+		res := resolver.Load(cfg.FixturesPath)
+		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с
+		// таймаутом, чтобы транспорт слушал сразу: до готовности товары резолвятся из
+		// фикстур, потом SetOptions атомарно заменяет их живыми (Store под RWMutex).
+		if api != nil {
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), productIndexTimeout)
+				defer cancel()
+				if opts, err := api.ProductIndex(ctx); err != nil {
+					log.Printf("resolver[%s]: живой индекс товаров недоступен (%v) — из фикстур", tc.ID, err)
+				} else {
+					res.SetOptions("product", opts)
+					log.Printf("resolver[%s]: %d товаров из живых заказов (фон готов)", tc.ID, len(opts))
+				}
+			}()
+		}
+		return client, res
+	case config.DooglysHTTP:
+		log.Printf("dooglys[%s]: HTTP client → %s", tc.ID, d.Base)
+		hc := dooglys.NewHTMLClient(d.Base, d.Cookie)
+		if live, err := resolver.NewLiveStore(context.Background(), hc); err != nil {
+			log.Printf("resolver[%s]: live store unavailable (%v) — fallback to fixtures", tc.ID, err)
+			return hc, resolver.Load(cfg.FixturesPath)
+		} else {
+			log.Printf("resolver[%s]: using live UUIDs from Dooglys HTML form", tc.ID)
+			return hc, live
+		}
+	default:
+		return dooglys.NewFixtureClient(cfg.FixturesPath), resolver.Load(cfg.FixturesPath)
+	}
+}
+
 // App строит app.App из конфига: planner/narrator/advisor, справочник тенантов,
-// клиент данных + резолвер, querylog. Возвращает cleanup (закрыть querylog) для defer.
-// Фатальные ошибки конфигурации (нет creds, не читается справочник) — как error;
-// точка входа сама решает, ронять ли процесс.
+// и пер-тенантный реестр {client, resolver} (по одному набору на тенанта из cfg.Tenants).
+// Возвращает cleanup (закрыть querylog) для defer. Фатальные ошибки конфигурации (битая
+// авторизация, не читается справочник) — как error; точка входа сама решает, ронять ли процесс.
 func App(cfg config.Config) (*app.App, func(), error) {
+	// Ранняя валидация авторизации: битый конфиг падает на старте с внятным сообщением,
+	// а не HTTP 500 на первом запросе (docs/12 §8).
+	if err := cfg.Validate(); err != nil {
+		return nil, nil, fmt.Errorf("config: %w", err)
+	}
+
 	// Планировщик, нарратор, консультант: реальная LLM или детерминированные стабы.
+	// Тенант-агностичны и общие для всех тенантов (один LLM-клиент, одна сессия-стора).
 	var pl planner.Planner
 	var nar narrator.Narrator
 	var adv advisor.Advisor
@@ -81,73 +167,21 @@ func App(cfg config.Config) (*app.App, func(), error) {
 		adv = advisor.NewLLM(cli, cfg.LLM.Model)
 	}
 
-	// Справочник тенантов.
+	// Справочник тенантов (таймзона/валюта/точки) — общий, ключуется по tenant_id/domain.
 	tenants, err := tenantctx.Load(filepath.Join(cfg.FixturesPath, "tenants.example.json"))
 	if err != nil {
 		return nil, nil, fmt.Errorf("tenants: %w", err)
 	}
 
-	// Источник данных: fixture (по умолчанию, детерминированный) или http (реальный Dooglys).
-	// Резолвер имя→uuid: при http берём живые uuid из HTML-формы отчёта, при fixture —
-	// офлайн grid-снимки (детерминированный путь CI/eval).
-	var client dooglys.Client
-	var res *resolver.Store
-	switch cfg.Dooglys.Mode {
-	case config.DooglysAPI:
-		if cfg.Dooglys.Login == "" || cfg.Dooglys.Password == "" {
-			return nil, nil, fmt.Errorf("DGS_CLIENT=api requires DGS_LOGIN and DGS_PASSWORD to be set")
-		}
-		log.Printf("dooglys: using JSON API client → %s (domain=%s); payment+products via API, прочее — фикстуры",
-			cfg.Dooglys.Base, cfg.Dooglys.Domain)
-		api := dooglys.NewAPIClient(cfg.Dooglys.Base, cfg.Dooglys.Domain, cfg.Dooglys.Login, cfg.Dooglys.Password)
-		// Гибрид: payment+products — живой JSON API; paycheck/orders — фикстуры.
-		// personnel — Report-API если DGS_XCONTEXT задан, иначе тоже фикстура.
-		// payment/products: при доступном Report-API — server-side агрегаты (единый
-		// источник = числа админки Dooglys); иначе самосбор APIClient (fallback).
-		byReport := map[string]dooglys.Client{"payment": api, "products": api}
-		// Report-API: включается, когда заданы креды одного из режимов.
-		// token (внешний api.dooglys.com) — primary для демо; xcontext — внутренний (кубы).
-		if rc := reportClient(cfg.Dooglys); rc != nil {
-			byReport["personnel"] = rc
-			byReport["payment"] = rc  // 3a: снять с самосбора → server-side агрегаты
-			byReport["products"] = rc // 3a: то же; bonus — profit из Report-API
-			log.Printf("dooglys: payment/products → Report-API (server-side агрегаты)")
-		}
-		client = dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
-		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с
-		// таймаутом, чтобы транспорт слушал сразу: до готовности товары резолвятся из
-		// фикстур, потом SetOptions атомарно заменяет их живыми (Store под RWMutex).
-		res = resolver.Load(cfg.FixturesPath)
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), productIndexTimeout)
-			defer cancel()
-			if opts, err := api.ProductIndex(ctx); err != nil {
-				log.Printf("resolver: живой индекс товаров недоступен (%v) — товары из фикстур", err)
-			} else {
-				res.SetOptions("product", opts)
-				log.Printf("resolver: %d товаров из живых заказов (фоновый индекс готов)", len(opts))
-			}
-		}()
-	case config.DooglysHTTP:
-		if cfg.Dooglys.Cookie == "" {
-			return nil, nil, fmt.Errorf("DGS_CLIENT=http requires DGS_COOKIE to be set")
-		}
-		log.Printf("dooglys: using HTTP client → %s", cfg.Dooglys.Base)
-		hc := dooglys.NewHTMLClient(cfg.Dooglys.Base, cfg.Dooglys.Cookie)
-		client = hc
-		if live, err := resolver.NewLiveStore(context.Background(), hc); err != nil {
-			log.Printf("resolver: live store unavailable (%v) — fallback to fixtures", err)
-			res = resolver.Load(cfg.FixturesPath)
-		} else {
-			log.Printf("resolver: using live UUIDs from Dooglys HTML form")
-			res = live
-		}
-	default:
-		client = dooglys.NewFixtureClient(cfg.FixturesPath)
-		res = resolver.Load(cfg.FixturesPath)
-	}
+	a := app.NewMulti(pl, tenants, nar, adv, session.NewStore())
 
-	a := app.New(pl, tenants, client, res, nar, adv, session.NewStore())
+	// Пер-тенантный реестр данных: у каждого тенанта СВОЙ client+resolver (граница
+	// изоляции). В fixture-режиме наборы идентичны (детерминированный CI); изоляция по
+	// реальным данным возникает в api-режиме, где у каждого свои домен/токен.
+	for _, tc := range cfg.Tenants {
+		client, res := tenantData(cfg, tc)
+		a.Register(tc.ID, client, res)
+	}
 
 	// Датасет вопросов/ответов (JSONL) — для продуктовой аналитики и дообучения.
 	// Включается, только если задан QUERY_LOG_PATH; файл переживает рестарт (append).
