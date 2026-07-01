@@ -63,10 +63,27 @@ type Dooglys struct {
 
 // Telegram — настройки Telegram-транспорта (тонкий адаптер поверх app.Ask).
 // Пустой Token → транспорт выключен (как пустой AUTH_TOKEN выключает HTTP-гейт).
+// Одно-тенантный legacy-путь: если список TENANTS пуст, из этих полей синтезируется
+// единственный TenantConfig (совместимость с dev/фикстурами и cmd/server).
 type Telegram struct {
 	Token         string  // TELEGRAM_TOKEN; пусто → бот не запускается
 	Allowlist     []int64 // TELEGRAM_ALLOWLIST (csv chat_id); пусто → открыт всем
 	DefaultTenant string  // TELEGRAM_TENANT; tenant по умолчанию для всех чатов
+}
+
+// TenantConfig — один тенант мультитенантного развёртывания: свой Telegram-бот,
+// свой whitelist и свои креды доступа к данным (Report-API/JSON API).
+//
+// Шов «3 бота → 1 бот на все тенанты»: топология (какой чат → какой тенант) живёт
+// в транспорте (resolveTenant), а НЕ здесь. Здесь — только описание тенанта.
+// Секреты (BotToken, AccessToken, XContext) НЕ печатаются в Summary и НЕ уходят в LLM.
+type TenantConfig struct {
+	ID          string  // tenant_id/domain для tenantctx и реестра (TENANT_<k>_ID; default = ключ)
+	BotToken    string  // токен Telegram-бота этого тенанта (TENANT_<k>_BOT_TOKEN); секрет
+	Allowlist   []int64 // whitelist chat_id этого бота (TENANT_<k>_ALLOWLIST); пусто → открыт всем
+	Domain      string  // tenant-domain Report-API (TENANT_<k>_DOMAIN; default = ID)
+	AccessToken string  // access-token Report-API (TENANT_<k>_ACCESS_TOKEN); пусто → общий DGS_ACCESS_TOKEN; секрет
+	XContext    string  // x-context Report-API (TENANT_<k>_XCONTEXT); секрет
 }
 
 // Config — корневая конфигурация.
@@ -80,11 +97,14 @@ type Config struct {
 	LLM          LLM
 	Dooglys      Dooglys
 	Telegram     Telegram
+	// Tenants — эффективный список тенантов (заполняется в Load). Из ENV TENANTS,
+	// либо один синтезированный из legacy Telegram+Dooglys, если TENANTS пуст.
+	Tenants []TenantConfig
 }
 
 // Load читает конфиг из ENV с разумными дефолтами под локальную разработку.
 func Load() Config {
-	return Config{
+	c := Config{
 		HTTPAddr:     env("HTTP_ADDR", ":8088"),
 		PlannerMode:  PlannerMode(env("PLANNER_MODE", string(PlannerLLM))),
 		FixturesPath: env("FIXTURES_PATH", "docs/contracts/fixtures"),
@@ -116,6 +136,61 @@ func Load() Config {
 			DefaultTenant: env("TELEGRAM_TENANT", "mock_single"),
 		},
 	}
+	c.Tenants = loadTenants(c)
+	return c
+}
+
+// loadTenants собирает список тенантов. Основной путь — ENV TENANTS (ключи через
+// запятую) + индексированные TENANT_<ключ>_*. Если TENANTS пуст — деградация к одному
+// тенанту, синтезированному из legacy Telegram+Dooglys (dev/фикстуры, cmd/server).
+//
+// Формат (индексированный, чтобы секреты не пихать одной JSON-строкой в ENV):
+//
+//	TENANTS=a,b,c
+//	TENANT_a_ID=rukagreka           # опц., default = ключ; это tenant_id/domain для tenantctx
+//	TENANT_a_BOT_TOKEN=123:ABC      # токен @BotFather
+//	TENANT_a_ALLOWLIST=111,222      # csv chat_id (пусто → бот открыт всем)
+//	TENANT_a_DOMAIN=rukagreka       # опц., default = ID; tenant-domain для Report-API
+//	TENANT_a_ACCESS_TOKEN=xxx       # опц.; пусто → общий DGS_ACCESS_TOKEN
+//	TENANT_a_XCONTEXT={...}         # опц. (внутренний xcontext-режим)
+func loadTenants(c Config) []TenantConfig {
+	keys := csvFields(os.Getenv("TENANTS"))
+	if len(keys) == 0 {
+		// Legacy деградация: один тенант из TELEGRAM_*/DGS_*.
+		return []TenantConfig{{
+			ID:          c.Telegram.DefaultTenant,
+			BotToken:    c.Telegram.Token,
+			Allowlist:   c.Telegram.Allowlist,
+			Domain:      c.Dooglys.Domain,
+			AccessToken: c.Dooglys.AccessToken,
+			XContext:    c.Dooglys.XContext,
+		}}
+	}
+	out := make([]TenantConfig, 0, len(keys))
+	for _, k := range keys {
+		p := "TENANT_" + k + "_"
+		id := env(p+"ID", k)
+		out = append(out, TenantConfig{
+			ID:          id,
+			BotToken:    os.Getenv(p + "BOT_TOKEN"),
+			Allowlist:   envInt64CSV(p + "ALLOWLIST"),
+			Domain:      env(p+"DOMAIN", id),
+			AccessToken: os.Getenv(p + "ACCESS_TOKEN"),
+			XContext:    os.Getenv(p + "XCONTEXT"),
+		})
+	}
+	return out
+}
+
+// csvFields разбивает "a, b ,c" в ["a","b","c"] (пустые элементы отброшены).
+func csvFields(v string) []string {
+	var out []string
+	for _, part := range strings.Split(v, ",") {
+		if part = strings.TrimSpace(part); part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }
 
 // Summary — однострочное описание для логов (без секретов).
@@ -135,12 +210,87 @@ func (c Config) Summary() string {
 	if c.FeedbackLogPath != "" {
 		flog = c.FeedbackLogPath
 	}
-	tg := "off"
-	if c.Telegram.Token != "" {
-		tg = fmt.Sprintf("on(tenant=%s allowlist=%d)", c.Telegram.DefaultTenant, len(c.Telegram.Allowlist))
+	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s feedbacklog=%s auth=%s tenants=%s",
+		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, flog, c.Dooglys.ReportAuth, c.tenantsSummary())
+}
+
+// tenantsSummary — компактное описание тенантов БЕЗ секретов: id/domain, размер
+// whitelist и признак наличия (не значение!) бот-токена и креда авторизации.
+func (c Config) tenantsSummary() string {
+	if len(c.Tenants) == 0 {
+		return "none"
 	}
-	return fmt.Sprintf("addr=%s planner=%s llm=%s model=%s fixtures=%s dooglys=%s querylog=%s feedbacklog=%s telegram=%s",
-		c.HTTPAddr, c.PlannerMode, c.LLM.BaseURL, c.LLM.Model, c.FixturesPath, dgs, qlog, flog, tg)
+	parts := make([]string, 0, len(c.Tenants))
+	for _, t := range c.Tenants {
+		cred := "unset"
+		if c.Dooglys.ReportAuth == string(dooglysAuthXContext) {
+			if t.XContext != "" {
+				cred = "set"
+			}
+		} else if t.AccessToken != "" || c.Dooglys.AccessToken != "" {
+			cred = "set"
+		}
+		parts = append(parts, fmt.Sprintf("%s(domain=%s alw=%d bot=%s cred=%s)",
+			t.ID, t.Domain, len(t.Allowlist), setUnset(t.BotToken != ""), cred))
+	}
+	return "[" + strings.Join(parts, " ") + "]"
+}
+
+func setUnset(ok bool) string {
+	if ok {
+		return "set"
+	}
+	return "unset"
+}
+
+// dooglysAuthXContext дублирует dooglys.ReportAuthXContext как строку, чтобы config
+// не зависел от пакета dooglys (иначе import-цикл). Значения должны совпадать.
+const dooglysAuthXContext = "xcontext"
+
+// Validate проверяет контракт авторизации данных ДО старта транспортов: битый конфиг
+// должен падать явным сообщением на старте, а не HTTP 500 на первом запросе (docs/12 §8).
+//
+// Проверяется только режим api (реальные данные): в fixture/stub Report-API легитимно
+// выключен. Каждый тенант обязан иметь кред выбранного ReportAuth (token→access-token,
+// xcontext→x-context); access-token может быть общим (DGS_ACCESS_TOKEN) или пер-тенантным.
+func (c Config) Validate() error {
+	switch c.Dooglys.ReportAuth {
+	case "token", dooglysAuthXContext:
+	default:
+		return fmt.Errorf("DGS_REPORT_AUTH=%q не поддержан (ожидается token|xcontext)", c.Dooglys.ReportAuth)
+	}
+	if c.Dooglys.Mode != DooglysAPI {
+		return nil // fixture/stub — данные из фикстур, креды не нужны
+	}
+	if len(c.Tenants) == 0 {
+		return fmt.Errorf("DGS_CLIENT=api, но не задан ни один тенант (TENANTS или TELEGRAM_TENANT)")
+	}
+	for _, t := range c.Tenants {
+		if c.Dooglys.ReportAuth == dooglysAuthXContext {
+			if t.XContext == "" {
+				return fmt.Errorf("тенант %q: DGS_REPORT_AUTH=xcontext, но не задан XCONTEXT", t.ID)
+			}
+			continue
+		}
+		if t.AccessToken == "" && c.Dooglys.AccessToken == "" {
+			return fmt.Errorf("тенант %q: DGS_REPORT_AUTH=token, но не задан ACCESS_TOKEN (пер-тенантный или общий DGS_ACCESS_TOKEN)", t.ID)
+		}
+	}
+	return nil
+}
+
+// ValidateTelegram проверяет, что каждый тенант несёт токен бота — предпосылка запуска
+// N ботов (cmd/bot). Отделено от Validate: cmd/server ботов не поднимает.
+func (c Config) ValidateTelegram() error {
+	if len(c.Tenants) == 0 {
+		return fmt.Errorf("не задан ни один тенант — боту нечего запускать")
+	}
+	for _, t := range c.Tenants {
+		if t.BotToken == "" {
+			return fmt.Errorf("тенант %q: не задан токен бота (TENANT_<key>_BOT_TOKEN или TELEGRAM_TOKEN)", t.ID)
+		}
+	}
+	return nil
 }
 
 func env(key, def string) string {

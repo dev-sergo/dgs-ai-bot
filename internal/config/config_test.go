@@ -106,6 +106,112 @@ func TestEnvInt64CSV(t *testing.T) {
 	}
 }
 
+// TestLoadTenantsLegacy — без TENANTS синтезируется один тенант из TELEGRAM_*/DGS_*.
+func TestLoadTenantsLegacy(t *testing.T) {
+	t.Setenv("TENANTS", "")
+	t.Setenv("TELEGRAM_TENANT", "rukagreka")
+	t.Setenv("TELEGRAM_TOKEN", "bot-tok")
+	t.Setenv("TELEGRAM_ALLOWLIST", "111,222")
+	t.Setenv("DGS_DOMAIN", "rukagreka")
+	t.Setenv("DGS_ACCESS_TOKEN", "acc")
+	c := Load()
+	if len(c.Tenants) != 1 {
+		t.Fatalf("Tenants = %d, want 1 (legacy synth)", len(c.Tenants))
+	}
+	tc := c.Tenants[0]
+	if tc.ID != "rukagreka" || tc.BotToken != "bot-tok" || tc.Domain != "rukagreka" || tc.AccessToken != "acc" {
+		t.Errorf("synth tenant = %+v", tc)
+	}
+	if len(tc.Allowlist) != 2 || tc.Allowlist[0] != 111 {
+		t.Errorf("allowlist = %v", tc.Allowlist)
+	}
+}
+
+// TestLoadTenantsIndexed — TENANTS + TENANT_<k>_* даёт список из N тенантов.
+func TestLoadTenantsIndexed(t *testing.T) {
+	t.Setenv("TENANTS", "a, b")
+	t.Setenv("TENANT_a_ID", "rukagreka")
+	t.Setenv("TENANT_a_BOT_TOKEN", "tok-a")
+	t.Setenv("TENANT_a_ALLOWLIST", "1,2")
+	t.Setenv("TENANT_a_ACCESS_TOKEN", "acc-a")
+	t.Setenv("TENANT_b_BOT_TOKEN", "tok-b")
+	t.Setenv("TENANT_b_DOMAIN", "second")
+	c := Load()
+	if len(c.Tenants) != 2 {
+		t.Fatalf("Tenants = %d, want 2", len(c.Tenants))
+	}
+	a := c.Tenants[0]
+	if a.ID != "rukagreka" || a.Domain != "rukagreka" || a.BotToken != "tok-a" || a.AccessToken != "acc-a" {
+		t.Errorf("tenant a = %+v", a)
+	}
+	b := c.Tenants[1]
+	if b.ID != "b" || b.Domain != "second" || b.BotToken != "tok-b" {
+		t.Errorf("tenant b = %+v (ID default=key, Domain override)", b)
+	}
+}
+
+// TestValidate — контракт авторизации падает на старте при битом конфиге (docs/12 §8).
+func TestValidate(t *testing.T) {
+	base := func() Config {
+		return Config{
+			Dooglys: Dooglys{Mode: DooglysAPI, ReportAuth: "token"},
+			Tenants: []TenantConfig{{ID: "t1", Domain: "t1"}},
+		}
+	}
+
+	// token без access-token (ни пер-тенантного, ни общего) → ошибка.
+	if err := base().Validate(); err == nil {
+		t.Error("token без ACCESS_TOKEN должен падать")
+	}
+	// пер-тенантный access-token → ок.
+	c := base()
+	c.Tenants[0].AccessToken = "acc"
+	if err := c.Validate(); err != nil {
+		t.Errorf("пер-тенантный access-token: %v", err)
+	}
+	// общий DGS_ACCESS_TOKEN → ок.
+	c = base()
+	c.Dooglys.AccessToken = "shared"
+	if err := c.Validate(); err != nil {
+		t.Errorf("общий access-token: %v", err)
+	}
+	// xcontext без x-context → ошибка.
+	c = base()
+	c.Dooglys.ReportAuth = "xcontext"
+	if err := c.Validate(); err == nil {
+		t.Error("xcontext без XCONTEXT должен падать")
+	}
+	// xcontext c x-context → ок.
+	c.Tenants[0].XContext = `{"tenant_id":"x"}`
+	if err := c.Validate(); err != nil {
+		t.Errorf("xcontext c XCONTEXT: %v", err)
+	}
+	// неизвестный auth → ошибка всегда.
+	c = base()
+	c.Dooglys.ReportAuth = "weird"
+	if err := c.Validate(); err == nil {
+		t.Error("неизвестный DGS_REPORT_AUTH должен падать")
+	}
+	// fixture-режим: креды не нужны → ок.
+	c = base()
+	c.Dooglys.Mode = DooglysFixture
+	if err := c.Validate(); err != nil {
+		t.Errorf("fixture-режим не должен требовать креды: %v", err)
+	}
+}
+
+// TestValidateTelegram — каждый тенант обязан нести токен бота (предпосылка запуска N ботов).
+func TestValidateTelegram(t *testing.T) {
+	c := Config{Tenants: []TenantConfig{{ID: "t1", BotToken: "x"}, {ID: "t2"}}}
+	if err := c.ValidateTelegram(); err == nil {
+		t.Error("тенант без токена бота должен падать")
+	}
+	c.Tenants[1].BotToken = "y"
+	if err := c.ValidateTelegram(); err != nil {
+		t.Errorf("все токены заданы: %v", err)
+	}
+}
+
 // TestSummaryNoSecrets — строка для логов не содержит секретов (cookie/пароль/токен).
 func TestSummaryNoSecrets(t *testing.T) {
 	t.Setenv("DGS_CLIENT", "api")
