@@ -18,16 +18,34 @@ import (
 
 var validRatings = map[string]bool{"up": true, "down": true}
 
+// maxBodyBytes — жёсткий предел тела запроса (1 MiB). Защита от раздувания памяти
+// и дешёвого DoS: /ask и /feedback принимают маленький JSON, гигантское тело — отбой 413.
+const maxBodyBytes = 1 << 20
+
 // Server — HTTP-сервер сервиса.
 type Server struct {
 	cfg config.Config
 	app *app.App
 	srv *http.Server
+	// tenants — множество разрешённых tenantID (из cfg.Tenants). Server-side проверка:
+	// клиент не может обслужиться под произвольным/чужим tenant_id (дыра изоляции).
+	// Пусто → пермиссив (dev/фикстуры: изолировать нечего).
+	tenants map[string]bool
+	// defaultTenant — tenantID по умолчанию, когда клиент его не передал. Заполняется
+	// только при ровно одном сконфигурированном тенанте (single-tenant удобство); при
+	// нескольких тенантах клиент ОБЯЗАН указать tenant_id явно.
+	defaultTenant string
 }
 
 // New создаёт сервер поверх оркестратора.
 func New(cfg config.Config, a *app.App) *Server {
-	s := &Server{cfg: cfg, app: a}
+	s := &Server{cfg: cfg, app: a, tenants: map[string]bool{}}
+	for _, t := range cfg.Tenants {
+		s.tenants[t.ID] = true
+	}
+	if len(cfg.Tenants) == 1 {
+		s.defaultTenant = cfg.Tenants[0].ID
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("POST /ask", s.handleAsk)
@@ -43,7 +61,8 @@ func New(cfg config.Config, a *app.App) *Server {
 }
 
 // gate — middleware демо-авторизации по общему токену (env AUTH_TOKEN).
-// Токен принимается из заголовка X-Auth-Token, Authorization: Bearer <tok>, либо ?key=<tok>.
+// Токен принимается ТОЛЬКО из заголовка (X-Auth-Token или Authorization: Bearer <tok>).
+// Приём из ?key= убран намеренно: URL с токеном оседает в логах прокси/сервера и истории.
 // Пустой AUTH_TOKEN отключает гейт (dev/CI). /healthz всегда открыт (health-чек туннеля).
 func (s *Server) gate(next http.Handler) http.Handler {
 	token := s.cfg.AuthToken
@@ -59,7 +78,7 @@ func (s *Server) gate(next http.Handler) http.Handler {
 		}
 		if !tokenOK(r, token) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{
-				"error": "доступ закрыт: укажите токен (?key=… либо заголовок X-Auth-Token)",
+				"error": "доступ закрыт: укажите токен в заголовке X-Auth-Token или Authorization: Bearer",
 			})
 			return
 		}
@@ -67,16 +86,15 @@ func (s *Server) gate(next http.Handler) http.Handler {
 	})
 }
 
-// tokenOK сверяет токен запроса с ожидаемым в постоянном времени.
+// tokenOK сверяет токен запроса с ожидаемым в постоянном времени. Только из заголовка:
+// X-Auth-Token либо Authorization: Bearer <tok>. Приём из URL (?key=) убран, чтобы токен
+// не утекал в логи.
 func tokenOK(r *http.Request, want string) bool {
 	got := r.Header.Get("X-Auth-Token")
 	if got == "" {
 		if a := r.Header.Get("Authorization"); strings.HasPrefix(a, "Bearer ") {
 			got = strings.TrimPrefix(a, "Bearer ")
 		}
-	}
-	if got == "" {
-		got = r.URL.Query().Get("key")
 	}
 	return got != "" && subtle.ConstantTimeCompare([]byte(got), []byte(want)) == 1
 }
@@ -106,19 +124,27 @@ type askRequest struct {
 }
 
 func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	var req askRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Text == "" {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if tooLarge(err) {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "тело запроса слишком большое"})
+			return
+		}
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ожидается JSON {\"text\": \"...\"}"})
+		return
+	}
+	if req.Text == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ожидается JSON {\"text\": \"...\"}"})
 		return
 	}
 
-	// tenant_id — server-side. В MVP берём из заголовка/тела (стаб пре-слоя авторизации).
-	tenantID := r.Header.Get("X-Tenant-ID")
-	if tenantID == "" {
-		tenantID = req.TenantID
-	}
-	if tenantID == "" {
-		tenantID = "mock_single"
+	// tenant_id — server-side: клиентское значение сверяется с реестром, чужой/произвольный
+	// tenant_id не обслуживается (дыра изоляции). resolveTenant вернёт ok=false → 403.
+	tenantID, ok := s.resolveTenant(r, req.TenantID)
+	if !ok {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "неизвестный или не указанный tenant_id"})
+		return
 	}
 
 	// session_id — ключ памяти диалога (стаб; в проде из пре-слоя). По умолчанию — на тенанта.
@@ -135,6 +161,27 @@ func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, ans)
 }
 
+// resolveTenant выбирает tenantID (заголовок X-Tenant-ID → тело → default) и сверяет его
+// с сконфигурированным реестром. ok=false, если tenant неизвестен: клиент не может выбрать
+// произвольный/чужой tenant_id и достать чужие данные. Пустой реестр (dev/фикстуры) —
+// пермиссив: изолировать нечего, обслуживаем как есть.
+func (s *Server) resolveTenant(r *http.Request, bodyTenant string) (string, bool) {
+	id := firstNonEmpty(r.Header.Get("X-Tenant-ID"), bodyTenant, s.defaultTenant)
+	if len(s.tenants) == 0 {
+		return id, true // dev/фикстуры: реестр не задан, изоляции нет
+	}
+	if id == "" || !s.tenants[id] {
+		return "", false
+	}
+	return id, true
+}
+
+// tooLarge сообщает, что ошибка вызвана превышением maxBodyBytes (MaxBytesReader).
+func tooLarge(err error) bool {
+	var mbe *http.MaxBytesError
+	return errors.As(err, &mbe)
+}
+
 // handleExport отдаёт отчёт по текстовому запросу как .xlsx (скачивание).
 // GET /export?text=<запрос>&tenant_id=&session_id=  — те же данные, что и /ask,
 // но сериализованные в Excel. Прогон идёт в отдельной export-сессии, чтобы не
@@ -145,7 +192,11 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ожидается ?text=<запрос>"})
 		return
 	}
-	tenantID := firstNonEmpty(r.Header.Get("X-Tenant-ID"), r.URL.Query().Get("tenant_id"), "mock_single")
+	tenantID, ok := s.resolveTenant(r, r.URL.Query().Get("tenant_id"))
+	if !ok {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "неизвестный или не указанный tenant_id"})
+		return
+	}
 	sessionID := firstNonEmpty(r.URL.Query().Get("session_id"), "default:"+tenantID)
 
 	ans, err := s.app.Ask(r.Context(), tenantID, "export:"+sessionID, text)
@@ -173,15 +224,19 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(data)
 }
 
-
 type feedbackRequest struct {
 	ID     string `json:"id"`
 	Rating string `json:"rating"`
 }
 
 func (s *Server) handleFeedback(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	var req feedbackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if tooLarge(err) {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "тело запроса слишком большое"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ожидается JSON {\"id\":\"...\",\"rating\":\"up|down\"}"})
 		return
 	}
