@@ -25,6 +25,7 @@ type Bot struct {
 	app       *app.App
 	tenantID  string
 	allowlist map[int64]struct{}
+	limiter   *rateLimiter
 }
 
 // New создаёт Bot, привязанный к тенанту tenantID, со своим токеном и whitelist'ом.
@@ -42,7 +43,13 @@ func New(token, tenantID string, allowlist []int64, a *app.App) (*Bot, error) {
 
 	slog.Info("telegram bot started", "username", api.Self.UserName,
 		"tenant", tenantID, "allowlist", len(allowlist))
-	return &Bot{api: api, app: a, tenantID: tenantID, allowlist: al}, nil
+	return &Bot{
+		api:       api,
+		app:       a,
+		tenantID:  tenantID,
+		allowlist: al,
+		limiter:   newRateLimiter(rateLimitRequests, rateLimitWindow),
+	}, nil
 }
 
 // NewFromTenant — удобный конструктор из config.TenantConfig (bootstrap N ботов).
@@ -108,6 +115,13 @@ func (b *Bot) handle(ctx context.Context, msg *tgbotapi.Message) {
 	// Allowlist-guard: свой whitelist на бот/тенант. Чужой chat_id отбит.
 	if !b.allowed(chatID) {
 		b.send(chatID, "Доступ закрыт.")
+		return
+	}
+
+	// Анти-спам: пер-чат частотный лимит поверх капа параллелизма. Превышение —
+	// мягкий ответ (не тихий дроп), чтобы пользователь понял, что надо подождать.
+	if !b.limiter.allow(chatID) {
+		b.send(chatID, "Слишком много запросов. Подождите немного и повторите.")
 		return
 	}
 
