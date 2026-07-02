@@ -1,0 +1,1 @@
+{"date":"2026-07-02","time":"1752","harness":"eval","corpus":"new-reports","mode":"llm","commit":"1989d39","pass":16,"total":16,"valid":16,"rate":1.000,"p50_ms":73,"p95_ms":201,"model":"gemma-4-31b"}
