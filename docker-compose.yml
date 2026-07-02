@@ -1,30 +1,30 @@
-# Dooglys AI-bot — Telegram-only деплой (мультитенант, N ботов).
+# Dooglys AI-bot — Telegram-only deploy (multi-tenant, N bots).
 #
-# Один процесс cmd/bot поднимает ПО БОТУ НА КАЖДОГО тенанта из TENANTS (см. .env).
-# Каждый бот жёстко привязан к своему тенанту и своему whitelist'у; общий движок
-# резолвит источник данных по tenant_id (изоляция). Портов наружу НЕТ: боты ходят
-# к api.telegram.org, роутеру моделей (LLM_BASE_URL) и api.dooglys.com только по
-# ИСХОДЯЩИМ соединениям. Секреты — в .env рядом с этим файлом (в git НЕ коммитим).
+# A single cmd/bot process runs ONE BOT PER TENANT from TENANTS (see .env). Each bot is
+# hard-bound to its tenant and its own whitelist; the shared engine resolves the data
+# source by tenant_id (isolation). No published ports: bots only make OUTBOUND calls to
+# api.telegram.org, the model router (LLM_BASE_URL) and api.dooglys.com. Secrets live in
+# .env next to this file (NOT committed to git).
 #
-# Запуск:  cp .env.example .env  &&  <заполнить .env>  &&  docker compose up -d --build
-# Логи:    docker compose logs -f
-# Стоп:    docker compose down
+# Start:  cp .env.example .env  &&  <fill in .env>  &&  docker compose up -d --build
+# Logs:   docker compose logs -f
+# Stop:   docker compose down
 services:
   bots:
     build: .
-    # Образ по умолчанию стартует HTTP-сервер (cmd/server); здесь переопределяем на бота.
+    # The image starts the HTTP server (cmd/server) by default; override to the bot here.
     entrypoint: ["/app/bot"]
-    # Запускаем контейнер ПОД ХОСТОВЫМ ПОЛЬЗОВАТЕЛЕМ (владельцем ./data), а не под nonroot
-    # uid 65532 из образа. Тогда bind-mount ./data пишется без chown под чужой uid — каталог
-    # остаётся под твоим юзером. Значения — из .env (HOST_UID/HOST_GID = `id -u`/`id -g`).
+    # Run the container AS THE HOST USER (owner of ./data), not the image's nonroot uid
+    # 65532. Then the bind-mounted ./data is writable without chowning to a foreign uid —
+    # the directory stays under your user. Values come from .env (HOST_UID/HOST_GID = `id -u`/`id -g`).
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    # Все переменные окружения (тенанты, LLM-роутер, Report-API, логи) берутся из .env.
+    # All env vars (tenants, LLM router, Report-API, logs) are taken from .env.
     env_file: .env
     volumes:
-      # JSONL-датасет вопрос→план→ответ и оценки 👍/👎. Пишется в /app/data → на хост в
-      # ./data (владелец = HOST_UID). Append-only, переживает рестарт.
+      # JSONL dataset question→plan→answer and 👍/👎 ratings. Written to /app/data → host
+      # ./data (owner = HOST_UID). Append-only, survives restarts.
       - ./data:/app/data
-    # Процесс-liveness: упал (напр. невалидный bot-токен → fail-fast) — контейнер
-    # перезапускается. distroless без shell → HEALTHCHECK-команду не запустить,
-    # мониторинг по `docker compose ps` / `docker compose logs`.
+    # Process liveness: if it dies (e.g. invalid bot token → fail-fast) the container
+    # restarts. distroless has no shell → a HEALTHCHECK command can't run; monitor via
+    # `docker compose ps` / `docker compose logs`.
     restart: unless-stopped
