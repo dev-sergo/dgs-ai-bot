@@ -92,10 +92,8 @@ test/manual/xlsx/
 # local secret probe (live cookie)
 probe_report.sh
 
-# spike / ad-hoc experiments
+# spike run outputs (harness itself is tracked: scripts/spike_*.py, spike_cases.jsonl)
 spike_results-*.jsonl
-/scripts/spike_*.py
-/scripts/spike_*.jsonl
 
 # === Курируемая история бенчмарков (bench/) ===
 # Прогоны качества — это документация прогресса, их коммитим (исключение из *.log выше).
