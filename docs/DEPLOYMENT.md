@@ -1,112 +1,126 @@
-# Деплой — Dooglys AI-bot
+# Деплой — Dooglys AI-bot (Telegram-only, N ботов)
 
-Сервис состоит из трёх контейнеров (собираются через `docker compose up --build`):
-- **bot** — HTTP API (`:8088`), принимает запросы `/ask`, `/export`, `/feedback`, `/healthz`.
-- **telegram** — Telegram-бот (отдельный процесс над тем же ядром).
-- **web** — nginx, раздаёт React-фронт на `:8090` и проксирует `/api/*` → `bot:8088`.
+Демо-канал — **Telegram**. Один процесс (`cmd/bot`) поднимает **по боту на каждого
+тенанта** из `TENANTS`; каждый бот жёстко привязан к своему тенанту и whitelist'у,
+общий движок резолвит источник данных по `tenant_id` (изоляция). Деплой — вручную
+через `docker compose` (CI/CD намеренно не используем; всё просто и прозрачно).
+
+Портов наружу нет: боты ходят по ИСХОДЯЩИМ к `api.telegram.org`, роутеру моделей
+(`LLM_BASE_URL`) и `api.dooglys.com`.
 
 ---
 
 ## Быстрый старт
 
 ```bash
-cp .env.example .env        # заполнить секреты (см. ниже)
-docker compose up --build   # поднять всё
-curl http://localhost:8090/  # проверить UI
-curl http://localhost:8088/healthz  # проверить бэкенд
+cp .env.example .env        # заполнить: bot-токены, LLM_API_KEY, access-token'ы, allowlist'ы
+docker compose up -d --build
+
+docker compose ps           # состояние
+docker compose logs -f      # логи (старт каждого бота, ошибки)
+```
+
+Остановить: `docker compose down`. Обновить после `git pull`:
+
+```bash
+git pull
+docker compose up -d --build --force-recreate
+```
+
+**Предпосылки на сервере:** установлены `git`, `docker`, `docker compose`; исходящий
+доступ к `github.com` (для `git pull`), `litellm.site.avtosushi.net` (роутер) и
+`api.dooglys.com`. Проверить достижимость до первого запуска:
+
+```bash
+curl -sSf https://api.dooglys.com/api/v1/reports >/dev/null && echo dooglys-ok
+curl -sS  https://litellm.site.avtosushi.net/v1/models -H "Authorization: Bearer $LLM_API_KEY" | head
 ```
 
 ---
 
 ## Переменные окружения (`.env`)
 
-Все переменные опциональны — у каждой есть дефолт. Секции ниже в порядке приоритета настройки.
+Полный заполняемый шаблон — [`.env.example`](../.env.example). Ниже — что за что отвечает.
 
-### Обязательно для работы с реальными данными
+### Приложение
 
-| Переменная | Дефолт | Описание |
+| Переменная | Значение (демо) | Описание |
 |---|---|---|
-| `DGS_CLIENT` | `fixture` | Источник данных: `fixture` (локальные JSON) / `api` (JSON API v1) / `http` (HTML-клиент, legacy) |
-| `DGS_BASE` | `https://google.dooglys.com` | URL тенанта Dooglys (заменить `google` на реальный домен) |
-| `DGS_DOMAIN` | `google` | Tenant-Domain для API v1 (часть URL до `.dooglys.com`) |
-| `DGS_LOGIN` | — | Логин для получения токена JSON API v1 (при `DGS_CLIENT=api`) |
-| `DGS_PASSWORD` | — | Пароль для получения токена JSON API v1 |
-| `DGS_XCONTEXT` | — | JSON `{"tenant_id":"...","tenant_domain":"..."}` для Report-API (personnel/kitchen); пусто → Report-API выключен |
-| `DGS_REPORT_BASE` | = `DGS_BASE` | Базовый URL Report-API, если отличается от основного |
+| `APP_ENV` | `prod` | `prod` → строгие инварианты: пустой allowlist у тенанта = fail-fast на старте. `dev` → послабления. |
+| `PLANNER_MODE` | `llm` | `llm` — реальная модель через роутер; `stub` — детерминированные планы без сети/GPU. |
 
-### LLM
+### LLM-роутер
 
-| Переменная | Дефолт | Описание |
+| Переменная | Значение | Описание |
 |---|---|---|
-| `LLM_BASE_URL` | `http://172.20.10.2:8080` | Эндпоинт OpenAI-совместимого сервера (llama.cpp / Ollama / vLLM) |
-| `LLM_MODEL` | `qwen2-5-32b-instruct-q4-k-m-ctx-8k-q8-0-kv-t07` | Идентификатор модели на LLM-сервере |
-| `LLM_API_KEY` | — | Bearer-токен, если LLM-сервер требует auth |
-| `LLM_TIMEOUT` | `180s` | Таймаут одного запроса к LLM (`time.ParseDuration` формат) |
-| `LLM_FORCE_JSON` | `true` | Включить `response_format=json_object`; выставить `false` если билд не поддерживает |
+| `LLM_BASE_URL` | `https://litellm.site.avtosushi.net` | Базовый домен OpenAI-совместимого роутера **без** `/v1` (клиент добавляет `/v1/chat/completions`). |
+| `LLM_MODEL` | `gemma-4-31b` | Идентификатор модели на роутере. |
+| `LLM_API_KEY` | 🔒 | Bearer-токен роутера. |
+| `LLM_FORCE_JSON` | `true` | `response_format=json_object`. Если роутер/модель не поддержит → `false` (parse+repair). Проверить curl'ом. |
+| `LLM_TIMEOUT` | `180s` | Таймаут одного запроса к модели. |
 
-### Сервис
+### Источник данных (Report-API, внешний контур)
 
-| Переменная | Дефолт | Описание |
+| Переменная | Значение | Описание |
 |---|---|---|
-| `HTTP_ADDR` | `:8088` | Адрес HTTP-сервера |
-| `APP_ENV` | `dev` | `prod` включает строгие инварианты безопасности (напр. непустой allowlist на тенанта → fail-fast на старте); `dev`/CI/eval сохраняют послабления |
-| `PLANNER_MODE` | `llm` | `llm` (реальная модель) / `stub` (детерминированный, для CI/демо без LLM) |
-| `FIXTURES_PATH` | `docs/contracts/fixtures` | Путь к директории с фикстурами (монтируется в контейнер) |
-| `AUTH_TOKEN` | — | Токен демо-гейта (только заголовок `X-Auth-Token` или `Authorization: Bearer`); пусто → гейт выключен |
-| `QUERY_LOG_PATH` | — | Путь к JSONL-файлу лога вопросов/ответов; пусто → не пишем |
-| `FEEDBACK_LOG_PATH` | — | Путь к JSONL-файлу оценок 👍/👎; пусто → не пишем |
+| `DGS_CLIENT` | `api` | `api` — живой Report-API; `fixture` — локальные JSON (оффлайн-демо). |
+| `DGS_REPORT_AUTH` | `token` | Режим авторизации: `token` (внешний `api.dooglys.com`) / `xcontext` (внутренний, кубы). |
+| `DGS_REPORT_BASE` | `https://api.dooglys.com/api/v1/reports` | База Report-API (внешний путь с префиксом `/reports`). |
+| `DGS_ACCESS_TOKEN` | 🔒 (опц.) | Общий `access-token`, если один на всех. Разные → задать пер-тенантно. |
 
-### Telegram — один бот (legacy / dev)
+> `DGS_LOGIN`/`DGS_PASSWORD` для 6 отчётов ТЗ **не нужны** (payment/products идут через
+> Report-API). Без них отключается лишь «живой индекс товаров» — распознавание названий
+> товаров берётся из фикстур; сами суммы отчётов живые.
 
-Если список `TENANTS` пуст, из этих переменных синтезируется **один** тенант (обратная
-совместимость и dev/фикстуры):
+### Логи (JSONL на томе `./data`)
 
-| Переменная | Дефолт | Описание |
+| Переменная | Значение | Описание |
 |---|---|---|
-| `TELEGRAM_TOKEN` | — | Токен бота Telegram; пусто → Telegram-транспорт не запускается |
-| `TELEGRAM_ALLOWLIST` | — | CSV list chat_id (например `123456,789012`); пусто → открыт всем |
-| `TELEGRAM_TENANT` | `mock_single` | ID тенанта по умолчанию для Telegram-бота |
+| `QUERY_LOG_PATH` | `/app/data/queries.jsonl` | Датасет вопрос→план→ответ (tenant/user в каждой строке). Пусто → выкл. |
+| `FEEDBACK_LOG_PATH` | `/app/data/feedback.jsonl` | Оценки 👍/👎. Пусто → выкл. |
 
-### Telegram — 3 бота (мультитенант, production-демо)
+Оба файла append-only, переживают рестарт. Один процесс на все боты → один файл каждого
+вида; разделение по тенантам — по полю в строке.
 
-Основной путь: `TENANTS` перечисляет ключи тенантов через запятую, а креды каждого
-задаются индексированными переменными `TENANT_<ключ>_*`. `cmd/bot` поднимает по боту на
-тенанта; каждый бот жёстко привязан к своему тенанту со своим whitelist'ом, а общий
-движок резолвит источник данных по `tenant_id` (изоляция). Секреты не логируются
-(`config.Summary()` печатает только `set|unset`).
+---
 
-| Переменная | Описание |
-|---|---|
-| `TENANTS` | CSV ключей, например `a,b,c` (пусто → одно-тенантный legacy-путь выше) |
-| `TENANT_<k>_ID` | tenant_id/domain для `tenants.example.json` и реестра (default = ключ) |
-| `TENANT_<k>_BOT_TOKEN` | токен бота @BotFather (обязателен) |
-| `TENANT_<k>_ALLOWLIST` | CSV chat_id whitelist (пусто → бот открыт всем) |
-| `TENANT_<k>_DOMAIN` | `tenant-domain` для Report-API (default = ID) |
-| `TENANT_<k>_ACCESS_TOKEN` | `access-token` Report-API; пусто → общий `DGS_ACCESS_TOKEN` |
-| `TENANT_<k>_XCONTEXT` | `x-context` (внутренний режим `DGS_REPORT_AUTH=xcontext`) |
+## Тенанты (= боты): как завести несколько
 
-Пример (3 бота, внешний `api.dooglys.com`, общий access-token, различие — домен):
+1. **Ключи** тенантов — через запятую в `TENANTS` (ключ = произвольный ярлык, удобно взять
+   = домену). Каждый ключ = отдельный бот.
+2. На каждый ключ `<k>` — блок `TENANT_<k>_*`.
+
+| Переменная | Обяз.? | Описание |
+|---|---|---|
+| `TENANT_<k>_BOT_TOKEN` | **да** | 🔒 токен @BotFather. Нет токена → fail-fast. |
+| `TENANT_<k>_ALLOWLIST` | **да (prod)** | Смешанный whitelist (см. ниже). Пустой в `prod` → fail-fast. |
+| `TENANT_<k>_ID` | опц. | `tenant_id` (default = ключ). Должен совпадать с записью в `tenants.example.json`. |
+| `TENANT_<k>_DOMAIN` | опц. | `tenant-domain` Report-API (default = ID). |
+| `TENANT_<k>_ACCESS_TOKEN` | опц. | 🔒 свой `access-token`; пусто → общий `DGS_ACCESS_TOKEN`. |
+
+Пишешь только то, что реально отличается (ID/DOMAIN дефолтятся от ключа, токен может быть
+общим). **Добавить бота = дописать ключ в `TENANTS` + блок `TENANT_<k>_*`; код не меняется.**
+
 ```env
-DGS_CLIENT=api
-DGS_REPORT_AUTH=token
-DGS_REPORT_BASE=https://api.dooglys.com/api/v1/reports
-DGS_ACCESS_TOKEN=shared-access-token   # общий, либо задайте TENANT_<k>_ACCESS_TOKEN
-
-TENANTS=rukagreka,second,third
+TENANTS=rukagreka,tenant2,tenant3,tenant4
 TENANT_rukagreka_BOT_TOKEN=111:AAA
-TENANT_rukagreka_ALLOWLIST=100200300
-TENANT_second_BOT_TOKEN=222:BBB
-TENANT_second_DOMAIN=second-domain
-TENANT_second_ALLOWLIST=400500600
-TENANT_third_BOT_TOKEN=333:CCC
-TENANT_third_DOMAIN=third-domain
-TENANT_third_ALLOWLIST=700800900
+TENANT_rukagreka_ALLOWLIST=@owner_ivan, 100200300
+TENANT_tenant2_BOT_TOKEN=222:BBB
+TENANT_tenant2_DOMAIN=second-domain
+TENANT_tenant2_ALLOWLIST=@owner_maria
+# … tenant3, tenant4 аналогично
 ```
 
-**Валидация на старте:** битый конфиг падает сразу с внятным сообщением, а не HTTP 500
-на первом запросе — `DGS_REPORT_AUTH=token` без access-token (пер-тенантного или общего),
-`xcontext` без `XCONTEXT`, либо тенант без токена бота. При `APP_ENV=prod` дополнительно
-требуется непустой allowlist на каждого тенанта (пустой список молча открыл бы бота всем).
+### Allowlist: `@username` и/или `chat_id`
+
+`TENANT_<k>_ALLOWLIST` — csv, каждый элемент распознаётся сам:
+
+- элемент из **одних цифр** → числовой `chat_id` (неизменяемый, надёжный). Узнать id: написать `@userinfobot`.
+- **всё остальное** → `@username` (регистр и `@` не важны: `@Ivan` == `ivan`). Удобно, но
+  username изменяем — если человек сменит `@handle`, доступ отвалится. Для железобетонного
+  доступа конкретного человека — числовой id.
+
+Можно смешивать: `@owner_petr, 700800900`. В `APP_ENV=prod` хотя бы один элемент обязателен.
 
 ---
 
@@ -114,100 +128,52 @@ TENANT_third_ALLOWLIST=700800900
 
 | Слой | Защита | Где |
 |---|---|---|
-| **Telegram (первичный канал)** | Per-chat rate-limit (10 запросов/мин на chatID) поверх капа в 8 одновременных `Ask` — защита LLM от спама «тенант лупит от души». Превышение → мягкий ответ, не тихий дроп. | `internal/transport/telegram` |
-| **Telegram whitelist** | В `APP_ENV=prod` пустой allowlist = fail-fast на старте. Чужой `chat_id` отбит на каждом боте. | `config.ValidateTelegram` |
-| **HTTP тело запроса** | `MaxBytesReader` = 1 MiB на `/ask` и `/feedback` → гигантское тело отбито `413`. | `internal/transport/http` |
-| **HTTP токен** | Принимается только из заголовка (`X-Auth-Token` / `Authorization: Bearer`); приём из `?key=` убран, чтобы токен не оседал в логах URL. | `http.tokenOK` |
-| **HTTP tenant_id** | Server-side проверка: `tenant_id` из тела/заголовка сверяется с реестром тенантов; чужой/произвольный → `403`. Клиент не может достать данные другого тенанта. | `http.resolveTenant` |
-| **Graceful-деградация** | Сбой `client.Fetch()` (флак живого API) → человеческий ответ «источник временно недоступен», реальная ошибка — в лог, а не `500`/raw error наружу. | `app.dataUnavailable` |
+| **Telegram whitelist** | Доступ по `chat_id` и/или `@username`; в `APP_ENV=prod` пустой allowlist = fail-fast на старте. Чужой отбит на каждом боте. | `config.ValidateTelegram`, `telegram.Bot.allowed` |
+| **Анти-спам** | Per-chat rate-limit (10 запросов/мин) поверх капа в 8 одновременных `Ask`. Превышение → мягкий ответ, не тихий дроп. | `internal/transport/telegram` |
+| **Изоляция тенантов** | Бот жёстко на своём `tenant_id` (не из ввода); сессии скоупятся `tg:<tenant>:<chatID>`; у каждого тенанта свой client+resolver. | `bootstrap`, `telegram.Bot` |
+| **Секреты вне LLM/логов** | `plan.go` без tenant_id; `config.Summary()` печатает секреты как `set/unset`. | `internal/config`, `internal/planner` |
+| **Graceful-деградация** | Сбой `client.Fetch()` → человеческий ответ «источник временно недоступен», реальная ошибка — в лог. | `app.dataUnavailable` |
 
-**HTTP rate-limit — на реверс-прокси.** Сам HTTP-транспорт (`cmd/server`) в демо не выставляется
-наружу (Telegram-only), поэтому пер-IP/токен rate-limit на HTTP делегирован обратному прокси.
-Если `cmd/server` всё же публикуется, настройте лимит на прокси (nginx `limit_req`, Caddy
-`rate_limit` и т.п.) перед `/ask` и `/export` — это тяжёлые LLM-маршруты.
+> HTTP-транспорт (`cmd/server`) в этом деплое не поднимается (Telegram-only). Если позже
+> публикуешь его наружу — ставь rate-limit на обратном прокси перед `/ask`/`/export`.
 
 ---
 
-## Монтирование томов
+## Права на том логов
 
-В `docker-compose.yml` два монтирования:
-
-```
-./data → /app/data     # JSONL-логи запросов и фидбека (writable)
-```
-
-Фикстуры (`docs/contracts/fixtures/`) копируются **в образ** при сборке (`COPY docs/contracts/fixtures /app/fixtures`).
-Если хотите обновлять фикстуры без пересборки — добавьте mount:
-```yaml
-- ./docs/contracts/fixtures:/app/fixtures:ro
-```
-и выставьте `FIXTURES_PATH=/app/fixtures`.
-
----
-
-## Режимы источника данных (`DGS_CLIENT`)
-
-### `fixture` (дефолт, CI/тест)
-Все отчёты читаются из локальных JSON-файлов `$FIXTURES_PATH/*.grid.json`.
-Сеть к Dooglys не нужна. Подходит для тестирования и оффлайн-демо.
-
-### `api` (production)
-- Payment + Products: JSON API v1 (`/api/v1/sales/order/list`, token-auth).
-- Personnel: Report-API (`/report/personnel`, x-context) — если `DGS_XCONTEXT` задан.
-- Остальные отчёты: fallback на фикстуры.
-
-**Минимальный `.env` для production:**
-```env
-DGS_CLIENT=api
-DGS_BASE=https://TENANT.dooglys.com
-DGS_DOMAIN=TENANT
-DGS_LOGIN=yourlogin
-DGS_PASSWORD=yourpassword
-LLM_BASE_URL=http://LLM_HOST:8080
-LLM_MODEL=your-model-name
-AUTH_TOKEN=secret-demo-token
-```
-
-### `http` (legacy)
-Парсит HTML через cookie-сессию браузера. Требует `DGS_COOKIE`. Не рекомендуется для production.
-
----
-
-## Мультитенантность
-
-Тенант определяется из запроса (приоритет): заголовок `X-Tenant-ID` → поле `tenant_id` в JSON
-→ дефолт (только при **ровно одном** сконфигурированном тенанте). Значение сверяется с реестром
-тенантов server-side: при нескольких тенантах клиент **обязан** указать корректный `tenant_id`,
-иначе `403` — произвольный/чужой `tenant_id` не обслуживается (изоляция).
-
-Конфиг тенантов (timezone, валюта, точки продаж) — файл `$FIXTURES_PATH/tenants.example.json`.
-Для production переименуйте/замените его под реальные данные.
-
----
-
-## Проверка работоспособности
+`./data` монтируется в `/app/data`, куда пишет процесс под nonroot (uid 65532). Если в
+логах видишь предупреждение, что датасет не открылся (нет прав на смонтированный каталог) —
+бот продолжит работать без лога. Чтобы включить запись, выдай права каталогу на хосте:
 
 ```bash
-# healthcheck (не требует токена)
-curl http://localhost:8088/healthz
-
-# тестовый вопрос (требует AUTH_TOKEN если задан)
-curl -s -X POST http://localhost:8088/ask \
-  -H 'Content-Type: application/json' \
-  -H 'X-Auth-Token: YOUR_TOKEN' \
-  -d '{"query":"выручка за вчера","tenant_id":"mock_single"}' | jq .
-
-# smoke-тест auth + xlsx
-BASE=http://localhost:8088 KEY=YOUR_TOKEN bash scripts/ask.sh
+mkdir -p ./data && sudo chown -R 65532:65532 ./data   # либо chmod 777 ./data
 ```
 
 ---
 
-## Обновление
+## Проверка перед демо (smoke)
 
-```bash
-git pull
-docker compose up --build --force-recreate
-```
+1. `docker compose logs` — каждый бот стартовал (строка `telegram bot started` с username и
+   размером allowlist на тенанта).
+2. Написать каждому боту простой вопрос из scope (напр. «выручка за вчера») → пришёл ответ.
+3. **Изоляция:** разрешённый на боте A `chat_id`/`@username` не имеет доступа к боту B; вопрос
+   в бот A возвращает числа тенанта A, не B.
+4. **Модель:** перед демо прогнать eval планировщика на боевой `gemma-4-31b` (роутер
+   публичный, гоняется с хоста):
+   ```bash
+   LLM_API_KEY=<bearer> LLM_BASE_URL=https://litellm.site.avtosushi.net \
+     LLM_MODEL=gemma-4-31b make eval-smoke   # быстрый сигнал (~5 мин); затем make eval-host
+   ```
 
-Логи (`QUERY_LOG_PATH`, `FEEDBACK_LOG_PATH`) — append-only JSONL, при перезапуске не обнуляются.
+---
+
+## Источник данных: режимы `DGS_CLIENT`
+
+- **`api`** (демо) — 6 отчётов ТЗ через Report-API (`payment`, `source-order`, `products`,
+  `categories`, `personnel`, `cash-on-hand`, `cash-income-outcome`); остальное — фикстуры.
+- **`fixture`** (CI/оффлайн) — все отчёты из локальных JSON (`$FIXTURES_PATH/*.grid.json`),
+  сеть к Dooglys не нужна.
+
+Конфиг тенантов (таймзона/валюта/точки) — `docs/contracts/fixtures/tenants.example.json`,
+ключуется по `tenant_id`. Для боевых тенантов значения `TENANT_<k>_ID` должны совпадать с
+ключами в этом файле (иначе тенант получит дефолты).

@@ -12,13 +12,22 @@ func botWith(tenantID string, allow ...int64) *Bot {
 	return &Bot{tenantID: tenantID, allowlist: al}
 }
 
+// botWithUsers строит Bot с whitelist по @username (уже нормализованным: без '@', lower).
+func botWithUsers(tenantID string, users ...string) *Bot {
+	au := make(map[string]struct{}, len(users))
+	for _, u := range users {
+		au[u] = struct{}{}
+	}
+	return &Bot{tenantID: tenantID, allowUsers: au}
+}
+
 // TestAllowed_WhitelistRejectsStranger: чужой chat_id отбит; свой пропущен.
 func TestAllowed_WhitelistRejectsStranger(t *testing.T) {
 	b := botWith("tenant-A", 111, 222)
-	if !b.allowed(111) {
+	if !b.allowed(111, "") {
 		t.Error("111 в whitelist — должен быть пропущен")
 	}
-	if b.allowed(999) {
+	if b.allowed(999, "") {
 		t.Error("999 не в whitelist — должен быть отбит")
 	}
 }
@@ -26,8 +35,23 @@ func TestAllowed_WhitelistRejectsStranger(t *testing.T) {
 // TestAllowed_EmptyWhitelistOpen: пустой whitelist → открыт всем (dev/legacy).
 func TestAllowed_EmptyWhitelistOpen(t *testing.T) {
 	b := botWith("tenant-A")
-	if !b.allowed(12345) {
-		t.Error("пустой whitelist должен пропускать любой chat_id")
+	if !b.allowed(12345, "anyone") {
+		t.Error("пустой whitelist должен пропускать любого")
+	}
+}
+
+// TestAllowed_ByUsername: whitelist по @username — пропуск регистронезависимо, чужой отбит,
+// а chat_id вне (пустого) числового списка не даёт доступа сам по себе.
+func TestAllowed_ByUsername(t *testing.T) {
+	b := botWithUsers("tenant-A", "ivan")
+	if !b.allowed(555, "Ivan") {
+		t.Error("@Ivan в whitelist (регистронезависимо) — должен быть пропущен")
+	}
+	if b.allowed(555, "maria") {
+		t.Error("@maria не в whitelist — должен быть отбит")
+	}
+	if b.allowed(555, "") {
+		t.Error("нет username и chat_id не в числовом списке — доступ закрыт")
 	}
 }
 
@@ -47,10 +71,10 @@ func TestResolveTenant_BoundToBot(t *testing.T) {
 func TestWhitelistPerTenant(t *testing.T) {
 	botA := botWith("tenant-A", 111)
 	botB := botWith("tenant-B", 222)
-	if botA.allowed(222) {
+	if botA.allowed(222, "") {
 		t.Error("222 разрешён только на боте B, не на A")
 	}
-	if botB.allowed(111) {
+	if botB.allowed(111, "") {
 		t.Error("111 разрешён только на боте A, не на B")
 	}
 }

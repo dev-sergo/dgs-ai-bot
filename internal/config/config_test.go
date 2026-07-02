@@ -109,6 +109,23 @@ func TestEnvInt64CSV(t *testing.T) {
 	}
 }
 
+// TestEnvAllowlist — смешанный whitelist: цифры → chat_id, остальное → @username
+// (нормализованный: без '@', нижний регистр). Пусто → nil,nil.
+func TestEnvAllowlist(t *testing.T) {
+	t.Setenv("X_ALW", "@Ivan, 111, maria , 222")
+	ids, users := envAllowlist("X_ALW")
+	if len(ids) != 2 || ids[0] != 111 || ids[1] != 222 {
+		t.Errorf("ids = %v, want [111 222]", ids)
+	}
+	if len(users) != 2 || users[0] != "ivan" || users[1] != "maria" {
+		t.Errorf("users = %v, want [ivan maria]", users)
+	}
+	t.Setenv("X_ALW", "")
+	if ids, users := envAllowlist("X_ALW"); ids != nil || users != nil {
+		t.Errorf("empty must yield nil,nil; got %v,%v", ids, users)
+	}
+}
+
 // TestLoadTenantsLegacy — без TENANTS синтезируется один тенант из TELEGRAM_*/DGS_*.
 func TestLoadTenantsLegacy(t *testing.T) {
 	t.Setenv("TENANTS", "")

@@ -66,9 +66,10 @@ type Dooglys struct {
 // Одно-тенантный legacy-путь: если список TENANTS пуст, из этих полей синтезируется
 // единственный TenantConfig (совместимость с dev/фикстурами и cmd/server).
 type Telegram struct {
-	Token         string  // TELEGRAM_TOKEN; пусто → бот не запускается
-	Allowlist     []int64 // TELEGRAM_ALLOWLIST (csv chat_id); пусто → открыт всем
-	DefaultTenant string  // TELEGRAM_TENANT; tenant по умолчанию для всех чатов
+	Token         string   // TELEGRAM_TOKEN; пусто → бот не запускается
+	Allowlist     []int64  // TELEGRAM_ALLOWLIST — числовые chat_id; пусто → открыт всем
+	AllowUsers    []string // TELEGRAM_ALLOWLIST — @username'ы (нормализованы: без '@', lower)
+	DefaultTenant string   // TELEGRAM_TENANT; tenant по умолчанию для всех чатов
 }
 
 // TenantConfig — один тенант мультитенантного развёртывания: свой Telegram-бот,
@@ -78,12 +79,13 @@ type Telegram struct {
 // в транспорте (resolveTenant), а НЕ здесь. Здесь — только описание тенанта.
 // Секреты (BotToken, AccessToken, XContext) НЕ печатаются в Summary и НЕ уходят в LLM.
 type TenantConfig struct {
-	ID          string  // tenant_id/domain для tenantctx и реестра (TENANT_<k>_ID; default = ключ)
-	BotToken    string  // токен Telegram-бота этого тенанта (TENANT_<k>_BOT_TOKEN); секрет
-	Allowlist   []int64 // whitelist chat_id этого бота (TENANT_<k>_ALLOWLIST); пусто → открыт всем
-	Domain      string  // tenant-domain Report-API (TENANT_<k>_DOMAIN; default = ID)
-	AccessToken string  // access-token Report-API (TENANT_<k>_ACCESS_TOKEN); пусто → общий DGS_ACCESS_TOKEN; секрет
-	XContext    string  // x-context Report-API (TENANT_<k>_XCONTEXT); секрет
+	ID          string   // tenant_id/domain для tenantctx и реестра (TENANT_<k>_ID; default = ключ)
+	BotToken    string   // токен Telegram-бота этого тенанта (TENANT_<k>_BOT_TOKEN); секрет
+	Allowlist   []int64  // whitelist по числовому chat_id (TENANT_<k>_ALLOWLIST); пусто → открыт всем
+	AllowUsers  []string // whitelist по @username (тот же TENANT_<k>_ALLOWLIST); нормализованы: без '@', lower
+	Domain      string   // tenant-domain Report-API (TENANT_<k>_DOMAIN; default = ID)
+	AccessToken string   // access-token Report-API (TENANT_<k>_ACCESS_TOKEN); пусто → общий DGS_ACCESS_TOKEN; секрет
+	XContext    string   // x-context Report-API (TENANT_<k>_XCONTEXT); секрет
 }
 
 // Config — корневая конфигурация.
@@ -137,10 +139,11 @@ func Load() Config {
 		},
 		Telegram: Telegram{
 			Token:         env("TELEGRAM_TOKEN", ""),
-			Allowlist:     envInt64CSV("TELEGRAM_ALLOWLIST"),
 			DefaultTenant: env("TELEGRAM_TENANT", "mock_single"),
 		},
 	}
+	// Смешанный whitelist (chat_id и/или @username) парсится вне литерала — два выхода.
+	c.Telegram.Allowlist, c.Telegram.AllowUsers = envAllowlist("TELEGRAM_ALLOWLIST")
 	c.Tenants = loadTenants(c)
 	return c
 }
@@ -154,7 +157,7 @@ func Load() Config {
 //	TENANTS=a,b,c
 //	TENANT_a_ID=rukagreka           # опц., default = ключ; это tenant_id/domain для tenantctx
 //	TENANT_a_BOT_TOKEN=123:ABC      # токен @BotFather
-//	TENANT_a_ALLOWLIST=111,222      # csv chat_id (пусто → бот открыт всем)
+//	TENANT_a_ALLOWLIST=@ivan,111    # csv @username и/или chat_id (пусто → бот открыт всем)
 //	TENANT_a_DOMAIN=rukagreka       # опц., default = ID; tenant-domain для Report-API
 //	TENANT_a_ACCESS_TOKEN=xxx       # опц.; пусто → общий DGS_ACCESS_TOKEN
 //	TENANT_a_XCONTEXT={...}         # опц. (внутренний xcontext-режим)
@@ -166,6 +169,7 @@ func loadTenants(c Config) []TenantConfig {
 			ID:          c.Telegram.DefaultTenant,
 			BotToken:    c.Telegram.Token,
 			Allowlist:   c.Telegram.Allowlist,
+			AllowUsers:  c.Telegram.AllowUsers,
 			Domain:      c.Dooglys.Domain,
 			AccessToken: c.Dooglys.AccessToken,
 			XContext:    c.Dooglys.XContext,
@@ -175,10 +179,12 @@ func loadTenants(c Config) []TenantConfig {
 	for _, k := range keys {
 		p := "TENANT_" + k + "_"
 		id := env(p+"ID", k)
+		ids, users := envAllowlist(p + "ALLOWLIST")
 		out = append(out, TenantConfig{
 			ID:          id,
 			BotToken:    os.Getenv(p + "BOT_TOKEN"),
-			Allowlist:   envInt64CSV(p + "ALLOWLIST"),
+			Allowlist:   ids,
+			AllowUsers:  users,
 			Domain:      env(p+"DOMAIN", id),
 			AccessToken: os.Getenv(p + "ACCESS_TOKEN"),
 			XContext:    os.Getenv(p + "XCONTEXT"),
@@ -236,7 +242,7 @@ func (c Config) tenantsSummary() string {
 			cred = "set"
 		}
 		parts = append(parts, fmt.Sprintf("%s(domain=%s alw=%d bot=%s cred=%s)",
-			t.ID, t.Domain, len(t.Allowlist), setUnset(t.BotToken != ""), cred))
+			t.ID, t.Domain, len(t.Allowlist)+len(t.AllowUsers), setUnset(t.BotToken != ""), cred))
 	}
 	return "[" + strings.Join(parts, " ") + "]"
 }
@@ -303,9 +309,9 @@ func (c Config) ValidateTelegram() error {
 		if t.BotToken == "" {
 			return fmt.Errorf("тенант %q: не задан токен бота (TENANT_<key>_BOT_TOKEN или TELEGRAM_TOKEN)", t.ID)
 		}
-		if c.IsProd() && len(t.Allowlist) == 0 {
+		if c.IsProd() && len(t.Allowlist) == 0 && len(t.AllowUsers) == 0 {
 			return fmt.Errorf("тенант %q: APP_ENV=prod требует непустой allowlist "+
-				"(TENANT_<key>_ALLOWLIST или TELEGRAM_ALLOWLIST) — иначе бот открыт всем", t.ID)
+				"(TENANT_<key>_ALLOWLIST или TELEGRAM_ALLOWLIST — @username и/или chat_id) — иначе бот открыт всем", t.ID)
 		}
 	}
 	return nil
@@ -335,6 +341,33 @@ func envDuration(key string, def time.Duration) time.Duration {
 		}
 	}
 	return def
+}
+
+// envAllowlist парсит смешанный whitelist из csv ("@ivan, 111, maria"): элемент из одних
+// цифр → числовой chat_id; любой другой → @username (нормализован normUsername: без '@',
+// нижний регистр). Пустое значение → nil,nil (allowlist выключен → бот открыт всем). Смешение
+// позволяет вести доступ по @username и/или по chat_id и переключаться правкой .env без кода.
+func envAllowlist(key string) (ids []int64, users []string) {
+	for _, part := range strings.Split(os.Getenv(key), ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if n, err := strconv.ParseInt(part, 10, 64); err == nil {
+			ids = append(ids, n)
+			continue
+		}
+		if u := normUsername(part); u != "" {
+			users = append(users, u)
+		}
+	}
+	return ids, users
+}
+
+// normUsername нормализует Telegram-username для сравнения: срезает ведущий '@' и приводит
+// к нижнему регистру (Telegram отдаёт username без '@', регистр в вводе произвольный).
+func normUsername(s string) string {
+	return strings.ToLower(strings.TrimPrefix(strings.TrimSpace(s), "@"))
 }
 
 // envInt64CSV парсит список chat_id из csv ("123,456"). Пустое значение или мусор —

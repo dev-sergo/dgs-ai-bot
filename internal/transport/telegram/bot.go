@@ -21,16 +21,18 @@ import (
 // константа (бот жёстко на своём тенанте); в будущем — замена на chatID→tenant-резолвер,
 // без изменения app/клиента (движок уже тенант-агностичен, tenantID приходит в Ask).
 type Bot struct {
-	api       *tgbotapi.BotAPI
-	app       *app.App
-	tenantID  string
-	allowlist map[int64]struct{}
-	limiter   *rateLimiter
+	api        *tgbotapi.BotAPI
+	app        *app.App
+	tenantID   string
+	allowlist  map[int64]struct{}  // whitelist по числовому chat_id
+	allowUsers map[string]struct{} // whitelist по @username (нормализован: без '@', lower)
+	limiter    *rateLimiter
 }
 
 // New создаёт Bot, привязанный к тенанту tenantID, со своим токеном и whitelist'ом.
+// Whitelist смешанный: chat_id (allowlist) и/или @username (allowUsers, уже нормализованы).
 // Возвращает ошибку если токен невалиден.
-func New(token, tenantID string, allowlist []int64, a *app.App) (*Bot, error) {
+func New(token, tenantID string, allowlist []int64, allowUsers []string, a *app.App) (*Bot, error) {
 	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, fmt.Errorf("telegram: %w", err)
@@ -40,21 +42,26 @@ func New(token, tenantID string, allowlist []int64, a *app.App) (*Bot, error) {
 	for _, id := range allowlist {
 		al[id] = struct{}{}
 	}
+	au := make(map[string]struct{}, len(allowUsers))
+	for _, u := range allowUsers {
+		au[u] = struct{}{}
+	}
 
 	slog.Info("telegram bot started", "username", api.Self.UserName,
-		"tenant", tenantID, "allowlist", len(allowlist))
+		"tenant", tenantID, "allowlist", len(allowlist)+len(allowUsers))
 	return &Bot{
-		api:       api,
-		app:       a,
-		tenantID:  tenantID,
-		allowlist: al,
-		limiter:   newRateLimiter(rateLimitRequests, rateLimitWindow),
+		api:        api,
+		app:        a,
+		tenantID:   tenantID,
+		allowlist:  al,
+		allowUsers: au,
+		limiter:    newRateLimiter(rateLimitRequests, rateLimitWindow),
 	}, nil
 }
 
 // NewFromTenant — удобный конструктор из config.TenantConfig (bootstrap N ботов).
 func NewFromTenant(tc config.TenantConfig, a *app.App) (*Bot, error) {
-	return New(tc.BotToken, tc.ID, tc.Allowlist, a)
+	return New(tc.BotToken, tc.ID, tc.Allowlist, tc.AllowUsers, a)
 }
 
 // resolveTenant — шов резолва чата в тенант. В 3-бот режиме бот жёстко на своём
@@ -62,14 +69,22 @@ func NewFromTenant(tc config.TenantConfig, a *app.App) (*Bot, error) {
 // маппинг chatID→tenant (единственная точка изменения топологии).
 func (b *Bot) resolveTenant(_ int64) string { return b.tenantID }
 
-// allowed сообщает, пропущен ли chatID whitelist'ом бота. Пустой список → открыт всем
-// (как пустой AUTH_TOKEN выключает HTTP-гейт). Чужой chat_id → false.
-func (b *Bot) allowed(chatID int64) bool {
-	if len(b.allowlist) == 0 {
+// allowed сообщает, пропущен ли пользователь whitelist'ом бота — по chat_id ИЛИ по
+// @username. Оба списка пусты → открыт всем (как пустой AUTH_TOKEN выключает HTTP-гейт).
+// Чужой chat_id и username вне списка → false. username сравнивается регистронезависимо.
+func (b *Bot) allowed(chatID int64, username string) bool {
+	if len(b.allowlist) == 0 && len(b.allowUsers) == 0 {
 		return true
 	}
-	_, ok := b.allowlist[chatID]
-	return ok
+	if _, ok := b.allowlist[chatID]; ok {
+		return true
+	}
+	if username != "" {
+		if _, ok := b.allowUsers[strings.ToLower(username)]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // Run запускает polling-loop; блокирует до отмены ctx.
@@ -112,8 +127,13 @@ func (b *Bot) Run(ctx context.Context) {
 func (b *Bot) handle(ctx context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 
-	// Allowlist-guard: свой whitelist на бот/тенант. Чужой chat_id отбит.
-	if !b.allowed(chatID) {
+	// Allowlist-guard: свой whitelist на бот/тенант — по chat_id или @username.
+	// Чужой отбит. username берём из msg.From (в личке From.ID == Chat.ID).
+	var username string
+	if msg.From != nil {
+		username = msg.From.UserName
+	}
+	if !b.allowed(chatID, username) {
 		b.send(chatID, "Доступ закрыт.")
 		return
 	}
