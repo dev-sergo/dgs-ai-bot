@@ -137,10 +137,12 @@ const (
 	retryBackoff   = 2 * time.Second
 )
 
-// Run прогоняет все кейсы через планировщик и валидатор.
-func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case) []Result {
+// Run прогоняет все кейсы через планировщик и валидатор. onResult (если не nil)
+// вызывается по мере готовности КАЖДОГО кейса (i — 0-based индекс, r — результат) —
+// это даёт живой прогресс на долгом прогоне вместо «тишины до конца».
+func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case, onResult func(i int, r Result)) []Result {
 	out := make([]Result, 0, len(cases))
-	for _, c := range cases {
+	for i, c := range cases {
 		start := time.Now()
 		p, err := planWithRetry(ctx, pl, c.Query)
 		lat := time.Since(start).Milliseconds()
@@ -161,6 +163,9 @@ func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []
 			r.Mismatch = Check(p, c.Expect)
 		}
 		out = append(out, r)
+		if onResult != nil {
+			onResult(i, r)
+		}
 	}
 	return out
 }

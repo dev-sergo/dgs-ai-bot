@@ -34,6 +34,7 @@ run-host: build-host  ## запустить сервис НА ХОСТЕ (исп
 	PLANNER_MODE=$${PLANNER_MODE:-llm} \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	FIXTURES_PATH=docs/contracts/fixtures \
 	./bin/server-host
 
@@ -42,6 +43,7 @@ bot-host:    ## поднять Telegram-бот НА ХОСТЕ (нужен TELEG
 	PLANNER_MODE=$${PLANNER_MODE:-llm} \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	FIXTURES_PATH=$${FIXTURES_PATH:-docs/contracts/fixtures} \
 	TELEGRAM_TENANT=$${TELEGRAM_TENANT:-mock_single} \
 	./bin/bot
@@ -75,6 +77,7 @@ eval-host:   ## eval-бенчмарк планировщика против ри
 	PLANNER_MODE=llm \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	EVAL_PROMPTS=$${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
 	./bin/eval-host 2>&1 | tee "$$out"; \
 	bash bench/summarize.sh "$$out" > "$${out%.log}.json"; \
@@ -89,6 +92,7 @@ serve-host:  ## поднять сервер НА ХОСТЕ с реальной 
 	HTTP_ADDR=$${HTTP_ADDR:-:8088} \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	FIXTURES_PATH=$${FIXTURES_PATH:-docs/contracts/fixtures} \
 	./bin/server
 
@@ -102,6 +106,7 @@ pipeval-host: ## full-pipeline бенчмарк через реальный LLM 
 	PLANNER_MODE=llm \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	PIPEVAL_CASES=$${PIPEVAL_CASES:-test/eval/pipeline.jsonl} \
 	./bin/pipeval-host 2>&1 | tee "$$out"; \
 	bash bench/summarize.sh "$$out" > "$${out%.log}.json"; \
@@ -116,6 +121,7 @@ pipeval-quality-host: ## КАЧЕСТВЕННЫЙ прогон: печатает
 	PLANNER_MODE=llm PIPEVAL_DUMP=1 \
 	LLM_BASE_URL=$${LLM_BASE_URL:-http://172.20.10.2:8080} \
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
+	LLM_API_KEY=$${LLM_API_KEY:-} \
 	PIPEVAL_CASES=test/eval/quality.jsonl \
 	./bin/pipeval-host 2>&1 | tee "$$out"; \
 	bash bench/summarize.sh "$$out" > "$${out%.log}.json"; \

@@ -64,7 +64,7 @@ func main() {
 	// Фиксированное «сейчас» — под даты фикстур (как в интеграционных тестах).
 	a.Now = func() time.Time { return time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC) }
 
-	fmt.Printf("pipeval: %d кейсов, planner=%s, данные=фикстуры(%s)\n\n", len(cases), cfg.PlannerMode, cfg.FixturesPath)
+	fmt.Printf("pipeval: %d cases, planner=%s, data=fixtures(%s)\n\n", len(cases), cfg.PlannerMode, cfg.FixturesPath)
 
 	dump := os.Getenv("PIPEVAL_DUMP") != "" // показать план + текст ответа (качественная оценка)
 
@@ -79,7 +79,7 @@ func main() {
 		}
 		fmt.Printf("[%s] %5dms  %s\n", status, r.LatencyMS, r.Query)
 		if r.Err != nil {
-			fmt.Printf("        ошибка: %v\n", r.Err)
+			fmt.Printf("        error: %v\n", r.Err)
 			continue
 		}
 		for _, m := range r.Mismatch {
@@ -87,9 +87,9 @@ func main() {
 		}
 		if dump {
 			pl := r.Answer.Plan
-			fmt.Printf("        план: intent=%s report=%s method=%s order=%s period=%s metrics=%v\n",
+			fmt.Printf("        plan: intent=%s report=%s method=%s order=%s period=%s metrics=%v\n",
 				pl.EffectiveIntent(), pl.Report, pl.Method, pl.Order, pl.Period.Token, pl.Metrics)
-			fmt.Printf("        ─── ответ ───\n")
+			fmt.Printf("        ─── answer ───\n")
 			for _, line := range strings.Split(strings.TrimRight(r.Answer.Text, "\n"), "\n") {
 				fmt.Printf("        | %s\n", line)
 			}
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	s := pipeval.Summarize(results)
-	fmt.Printf("\n— итог —\nпрошло: %d/%d\nошибок: %d\nлатентность: p50=%dms p95=%dms max=%dms\n",
+	fmt.Printf("\n— summary —\npassed: %d/%d\nerrors: %d\nlatency: p50=%dms p95=%dms max=%dms\n",
 		s.Passed, s.Total, s.Errors, s.LatP50, s.LatP95, s.LatMax)
 
 	if s.Passed < s.Total {

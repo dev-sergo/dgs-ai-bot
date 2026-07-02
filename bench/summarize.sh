@@ -16,13 +16,14 @@ IFS='_' read -r d t harness corpus mode commit <<<"$base"
 
 body="$(cat "$f")"
 
-# First occurrence = the run's own итог line (guards against logs with appended blocks).
-pt="$(grep -oE '(прошло|Итог):?[[:space:]]*[0-9]+/[0-9]+' <<<"$body" | head -1 | grep -oE '[0-9]+/[0-9]+' || true)"
+# First occurrence = the run's own summary line (guards against logs with appended blocks).
+# Лейблы понимаем и на английском (текущие), и на русском (legacy-логи до перехода).
+pt="$(grep -oE '(passed|прошло|Итог):?[[:space:]]*[0-9]+/[0-9]+' <<<"$body" | head -1 | grep -oE '[0-9]+/[0-9]+' || true)"
 pass="${pt%/*}"; total="${pt#*/}"
-valid="$(grep -oE 'валидных:?[[:space:]]*[0-9]+' <<<"$body" | head -1 | grep -oE '[0-9]+$' || true)"
+valid="$(grep -oE '(valid|валидных):?[[:space:]]*[0-9]+' <<<"$body" | head -1 | grep -oE '[0-9]+$' || true)"
 p50="$(grep -oE 'p50=[0-9]+' <<<"$body" | head -1 | sed 's/p50=//' || true)"
 p95="$(grep -oE 'p95=[0-9]+' <<<"$body" | head -1 | sed 's/p95=//' || true)"
-model="$(grep -oE 'модель=[^,]+' <<<"$body" | head -1 | sed 's/модель=//' || true)"
+model="$(grep -oE '(model|модель)=[^,]+' <<<"$body" | head -1 | sed -E 's/(model|модель)=//' || true)"
 
 rate=null
 if [[ -n "${pass:-}" && -n "${total:-}" && "${total:-0}" -gt 0 ]]; then
