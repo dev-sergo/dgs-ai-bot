@@ -20,6 +20,13 @@ services:
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     # All env vars (tenants, LLM router, Report-API, logs) are taken from .env.
     env_file: .env
+    # api.telegram.org is reachable from this server only at the Bot API DC IP
+    # 149.154.167.220; its other A/AAAA records (and IPv6) are blocked here and time out.
+    # Pin the hostname to the working IP so the bot connects straight to it — Go's resolver
+    # reads the container's /etc/hosts. No proxy needed. If Telegram ever changes this IP,
+    # update it here (check: curl --resolve api.telegram.org:443:<ip> https://api.telegram.org/).
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220"
     volumes:
       # JSONL dataset question→plan→answer and 👍/👎 ratings. Written to /app/data → host
       # ./data (owner = HOST_UID). Append-only, survives restarts.
