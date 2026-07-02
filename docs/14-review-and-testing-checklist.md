@@ -12,21 +12,21 @@
 
 ## Блок 0 — до демо (пт 2026-07-04). Пилот-критично
 
-- [ ] **0.1** Routing-правила для 4 новых отчётов ТЗ в systemPrompt (`source-order`, `categories`,
-  `cash-on-hand`, `cash-income-outcome`) — сейчас модель видит их только списком в каталоге,
-  new-reports даёт 13/16. Где: [llm.go](../internal/planner/llm.go) (routing-блок правил).
-- [ ] **0.2** Таймзона/валюта тенанта из реального конфига, а не `tenants.example.json`
-  ([bootstrap.go](../internal/bootstrap/bootstrap.go), загрузка tenantctx); незнакомый тенант →
-  fail-fast вместо молчаливой Москвы/RUB ([app.go](../internal/app/app.go), tenantMeta).
-- [ ] **0.3** Per-tenant kill-switch `enabled` (R18 из док-13 — задизайнен, в коде отсутствует):
-  выкл → «на техобслуживании», без рестарта остальных ботов.
-- [ ] **0.4** Лимит длины запроса ДО планировщика: HTTP пропускает до 1 MiB
-  (`maxBodyBytes`, [server.go](../internal/transport/http/server.go)), и весь текст уходит
-  в промпт при ctx 16k. Нужен cap (~2–4k символов) с вежливым ответом «сократите вопрос»,
-  не ошибка LLM. Telegram сам режет 4096/сообщение — но HTTP-канал открыт.
-- [ ] **0.5** Проверить `orders`: есть в каталоге, нет в `reportPathMap`
-  ([reportclient.go](../internal/dooglys/reportclient.go)) → ходит через fallback.
-  Добавить путь или зафиксировать комментарием, что осознанно.
+- [x] **0.1** ✅ код 2026-07-02 (⏳ гейт: полный eval) — routing-правила 4 новых отчётов
+  в systemPrompt + правило source-order vs каналы оплаты + enum-значения фильтра type
+  (`cash_income`/`cash_outcome`) + group_by для всех новых slug'ов ([llm.go](../internal/planner/llm.go)).
+- [x] **0.2** ✅ 2026-07-02 — `TENANT_<k>_TZ`/`_CURRENCY` в конфиге, наложение поверх
+  файлового справочника (`tenantctx.Add`, bootstrap), fail-fast на невалидной таймзоне
+  в ЛЮБОМ режиме данных (config.Validate), warn-лог на fallback Москва/RUB.
+- [x] **0.3** ✅ 2026-07-02 — kill-switch `TENANT_<k>_ENABLED=0` → «на техобслуживании»
+  до планирования и данных (`app.Disable`), остальные тенанты не затронуты.
+- [x] **0.4** ✅ 2026-07-02 — cap 2000 рун ДО планировщика/лога/сессии (`maxQueryRunes`,
+  app.Ask): вежливый отказ, «простыня» не попадает ни в промпт, ни в JSONL.
+- [x] **0.5** ✅ 2026-07-02 — нашлось хуже, чем orders: в api-режиме через Report-API
+  роутились только payment/products/personnel, а cash/categories/source-order падали в
+  fixture-fallback (чужие числа живому тенанту!). Исправлено: все 7 slug'ов уровня A →
+  Report-API; в prod fixture-fallback ЗАПРЕЩЁН — не подключённый отчёт (orders/paycheck)
+  отвечает честным «отчёт пока не подключён» (`ErrReportNotLive`), в dev фикстуры остаются.
 
 ## Блок Т — тестовый контур (расширение покрытия; параллельно Блоку 0 и после)
 

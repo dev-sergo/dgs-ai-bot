@@ -87,6 +87,9 @@ type TenantConfig struct {
 	Domain      string   // Report-API tenant-domain (TENANT_<k>_DOMAIN; default = key)
 	AccessToken string   // Report-API access-token (TENANT_<k>_ACCESS_TOKEN); empty → shared DGS_ACCESS_TOKEN; secret
 	XContext    string   // Report-API x-context (TENANT_<k>_XCONTEXT); secret
+	Timezone    string   // IANA tz for period math (TENANT_<k>_TZ; default Europe/Moscow); wrong tz = wrong "yesterday"
+	Currency    string   // display currency (TENANT_<k>_CURRENCY; default RUB)
+	Enabled     bool     // kill-switch (TENANT_<k>_ENABLED; default true): off → bot replies "maintenance", no data access
 }
 
 // Config — корневая конфигурация.
@@ -162,6 +165,9 @@ func Load() Config {
 //	TENANT_a_DOMAIN=rukagreka       # опц., default = ключ; tenant-domain для Report-API
 //	TENANT_a_ACCESS_TOKEN=xxx       # опц.; пусто → общий DGS_ACCESS_TOKEN
 //	TENANT_a_XCONTEXT={...}         # опц. (внутренний xcontext-режим)
+//	TENANT_a_TZ=Asia/Yekaterinburg  # опц., default Europe/Moscow; IANA-таймзона периодов
+//	TENANT_a_CURRENCY=RUB           # опц., default RUB
+//	TENANT_a_ENABLED=1              # опц., default 1; 0 → kill-switch («на техобслуживании»)
 func loadTenants(c Config) []TenantConfig {
 	keys := csvFields(os.Getenv("TENANTS"))
 	if len(keys) == 0 {
@@ -174,6 +180,9 @@ func loadTenants(c Config) []TenantConfig {
 			Domain:      c.Dooglys.Domain,
 			AccessToken: c.Dooglys.AccessToken,
 			XContext:    c.Dooglys.XContext,
+			Timezone:    env("TENANT_TZ", "Europe/Moscow"),
+			Currency:    env("TENANT_CURRENCY", "RUB"),
+			Enabled:     envBool("TENANT_ENABLED", true),
 		}}
 	}
 	out := make([]TenantConfig, 0, len(keys))
@@ -189,6 +198,9 @@ func loadTenants(c Config) []TenantConfig {
 			Domain:      env(p+"DOMAIN", k),
 			AccessToken: os.Getenv(p + "ACCESS_TOKEN"),
 			XContext:    os.Getenv(p + "XCONTEXT"),
+			Timezone:    env(p+"TZ", "Europe/Moscow"),
+			Currency:    env(p+"CURRENCY", "RUB"),
+			Enabled:     envBool(p+"ENABLED", true),
 		})
 	}
 	return out
@@ -266,6 +278,14 @@ const dooglysAuthXContext = "xcontext"
 // выключен. Каждый тенант обязан иметь кред выбранного ReportAuth (token→access-token,
 // xcontext→x-context); access-token может быть общим (DGS_ACCESS_TOKEN) или пер-тенантным.
 func (c Config) Validate() error {
+	// Таймзоны тенантов — в ЛЮБОМ режиме данных: невалидная зона молча превращается
+	// в UTC (tenantctx.Location) → «вчера» считается не по тому дню. Ловим на старте,
+	// а не в первом отчёте пилота.
+	for _, t := range c.Tenants {
+		if _, err := time.LoadLocation(t.Timezone); err != nil {
+			return fmt.Errorf("тенант %q: невалидная таймзона TENANT_<key>_TZ=%q (нужна IANA-зона, напр. Europe/Moscow): %v", t.ID, t.Timezone, err)
+		}
+	}
 	switch c.Dooglys.ReportAuth {
 	case "token", dooglysAuthXContext:
 	default:

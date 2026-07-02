@@ -285,3 +285,38 @@ func TestSummaryNoSecrets(t *testing.T) {
 		}
 	}
 }
+
+// TestLoadTenantsContext — TENANT_<k>_TZ/_CURRENCY/_ENABLED парсятся, дефолты разумные.
+func TestLoadTenantsContext(t *testing.T) {
+	t.Setenv("TENANTS", "a, b")
+	t.Setenv("TENANT_a_TZ", "Asia/Yekaterinburg")
+	t.Setenv("TENANT_a_CURRENCY", "KZT")
+	t.Setenv("TENANT_a_ENABLED", "0")
+	c := Load()
+	if len(c.Tenants) != 2 {
+		t.Fatalf("Tenants = %d, want 2", len(c.Tenants))
+	}
+	a, b := c.Tenants[0], c.Tenants[1]
+	if a.Timezone != "Asia/Yekaterinburg" || a.Currency != "KZT" || a.Enabled {
+		t.Errorf("tenant a = %+v (ожидали TZ/CURRENCY/ENABLED=0 из env)", a)
+	}
+	if b.Timezone != "Europe/Moscow" || b.Currency != "RUB" || !b.Enabled {
+		t.Errorf("tenant b = %+v (ожидали дефолты Moscow/RUB/enabled)", b)
+	}
+}
+
+// TestValidateTimezone — невалидная TENANT_<k>_TZ падает на старте в ЛЮБОМ режиме данных
+// (иначе tenantctx.Location молча превращает её в UTC → «вчера» не по тому дню).
+func TestValidateTimezone(t *testing.T) {
+	c := Config{
+		Dooglys: Dooglys{Mode: DooglysFixture, ReportAuth: "token"},
+		Tenants: []TenantConfig{{ID: "t1", Timezone: "Mars/Olympus"}},
+	}
+	if err := c.Validate(); err == nil {
+		t.Error("невалидная таймзона должна падать даже в fixture-режиме")
+	}
+	c.Tenants[0].Timezone = "Europe/Moscow"
+	if err := c.Validate(); err != nil {
+		t.Errorf("валидная таймзона: %v", err)
+	}
+}

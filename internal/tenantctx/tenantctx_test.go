@@ -103,3 +103,44 @@ func TestLoadMissingFile(t *testing.T) {
 		t.Fatal("expected error for missing file")
 	}
 }
+
+// TestAddOverlay — env-тенант (TENANT_<k>_TZ/_CURRENCY) регистрируется поверх файла:
+// по routing-ключу и uuid отдаётся env-запись с её таймзоной, а занятый файлом домен
+// (fixture-запись с sale_points) НЕ затирается.
+func TestAddOverlay(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tenants.json")
+	doc := `{"tenants":[{"tenant_id":"uuid-g","domain":"google","timezone":"Europe/Moscow",
+		"currency":"RUB","sale_points":[{"id":"sp1","name":"Точка"}]}]}`
+	if err := os.WriteFile(path, []byte(doc), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	s.Add(Tenant{TenantID: "uuid-r", Domain: "google", Timezone: "Asia/Yekaterinburg", Currency: "RUB"}, "rukagreka")
+
+	for _, key := range []string{"rukagreka", "uuid-r"} {
+		tn, ok := s.Lookup(key)
+		if !ok || tn.Timezone != "Asia/Yekaterinburg" {
+			t.Errorf("Lookup(%q) = %+v ok=%v, want env-запись с Asia/Yekaterinburg", key, tn, ok)
+		}
+		if tn.Location().String() != "Asia/Yekaterinburg" {
+			t.Errorf("Location(%q) = %s, want Asia/Yekaterinburg (кэш loc)", key, tn.Location())
+		}
+	}
+	if tn, ok := s.Lookup("google"); !ok || len(tn.SalePoints) != 1 {
+		t.Errorf("файловая запись домена затёрта: %+v ok=%v", tn, ok)
+	}
+}
+
+// TestAddOnZeroStore — Add на нулевом Store (nil-мапы) не паникует.
+func TestAddOnZeroStore(t *testing.T) {
+	var s Store
+	s.Add(Tenant{Timezone: "UTC"}, "k")
+	if _, ok := s.Lookup("k"); !ok {
+		t.Error("alias не зарегистрирован на zero Store")
+	}
+}

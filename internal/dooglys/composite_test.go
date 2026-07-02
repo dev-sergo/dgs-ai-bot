@@ -2,6 +2,7 @@ package dooglys
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -28,5 +29,19 @@ func TestComposite_RoutesByReport(t *testing.T) {
 		if got.Label != "fixture" {
 			t.Errorf("%s должен идти в fixture, got %q", rep, got.Label)
 		}
+	}
+}
+
+// TestComposite_NilFallbackRefuses — prod-режим: fallback нет, не подключённый отчёт
+// получает типизированный отказ (ErrReportNotLive), а не чужие фикстурные числа.
+func TestComposite_NilFallbackRefuses(t *testing.T) {
+	c := NewComposite(map[string]Client{"payment": fakeClient{"api"}}, nil)
+
+	if pay, _ := c.Fetch(context.Background(), Query{Report: "payment"}); pay.Label != "api" {
+		t.Errorf("подключённый отчёт должен работать, got %q", pay.Label)
+	}
+	_, err := c.Fetch(context.Background(), Query{Report: "orders"})
+	if !errors.Is(err, ErrReportNotLive) {
+		t.Fatalf("orders без fallback должен вернуть ErrReportNotLive, got %v", err)
 	}
 }

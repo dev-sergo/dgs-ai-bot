@@ -78,6 +78,38 @@ func Load(path string) (*Store, error) {
 	return s, nil
 }
 
+// Add регистрирует тенанта, собранного из env-конфига (TENANT_<k>_TZ/_CURRENCY),
+// поверх файлового справочника. aliases — routing-ключи (TENANTS), под которыми
+// транспорты спрашивают контекст; по ним env-запись побеждает всегда. byDomain
+// заполняется, только если домен ещё свободен: fixture-записи файла (CI/pipeval,
+// с sale_points) не затираются env-записью без sale_points.
+func (s *Store) Add(t Tenant, aliases ...string) {
+	if s.byID == nil {
+		s.byID = map[string]Tenant{}
+	}
+	if s.byDomain == nil {
+		s.byDomain = map[string]Tenant{}
+	}
+	if t.Timezone != "" {
+		if loc, err := time.LoadLocation(t.Timezone); err == nil {
+			t.loc = loc
+		}
+	}
+	for _, a := range aliases {
+		if a != "" {
+			s.byID[a] = t
+		}
+	}
+	if t.TenantID != "" {
+		s.byID[t.TenantID] = t
+	}
+	if t.Domain != "" {
+		if _, busy := s.byDomain[t.Domain]; !busy {
+			s.byDomain[t.Domain] = t
+		}
+	}
+}
+
 // Lookup ищет тенанта по идентификатору (tenant_id или domain).
 // Второй результат — false, если тенант не найден.
 func (s *Store) Lookup(id string) (Tenant, bool) {

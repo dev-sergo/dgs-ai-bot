@@ -98,13 +98,22 @@ func tenantData(cfg config.Config, tc config.TenantConfig) (dooglys.Client, *res
 		}
 		// Report-API: server-side агрегаты (единый источник = числа админки Dooglys).
 		// token (внешний api.dooglys.com) — primary демо; xcontext — внутренний (кубы).
+		// Роутим ВСЕ отчёты уровня A (6 отчётов ТЗ): иначе cash/categories/source-order
+		// падают в fixture-fallback и отдают живому тенанту чужие фикстурные числа.
 		if rc := reportClient(d); rc != nil {
-			byReport["personnel"] = rc
-			byReport["payment"] = rc  // снять с самосбора → server-side агрегаты
-			byReport["products"] = rc // то же; bonus — profit из Report-API
-			log.Printf("dooglys[%s]: payment/products/personnel → Report-API", tc.ID)
+			for _, slug := range []string{"payment", "products", "personnel",
+				"source-order", "categories", "cash-on-hand", "cash-income-outcome"} {
+				byReport[slug] = rc
+			}
+			log.Printf("dooglys[%s]: уровень A (payment/products/personnel/source-order/categories/cash-*) → Report-API", tc.ID)
 		}
-		client := dooglys.NewComposite(byReport, dooglys.NewFixtureClient(cfg.FixturesPath))
+		// Fixture-fallback для не подключённых отчётов (orders/paycheck) — ТОЛЬКО вне
+		// prod: в проде честный отказ (ErrReportNotLive) вместо чужих фикстурных чисел.
+		var fb dooglys.Client
+		if !cfg.IsProd() {
+			fb = dooglys.NewFixtureClient(cfg.FixturesPath)
+		}
+		client := dooglys.NewComposite(byReport, fb)
 		res := resolver.Load(cfg.FixturesPath)
 		// Индекс товаров перебирает всю историю заказов (~минуты) — строим в ФОНЕ с
 		// таймаутом, чтобы транспорт слушал сразу: до готовности товары резолвятся из
@@ -172,6 +181,15 @@ func App(cfg config.Config) (*app.App, func(), error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("tenants: %w", err)
 	}
+	// Env-конфиг тенантов ПОВЕРХ файлового справочника: таймзона/валюта пилотных
+	// тенантов задаются TENANT_<k>_TZ/_CURRENCY, а не примером фикстур. Валидность
+	// таймзоны гарантирована config.Validate (fail-fast на старте).
+	for _, tc := range cfg.Tenants {
+		tenants.Add(tenantctx.Tenant{
+			TenantID: tc.TenantID, Domain: tc.Domain,
+			Timezone: tc.Timezone, Currency: tc.Currency, CurrencyPrecision: 2,
+		}, tc.ID)
+	}
 
 	a := app.NewMulti(pl, tenants, nar, adv, session.NewStore())
 
@@ -181,6 +199,9 @@ func App(cfg config.Config) (*app.App, func(), error) {
 	for _, tc := range cfg.Tenants {
 		client, res := tenantData(cfg, tc)
 		a.Register(tc.ID, tc.TenantID, client, res)
+		if !tc.Enabled {
+			a.Disable(tc.ID) // kill-switch: «на техобслуживании», данные не трогаем
+		}
 	}
 
 	// Датасет вопросов/ответов (JSONL) — для продуктовой аналитики и дообучения.
