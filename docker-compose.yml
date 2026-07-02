@@ -14,11 +14,15 @@ services:
     build: .
     # Образ по умолчанию стартует HTTP-сервер (cmd/server); здесь переопределяем на бота.
     entrypoint: ["/app/bot"]
+    # Запускаем контейнер ПОД ХОСТОВЫМ ПОЛЬЗОВАТЕЛЕМ (владельцем ./data), а не под nonroot
+    # uid 65532 из образа. Тогда bind-mount ./data пишется без chown под чужой uid — каталог
+    # остаётся под твоим юзером. Значения — из .env (HOST_UID/HOST_GID = `id -u`/`id -g`).
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     # Все переменные окружения (тенанты, LLM-роутер, Report-API, логи) берутся из .env.
     env_file: .env
     volumes:
-      # JSONL-датасет вопрос→план→ответ и оценки 👍/👎. Пишется в /app/data (владелец
-      # nonroot uid 65532) → на хост в ./data. Append-only, переживает рестарт.
+      # JSONL-датасет вопрос→план→ответ и оценки 👍/👎. Пишется в /app/data → на хост в
+      # ./data (владелец = HOST_UID). Append-only, переживает рестарт.
       - ./data:/app/data
     # Процесс-liveness: упал (напр. невалидный bot-токен → fail-fast) — контейнер
     # перезапускается. distroless без shell → HEALTHCHECK-команду не запустить,

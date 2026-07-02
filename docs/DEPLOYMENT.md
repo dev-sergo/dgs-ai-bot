@@ -66,7 +66,7 @@ curl -sS  https://litellm.site.avtosushi.net/v1/models -H "Authorization: Bearer
 | `DGS_CLIENT` | `api` | `api` — живой Report-API; `fixture` — локальные JSON (оффлайн-демо). |
 | `DGS_REPORT_AUTH` | `token` | Режим авторизации: `token` (внешний `api.dooglys.com`) / `xcontext` (внутренний, кубы). |
 | `DGS_REPORT_BASE` | `https://api.dooglys.com/api/v1/reports` | База Report-API (внешний путь с префиксом `/reports`). |
-| `DGS_ACCESS_TOKEN` | 🔒 (опц.) | Общий `access-token`, если один на всех. Разные → задать пер-тенантно. |
+| `DGS_ACCESS_TOKEN` | 🔒 (не исп.) | Общий `access-token`. В этом проекте у каждого тенанта свой — оставить пустым, задавать пер-тенантно. |
 
 > `DGS_LOGIN`/`DGS_PASSWORD` для 6 отчётов ТЗ **не нужны** (payment/products идут через
 > Report-API). Без них отключается лишь «живой индекс товаров» — распознавание названий
@@ -96,7 +96,7 @@ curl -sS  https://litellm.site.avtosushi.net/v1/models -H "Authorization: Bearer
 | `TENANT_<k>_ALLOWLIST` | **да (prod)** | Смешанный whitelist (см. ниже). Пустой в `prod` → fail-fast. |
 | `TENANT_<k>_ID` | опц. | `tenant_id` (default = ключ). Должен совпадать с записью в `tenants.example.json`. |
 | `TENANT_<k>_DOMAIN` | опц. | `tenant-domain` Report-API (default = ID). |
-| `TENANT_<k>_ACCESS_TOKEN` | опц. | 🔒 свой `access-token`; пусто → общий `DGS_ACCESS_TOKEN`. |
+| `TENANT_<k>_ACCESS_TOKEN` | **да** | 🔒 свой `access-token` тенанта (у каждого свой; общий `DGS_ACCESS_TOKEN` не используем). |
 
 Пишешь только то, что реально отличается (ID/DOMAIN дефолтятся от ключа, токен может быть
 общим). **Добавить бота = дописать ключ в `TENANTS` + блок `TENANT_<k>_*`; код не меняется.**
@@ -141,13 +141,25 @@ TENANT_tenant2_ALLOWLIST=@owner_maria
 
 ## Права на том логов
 
-`./data` монтируется в `/app/data`, куда пишет процесс под nonroot (uid 65532). Если в
-логах видишь предупреждение, что датасет не открылся (нет прав на смонтированный каталог) —
-бот продолжит работать без лога. Чтобы включить запись, выдай права каталогу на хосте:
+`./data` монтируется в `/app/data`, куда пишутся JSONL-датасеты. Чтобы контейнер писал в
+bind-mount под **твоим хостовым пользователем** (а не под nonroot uid 65532 из образа), он
+запускается с `user: "${HOST_UID}:${HOST_GID}"` — задай их в `.env` под свой аккаунт:
 
 ```bash
-mkdir -p ./data && sudo chown -R 65532:65532 ./data   # либо chmod 777 ./data
+echo "HOST_UID=$(id -u)" >> .env
+echo "HOST_GID=$(id -g)" >> .env
+docker compose up -d --force-recreate bots
 ```
+
+Тогда `./data` остаётся под твоим юзером, chown под чужой uid не нужен. Проверка:
+
+```bash
+docker compose logs bots | grep -i "log отключён" || echo "LOGS OK"   # WARNING быть не должно
+```
+
+Если каталог `./data` принадлежит другому пользователю (напр. создан под root) — приведи его
+к своему: `sudo chown -R $(id -u):$(id -g) data`. Под **SELinux** (`getenforce` = `Enforcing`)
+дополнительно добавь суффикс `:Z` к тому: `- ./data:/app/data:Z`.
 
 ---
 
