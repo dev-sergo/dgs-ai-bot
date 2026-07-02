@@ -509,7 +509,7 @@
 {"query": "лидер продаж среди напитков за месяц", "expect": {"intent": "report", "report": "products", "method": "top_n", "period_token": "this_month|last_30_days", "filters": ["product_category"]}}
 {"query": "продавец месяца за прошлый месяц", "expect": {"intent": "report", "report": "personnel|paycheck|products", "period_token": "last_month"}}
 {"query": "покажи чеки за сегодня без фильтров", "expect": {"intent": "report", "report": "paycheck", "period_token": "today"}}
-{"query": "покажи заказы за эту неделю в разбивке по источникам", "expect": {"intent": "report", "report": "orders", "period_token": "this_week"}}
+{"query": "покажи заказы за эту неделю в разбивке по источникам", "expect": {"intent": "report", "report": "orders|source-order", "period_token": "this_week"}}
 {"query": "выручка за всё время", "expect": {"intent": "report", "report": "payment"}}
 {"query": "общая выручка с начала года", "expect": {"intent": "report", "report": "payment"}}
 {"query": "суммарный доход за полгода", "expect": {"intent": "report", "report": "payment"}}
