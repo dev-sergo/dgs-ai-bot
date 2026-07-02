@@ -47,6 +47,26 @@ func TestFormatNumberByUnit(t *testing.T) {
 	}
 }
 
+// TestNumberCompact — целые рубли без хвоста «,00»; дробные и не-RUB как обычно.
+func TestNumberCompact(t *testing.T) {
+	cases := []struct {
+		v    float64
+		unit string
+		want string
+	}{
+		{612400, "RUB", "612 400 ₽"},   // целое → без ,00
+		{1256.74, "RUB", "1 256,74 ₽"}, // дробное → копейки на месте
+		{0, "RUB", "0 ₽"},              // ноль целый
+		{12.5, "percent", "12,50 %"},   // не RUB — как Number
+		{42, "count", "42"},
+	}
+	for _, tc := range cases {
+		if got := NumberCompact(tc.v, tc.unit, "RUB"); got != tc.want {
+			t.Errorf("NumberCompact(%v,%q) = %q, want %q", tc.v, tc.unit, got, tc.want)
+		}
+	}
+}
+
 // TestMoneyNonRUBCurrency — неизвестная валюта печатается кодом, а не падает.
 func TestMoneyNonRUBCurrency(t *testing.T) {
 	if got := Money(100, "USD"); got != "100,00 USD" {

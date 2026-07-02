@@ -8,18 +8,18 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const msgStart = `Привет! Я AI-аналитик вашего заведения.
+const msgStart = `👋 <b>Привет! Я AI-аналитик вашего заведения.</b>
 
-Примеры запросов:
+<b>Примеры запросов:</b>
 • Как вчера отработали?
 • Покажи выручку за прошлую неделю
 • На чём я теряю деньги?
 • Топ-5 товаров за май
 • Выгрузи таблицу за май
 
-Команды: /help, /today, /tt КОД_ТТ`
+<b>Команды:</b> /help, /today, /tt КОД_ТТ`
 
-const msgHelp = `Команды:
+const msgHelp = `<b>Команды</b>
 /start — начало
 /help  — справка
 /today — дайджест за вчера
@@ -31,9 +31,9 @@ const msgHelp = `Команды:
 func (b *Bot) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 	switch msg.Command() {
 	case "start":
-		b.send(msg.Chat.ID, msgStart)
+		b.sendHTML(msg.Chat.ID, msgStart)
 	case "help":
-		b.send(msg.Chat.ID, msgHelp)
+		b.sendHTML(msg.Chat.ID, msgHelp)
 	case "today":
 		b.ask(ctx, msg.Chat.ID, "как вчера отработали?")
 	case "tt":
@@ -55,7 +55,7 @@ func (b *Bot) handleTT(ctx context.Context, msg *tgbotapi.Message) {
 		b.send(msg.Chat.ID, "Укажите код точки: /tt IV-001")
 		return
 	}
-	b.send(msg.Chat.ID, fmt.Sprintf("Фокус на точке %s. Следующие вопросы буду отвечать по ней.", code))
+	b.send(msg.Chat.ID, fmt.Sprintf("📍 Фокус на точке %s. Следующие вопросы буду отвечать по ней.", code))
 	// Инициируем запрос с явным кодом точки — сессия запомнит фильтр через NLU.
 	b.ask(ctx, msg.Chat.ID, fmt.Sprintf("выручка за сегодня по точке %s", code))
 }

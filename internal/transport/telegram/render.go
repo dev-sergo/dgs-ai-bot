@@ -111,12 +111,33 @@ func header(e *envelope.Envelope) string {
 	if n := strings.TrimSpace(e.Narrative); n != "" {
 		b.WriteString(html.EscapeString(n) + "\n\n")
 	}
+	if badge := deltaBadge(e); badge != "" {
+		b.WriteString(badge + "\n\n")
+	}
 	return b.String()
 }
 
+// deltaBadge — строка направления для сравнений: ▲ рост / ▼ падение по delta_pct.
+// Пусто, если в Summary нет дельты (обычные отчёты). Экранирования не требует —
+// собирается из безопасных символов и уже отформатированного числа.
+func deltaBadge(e *envelope.Envelope) string {
+	p, ok := e.Summary["delta_pct"]
+	if !ok {
+		return ""
+	}
+	if p == 0 {
+		return "≈ без изменений к предыдущему периоду"
+	}
+	arrow, sign := "▲", "+"
+	if p < 0 {
+		arrow, sign, p = "▼", "−", -p
+	}
+	return fmt.Sprintf("%s %s%s к предыдущему периоду", arrow, sign, render.Number(p, "percent", ""))
+}
+
 // rowsBlock рендерит строки отчёта вертикально.
-// Две колонки → строка-список «значение — значение»; больше → карточка на строку:
-// первая колонка жирным как заголовок карточки, остальные «Подпись: значение».
+// Две колонки → строка-список «значение — жирное значение»; больше → карточка на
+// строку: первая колонка жирным как заголовок, остальные «Подпись: значение».
 func rowsBlock(e *envelope.Envelope) string {
 	cols := render.VisibleColumns(*e)
 	if len(cols) == 0 {
@@ -125,10 +146,17 @@ func rowsBlock(e *envelope.Envelope) string {
 
 	var b strings.Builder
 	if len(cols) <= 2 {
-		for _, row := range e.Rows {
-			b.WriteString(html.EscapeString(render.Cell(row[cols[0].Key], cols[0].Unit, e.Currency)))
+		// Нумеруем именованные списки (топы/антирейтинги) — ранг сразу виден.
+		// По датам нумерация бессмысленна, поэтому только для нечисловой первой колонки.
+		numbered := cols[0].Unit == "string"
+		for i, row := range e.Rows {
+			if numbered {
+				fmt.Fprintf(&b, "%d. ", i+1)
+			}
+			b.WriteString(html.EscapeString(render.CellCompact(row[cols[0].Key], cols[0].Unit, e.Currency)))
 			if len(cols) == 2 {
-				b.WriteString(" — " + html.EscapeString(render.Cell(row[cols[1].Key], cols[1].Unit, e.Currency)))
+				val := render.CellCompact(row[cols[1].Key], cols[1].Unit, e.Currency)
+				b.WriteString(" — <b>" + html.EscapeString(val) + "</b>")
 			}
 			b.WriteByte('\n')
 		}
@@ -139,10 +167,14 @@ func rowsBlock(e *envelope.Envelope) string {
 		if i > 0 {
 			b.WriteByte('\n')
 		}
-		head := cols[0].Label + ": " + render.Cell(row[cols[0].Key], cols[0].Unit, e.Currency)
+		head := cols[0].Label + ": " + render.CellCompact(row[cols[0].Key], cols[0].Unit, e.Currency)
 		b.WriteString("<b>" + html.EscapeString(head) + "</b>\n")
 		for _, c := range cols[1:] {
-			v := render.Cell(row[c.Key], c.Unit, e.Currency)
+			raw := row[c.Key]
+			if isZeroNum(raw, c.Unit) {
+				continue // нулевые деньги/счётчики в карточке — шум, прячем
+			}
+			v := render.CellCompact(raw, c.Unit, e.Currency)
 			if v == "" {
 				continue
 			}
@@ -152,6 +184,16 @@ func rowsBlock(e *envelope.Envelope) string {
 	return b.String()
 }
 
+// isZeroNum сообщает, что значение — нулевое число в денежной/счётной/процентной
+// колонке (кандидат на скрытие в карточке).
+func isZeroNum(v any, unit string) bool {
+	switch unit {
+	case "RUB", "count", "percent":
+		return toF(v) == 0
+	}
+	return false
+}
+
 // totalsBlock — блок «Итого» из envelope.Summary по видимым колонкам.
 // Пустой, если ключи Summary не совпадают с колонками (contribution и пр. —
 // их сводка уже в нарративе).
@@ -159,7 +201,7 @@ func totalsBlock(e *envelope.Envelope) string {
 	var b strings.Builder
 	for _, c := range render.VisibleColumns(*e) {
 		if v, ok := e.Summary[c.Key]; ok {
-			b.WriteString(html.EscapeString(c.Label+": "+render.Number(v, c.Unit, e.Currency)) + "\n")
+			b.WriteString(html.EscapeString(c.Label+": "+render.NumberCompact(v, c.Unit, e.Currency)) + "\n")
 		}
 	}
 	if b.Len() == 0 {
@@ -179,11 +221,11 @@ func maxMinBlock(e *envelope.Envelope) string {
 	if dateKey == "" {
 		return ""
 	}
-	return fmt.Sprintf("Макс: %s — %s\nМин: %s — %s\n",
+	return fmt.Sprintf("Макс: %s — <b>%s</b>\nМин: %s — <b>%s</b>\n",
 		html.EscapeString(fmt.Sprintf("%v", maxRow[dateKey])),
-		html.EscapeString(render.Number(toF(maxRow[col.Key]), col.Unit, e.Currency)),
+		html.EscapeString(render.NumberCompact(toF(maxRow[col.Key]), col.Unit, e.Currency)),
 		html.EscapeString(fmt.Sprintf("%v", minRow[dateKey])),
-		html.EscapeString(render.Number(toF(minRow[col.Key]), col.Unit, e.Currency)))
+		html.EscapeString(render.NumberCompact(toF(minRow[col.Key]), col.Unit, e.Currency)))
 }
 
 // maxMinRows находит строки с максимальным и минимальным значением первой числовой колонки.

@@ -135,14 +135,14 @@ func (b *Bot) handle(ctx context.Context, msg *tgbotapi.Message) {
 		username = msg.From.UserName
 	}
 	if !b.allowed(chatID, username) {
-		b.send(chatID, "Доступ закрыт.")
+		b.send(chatID, "🚫 Доступ закрыт.")
 		return
 	}
 
 	// Анти-спам: пер-чат частотный лимит поверх капа параллелизма. Превышение —
 	// мягкий ответ (не тихий дроп), чтобы пользователь понял, что надо подождать.
 	if !b.limiter.allow(chatID) {
-		b.send(chatID, "Слишком много запросов. Подождите немного и повторите.")
+		b.send(chatID, "⏳ Слишком много запросов. Подождите немного и повторите.")
 		return
 	}
 
@@ -174,12 +174,18 @@ func (b *Bot) ask(ctx context.Context, chatID int64, text string) {
 	ans, err := b.app.Ask(ctx, tenantID, sessionID, text)
 	if err != nil {
 		slog.Error("telegram ask error", "chat_id", chatID, "err", err)
-		b.send(chatID, "Произошла ошибка при обращении к данным. Попробуйте позже.")
+		b.send(chatID, "⚠️ Не удалось получить данные — источник временно недоступен. Попробуйте позже.")
 		return
 	}
 
 	replyText, doc := Render(ans)
-	b.sendWithFeedback(chatID, replyText, ans.ID)
+	// Кнопки 👍/👎 — только на содержательных ответах. Уточнения («уточните период»)
+	// оценивать бессмысленно: гасим feedback, обнуляя answerID.
+	answerID := ans.ID
+	if ans.Validation.NeedClarify {
+		answerID = ""
+	}
+	b.sendWithFeedback(chatID, replyText, answerID)
 
 	if doc != nil {
 		file := tgbotapi.FileBytes{Name: doc.Name, Bytes: doc.Data}
@@ -265,5 +271,16 @@ func (b *Bot) send(chatID int64, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	if _, err := b.api.Send(msg); err != nil {
 		slog.Error("telegram send error", "chat_id", chatID, "err", err)
+	}
+}
+
+// sendHTML отправляет сообщение с HTML-разметкой (жирные заголовки /start, /help).
+// При отказе Telegram от разметки — повтор обычным текстом без тегов.
+func (b *Bot) sendHTML(chatID int64, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ParseMode = tgbotapi.ModeHTML
+	if _, err := b.api.Send(msg); err != nil {
+		slog.Error("telegram send error (html), retrying plain", "chat_id", chatID, "err", err)
+		b.send(chatID, stripHTML(text))
 	}
 }

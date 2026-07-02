@@ -63,8 +63,11 @@ func TestRender_SmallTwoCol_InlineList(t *testing.T) {
 	ans := app.Answer{Plan: okPlan(), Text: "Топ за май", Envelope: e}
 	text, doc := Render(ans)
 
-	if !strings.Contains(text, "Ролл Калифорния — 612 400,00 ₽") {
-		t.Errorf("две колонки → строка-список «значение — значение», got:\n%s", text)
+	if !strings.Contains(text, "1. Ролл Калифорния — <b>612 400 ₽</b>") {
+		t.Errorf("именованный топ → нумерация + жирная компактная сумма, got:\n%s", text)
+	}
+	if !strings.Contains(text, "2. Сет Филадельфия") {
+		t.Errorf("вторая строка должна иметь ранг 2, got:\n%s", text)
 	}
 	if !strings.Contains(text, "<b>Товары</b>") {
 		t.Errorf("заголовок отчёта должен быть жирным, got:\n%s", text)
@@ -114,6 +117,9 @@ func TestRender_SmallWide_InlineCards(t *testing.T) {
 	if !strings.Contains(text, "Оплачено: 1 256,74 ₽") {
 		t.Errorf("значения в карточке форматируются по единицам колонок, got:\n%s", text)
 	}
+	if strings.Contains(text, "Скидка: 0,00 ₽") || strings.Contains(text, "Скидка: 0 ₽") {
+		t.Errorf("нулевая скидка должна скрываться в карточке, got:\n%s", text)
+	}
 	if !strings.Contains(text, "<b>Итого</b>") || !strings.Contains(text, "Оплачено: 2 471,74 ₽") {
 		t.Errorf("итоги из Summary должны присутствовать, got:\n%s", text)
 	}
@@ -148,14 +154,14 @@ func TestRender_LargeTable_XlsxDoc(t *testing.T) {
 	if !strings.HasSuffix(doc.Name, ".xlsx") {
 		t.Errorf("имя файла должно оканчиваться на .xlsx, got %q", doc.Name)
 	}
-	if !strings.Contains(text, "Выручка: 900 000,00 ₽") {
-		t.Errorf("итог должен быть отформатирован в рублях, got:\n%s", text)
+	if !strings.Contains(text, "Выручка: 900 000 ₽") {
+		t.Errorf("целый итог — без хвоста ,00, got:\n%s", text)
 	}
-	if !strings.Contains(text, "Макс: 2026-05-01 — 250 000,00 ₽") {
-		t.Errorf("макс должен быть отформатирован, got:\n%s", text)
+	if !strings.Contains(text, "Макс: 2026-05-01 — <b>250 000 ₽</b>") {
+		t.Errorf("макс должен быть компактным и жирным, got:\n%s", text)
 	}
-	if !strings.Contains(text, "Мин: 2026-05-01 — 50 000,00 ₽") {
-		t.Errorf("мин должен быть отформатирован, got:\n%s", text)
+	if !strings.Contains(text, "Мин: 2026-05-01 — <b>50 000 ₽</b>") {
+		t.Errorf("мин должен быть компактным и жирным, got:\n%s", text)
 	}
 	if !strings.Contains(text, "в файле ниже") {
 		t.Errorf("сводка должна ссылаться на приложенный файл, got:\n%s", text)
@@ -185,6 +191,32 @@ func TestRender_NoEnvelope_NilDoc(t *testing.T) {
 	_, doc := Render(ans)
 	if doc != nil {
 		t.Error("advice-ответ без envelope не должен давать файл")
+	}
+}
+
+func TestRender_Compare_DeltaBadge(t *testing.T) {
+	up := &envelope.Envelope{
+		Type: "payment_compare", Currency: "RUB",
+		Period:  envelope.Period{From: "01.06.2026", To: "30.06.2026", TZ: "Europe/Moscow"},
+		Columns: []envelope.Column{{Key: "sale_point", Label: "Точка", Unit: "string"}, {Key: "value_now", Label: "Сейчас", Unit: "RUB"}},
+		Rows:    []map[string]any{{"sale_point": "ТТ-1", "value_now": 500000.0}},
+		Summary: map[string]float64{"delta_pct": 12.4},
+	}
+	text, _ := Render(app.Answer{Plan: okPlan(), Envelope: up})
+	if !strings.Contains(text, "▲ +12,40 % к предыдущему периоду") {
+		t.Errorf("рост → стрелка вверх со знаком +, got:\n%s", text)
+	}
+
+	down := &envelope.Envelope{
+		Type: "payment_compare", Currency: "RUB",
+		Period:  envelope.Period{From: "01.06.2026", To: "30.06.2026", TZ: "Europe/Moscow"},
+		Columns: up.Columns,
+		Rows:    up.Rows,
+		Summary: map[string]float64{"delta_pct": -8},
+	}
+	text2, _ := Render(app.Answer{Plan: okPlan(), Envelope: down})
+	if !strings.Contains(text2, "▼ −8,00 % к предыдущему периоду") {
+		t.Errorf("падение → стрелка вниз со знаком −, got:\n%s", text2)
 	}
 }
 

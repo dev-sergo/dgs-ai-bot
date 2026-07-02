@@ -4,6 +4,7 @@ package render
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -145,6 +146,24 @@ func Money(v float64, currency string) string {
 
 // Pct форматирует процент (RU-стиль).
 func Pct(v float64) string { return groupThousands(v, 2) + " %" }
+
+// NumberCompact — как Number, но на целых рублёвых суммах убирает хвост «,00»
+// (612 400 ₽ вместо 612 400,00 ₽). Для мобильного вывода, где выравнивание
+// колонок не нужно и лишние нули только шумят. Дробные значения не трогает.
+func NumberCompact(v float64, unit, currency string) string {
+	if unit == "RUB" && v == math.Trunc(v) {
+		return groupThousands(v, 0) + " " + currencySymbol(currency)
+	}
+	return Number(v, unit, currency)
+}
+
+// CellCompact — как Cell, но числа форматирует через NumberCompact.
+func CellCompact(v any, unit, currency string) string {
+	if f, ok := v.(float64); ok {
+		return NumberCompact(f, unit, currency)
+	}
+	return Cell(v, unit, currency)
+}
 
 // Number форматирует число по единице измерения колонки (RU-стиль).
 // Экспортируется для транспортов (Telegram-сводки и т.п.).
