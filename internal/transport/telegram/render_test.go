@@ -24,6 +24,17 @@ func TestRender_TextOnly(t *testing.T) {
 	}
 }
 
+func TestRender_TextOnly_EscapesHTML(t *testing.T) {
+	ans := app.Answer{Plan: okPlan(), Text: "сравни <май> и июнь"}
+	text, _ := Render(ans)
+	if strings.Contains(text, "<май>") {
+		t.Errorf("текст должен быть HTML-экранирован, got %q", text)
+	}
+	if !strings.Contains(text, "&lt;май&gt;") {
+		t.Errorf("ожидалось экранирование &lt;…&gt;, got %q", text)
+	}
+}
+
 func TestRender_EmptyEnvelope(t *testing.T) {
 	ans := app.Answer{Plan: okPlan(), Text: "Нет данных", Envelope: &envelope.Envelope{}}
 	text, doc := Render(ans)
@@ -35,10 +46,11 @@ func TestRender_EmptyEnvelope(t *testing.T) {
 	}
 }
 
-func TestRender_SmallTable_Inline(t *testing.T) {
+func TestRender_SmallTwoCol_InlineList(t *testing.T) {
 	e := &envelope.Envelope{
 		Type:     "products",
 		Currency: "RUB",
+		Period:   envelope.Period{From: "01.05.2026", To: "31.05.2026", TZ: "Europe/Moscow"},
 		Columns: []envelope.Column{
 			{Key: "name", Label: "Товар", Unit: "string"},
 			{Key: "amount", Label: "Выручка", Unit: "RUB"},
@@ -51,14 +63,62 @@ func TestRender_SmallTable_Inline(t *testing.T) {
 	ans := app.Answer{Plan: okPlan(), Text: "Топ за май", Envelope: e}
 	text, doc := Render(ans)
 
-	if !strings.Contains(text, "Ролл Калифорния") {
-		t.Error("inline-блок должен содержать строки таблицы")
+	if !strings.Contains(text, "Ролл Калифорния — 612 400,00 ₽") {
+		t.Errorf("две колонки → строка-список «значение — значение», got:\n%s", text)
 	}
-	if !strings.Contains(text, "---") {
-		t.Error("inline-блок должен содержать разделитель ---")
+	if !strings.Contains(text, "<b>Товары</b>") {
+		t.Errorf("заголовок отчёта должен быть жирным, got:\n%s", text)
+	}
+	if !strings.Contains(text, "01.05.2026 — 31.05.2026") {
+		t.Errorf("период должен присутствовать, got:\n%s", text)
+	}
+	if strings.Contains(text, "---") {
+		t.Error("ASCII-таблиц с разделителями быть не должно (мобильный формат)")
 	}
 	if doc != nil {
 		t.Error("маленькая таблица не должна давать файл")
+	}
+}
+
+func TestRender_SmallWide_InlineCards(t *testing.T) {
+	e := &envelope.Envelope{
+		Type:     "paycheck",
+		Currency: "RUB",
+		Period:   envelope.Period{From: "01.06.2026", To: "30.06.2026", TZ: "Europe/Moscow"},
+		Columns: []envelope.Column{
+			{Key: "num", Label: "№ чека", Unit: "string"},
+			{Key: "terminal", Label: "Терминал", Unit: "string"},
+			{Key: "closed", Label: "Закрыт", Unit: "string"},
+			{Key: "pay_type", Label: "Тип оплаты", Unit: "string"},
+			{Key: "paid", Label: "Оплачено", Unit: "RUB"},
+			{Key: "discount", Label: "Скидка", Unit: "RUB"},
+			{Key: "profit", Label: "Прибыль", Unit: "RUB"},
+		},
+		Rows: []map[string]any{
+			{"num": "138,00", "terminal": "ТСПИоТ SUNMI", "closed": "18 июн. 19:37",
+				"pay_type": "Наличные", "paid": 1256.74, "discount": 0.0, "profit": 796.67},
+			{"num": "Корп.", "terminal": "ТС ПИоТ", "closed": "16 июн. 18:23",
+				"pay_type": "Наличные", "paid": 1215.0, "discount": 0.0, "profit": 1194.08},
+		},
+		Summary: map[string]float64{"paid": 2471.74, "profit": 1990.75},
+	}
+	ans := app.Answer{Plan: okPlan(), Text: "не используется", Envelope: e}
+	text, doc := Render(ans)
+
+	if doc != nil {
+		t.Error("короткий отчёт (≤ maxInlineRows) показывается карточками без файла")
+	}
+	if !strings.Contains(text, "<b>№ чека: 138,00</b>") {
+		t.Errorf("заголовок карточки — первая колонка жирным, got:\n%s", text)
+	}
+	if !strings.Contains(text, "Оплачено: 1 256,74 ₽") {
+		t.Errorf("значения в карточке форматируются по единицам колонок, got:\n%s", text)
+	}
+	if !strings.Contains(text, "<b>Итого</b>") || !strings.Contains(text, "Оплачено: 2 471,74 ₽") {
+		t.Errorf("итоги из Summary должны присутствовать, got:\n%s", text)
+	}
+	if strings.Contains(text, "не используется") {
+		t.Error("Answer.Text (десктопная таблица) не должен попадать в сообщение при envelope")
 	}
 }
 
@@ -71,8 +131,11 @@ func TestRender_LargeTable_XlsxDoc(t *testing.T) {
 	for i := range rows {
 		rows[i] = map[string]any{"date": "2026-05-01", "sum_all": 100000.0}
 	}
+	rows[3]["sum_all"] = 250000.0
+	rows[5]["sum_all"] = 50000.0
 	e := &envelope.Envelope{
 		Type: "payment", Currency: "RUB",
+		Period:  envelope.Period{From: "01.05.2026", To: "31.05.2026", TZ: "Europe/Moscow"},
 		Columns: cols, Rows: rows,
 		Summary: map[string]float64{"sum_all": 900000},
 	}
@@ -85,25 +148,35 @@ func TestRender_LargeTable_XlsxDoc(t *testing.T) {
 	if !strings.HasSuffix(doc.Name, ".xlsx") {
 		t.Errorf("имя файла должно оканчиваться на .xlsx, got %q", doc.Name)
 	}
-	if !strings.Contains(text, "Выручка по дням") {
-		t.Error("текст ответа должен присутствовать")
+	if !strings.Contains(text, "Выручка: 900 000,00 ₽") {
+		t.Errorf("итог должен быть отформатирован в рублях, got:\n%s", text)
+	}
+	if !strings.Contains(text, "Макс: 2026-05-01 — 250 000,00 ₽") {
+		t.Errorf("макс должен быть отформатирован, got:\n%s", text)
+	}
+	if !strings.Contains(text, "Мин: 2026-05-01 — 50 000,00 ₽") {
+		t.Errorf("мин должен быть отформатирован, got:\n%s", text)
+	}
+	if !strings.Contains(text, "в файле ниже") {
+		t.Errorf("сводка должна ссылаться на приложенный файл, got:\n%s", text)
 	}
 }
 
-func TestRender_WideTable_XlsxDoc(t *testing.T) {
-	cols := make([]envelope.Column, maxInlineCols+1)
-	for i := range cols {
-		cols[i] = envelope.Column{Key: "c", Label: "Col", Unit: "RUB"}
-	}
+func TestRender_Narrative_InHeader(t *testing.T) {
 	e := &envelope.Envelope{
-		Type: "payment", Currency: "RUB",
-		Columns: cols,
-		Rows:    []map[string]any{{"c": 1.0}},
+		Type: "payment_compare", Currency: "RUB",
+		Period:    envelope.Period{From: "01.05.2026", To: "31.05.2026", TZ: "Europe/Moscow"},
+		Narrative: "Выручка выросла на 12% к прошлому месяцу.",
+		Columns: []envelope.Column{
+			{Key: "date", Label: "Дата", Unit: "date"},
+			{Key: "sum_all", Label: "Выручка", Unit: "RUB"},
+		},
+		Rows: []map[string]any{{"date": "2026-05-01", "sum_all": 100000.0}},
 	}
-	ans := app.Answer{Plan: okPlan(), Text: "Широкий отчёт", Envelope: e}
-	_, doc := Render(ans)
-	if doc == nil {
-		t.Error("широкая таблица (>maxInlineCols колонок) должна давать xlsx-документ")
+	ans := app.Answer{Plan: okPlan(), Envelope: e}
+	text, _ := Render(ans)
+	if !strings.Contains(text, "Выручка выросла на 12%") {
+		t.Errorf("нарратив должен присутствовать в сообщении, got:\n%s", text)
 	}
 }
 
@@ -112,5 +185,14 @@ func TestRender_NoEnvelope_NilDoc(t *testing.T) {
 	_, doc := Render(ans)
 	if doc != nil {
 		t.Error("advice-ответ без envelope не должен давать файл")
+	}
+}
+
+func TestRowsWord(t *testing.T) {
+	cases := map[int]string{1: "строка", 2: "строки", 5: "строк", 11: "строк", 21: "строка", 22: "строки", 100: "строк"}
+	for n, want := range cases {
+		if got := rowsWord(n); got != want {
+			t.Errorf("rowsWord(%d) = %q, want %q", n, got, want)
+		}
 	}
 }

@@ -3,22 +3,24 @@
 package telegram
 
 import (
-	"bytes"
 	"fmt"
+	"html"
 	"strings"
 	"unicode/utf8"
 
 	"dgsbot/internal/app"
 	"dgsbot/internal/envelope"
 	"dgsbot/internal/export"
+	"dgsbot/internal/render"
 )
 
-// maxInlineRows — максимум строк таблицы для показа inline-блоком в чате.
+// maxInlineRows — максимум строк отчёта для показа прямо в сообщении.
 // Больше → сводка + xlsx-файл.
 const maxInlineRows = 8
 
-// maxInlineCols — максимум колонок для inline-блока (мобильная ширина ~33 символа).
-const maxInlineCols = 3
+// maxInlineChars — предохранитель на длину inline-сообщения (лимит Telegram 4096).
+// Слишком длинный список карточек деградирует в сводку + xlsx.
+const maxInlineChars = 3500
 
 // Document — xlsx-файл, готовый к отправке в Telegram.
 type Document struct {
@@ -26,155 +28,182 @@ type Document struct {
 	Data []byte
 }
 
-// Render конвертирует Answer в текст сообщения и опциональный документ.
+// Render конвертирует Answer в текст сообщения (HTML parse_mode) и опциональный документ.
 // Чистая функция — вся логика тестируется без сети и Telegram API.
 //
-// Правило (из docs/08-telegram-transport.md §4):
-//  1. Всегда отдаём Answer.Text.
-//  2. Envelope пустой → только текст.
-//  3. Маленький (≤ maxInlineRows строк, ≤ maxInlineCols колонок) → текст + моноширинный блок.
-//  4. Крупный/широкий → текст + сводка (итого/макс/мин) + xlsx-документ.
+// Мобильный формат (docs/08-telegram-transport.md §4): таблицы с выравниванием
+// пробелами в Telegram разъезжаются (пропорциональный шрифт, узкий экран),
+// поэтому строки рендерятся вертикально — карточками «Подпись: значение».
+//
+// Правила:
+//  1. Envelope пустой → Answer.Text (экранированный).
+//  2. Маленький отчёт (≤ maxInlineRows строк) → заголовок + карточки + итоги.
+//  3. Крупный → заголовок + итоги + макс/мин + xlsx-документ.
 func Render(ans app.Answer) (text string, doc *Document) {
 	e := ans.Envelope
 	if e == nil || len(e.Rows) == 0 {
-		return ans.Text, nil
+		return html.EscapeString(ans.Text), nil
 	}
 
-	if isInline(e) {
-		return ans.Text + "\n\n" + inlineTable(e), nil
+	if len(e.Rows) <= maxInlineRows {
+		if msg := inlineMessage(e); utf8.RuneCountInString(msg) <= maxInlineChars {
+			return msg, nil
+		}
 	}
 
-	// Крупный/широкий — сводка в тексте + xlsx-файл.
-	summary := summaryBlock(e)
-	if summary != "" {
-		text = ans.Text + "\n\n" + summary
-	} else {
-		text = ans.Text
-	}
-
+	// Крупный отчёт: сводка в тексте + полные данные в xlsx-файле.
+	text = summaryMessage(e)
 	data, err := export.XLSX(e)
 	if err != nil {
-		// Не удалось собрать xlsx — отдаём хотя бы текст со сводкой.
+		// Не удалось собрать xlsx — отдаём хотя бы сводку.
 		return text, nil
 	}
 	return text, &Document{Name: export.Filename(e), Data: data}
 }
 
-// isInline сообщает, помещается ли таблица в моноширинный блок прямо в чат.
-func isInline(e *envelope.Envelope) bool {
-	return len(e.Rows) <= maxInlineRows && len(e.Columns) <= maxInlineCols
+// inlineMessage — компактный отчёт целиком в сообщении: заголовок, нарратив,
+// строки-карточки, итоги.
+func inlineMessage(e *envelope.Envelope) string {
+	var b strings.Builder
+	b.WriteString(header(e))
+	b.WriteString(rowsBlock(e))
+	if t := totalsBlock(e); t != "" {
+		b.WriteString("\n" + t)
+	}
+	return strings.TrimRight(b.String(), "\n")
 }
 
-// inlineTable строит компактную моноширинную таблицу для inline-вывода в Telegram.
-// Формат: выровненные колонки, влезает в мобильную ширину (~33 символа).
-func inlineTable(e *envelope.Envelope) string {
-	// Берём только первые maxInlineCols колонок.
-	cols := e.Columns
-	if len(cols) > maxInlineCols {
-		cols = cols[:maxInlineCols]
+// summaryMessage — сводка крупного отчёта: заголовок, нарратив, итоги, макс/мин.
+func summaryMessage(e *envelope.Envelope) string {
+	parts := []string{strings.TrimRight(header(e), "\n")}
+	if t := totalsBlock(e); t != "" {
+		parts = append(parts, strings.TrimRight(t, "\n"))
+	}
+	if mm := maxMinBlock(e); mm != "" {
+		parts = append(parts, strings.TrimRight(mm, "\n"))
+	}
+	n := len(e.Rows)
+	parts = append(parts, fmt.Sprintf("Полный отчёт (%d %s) — в файле ниже.", n, rowsWord(n)))
+	return strings.Join(parts, "\n\n")
+}
+
+// rowsWord — склонение слова «строка» по числу.
+func rowsWord(n int) string {
+	m10, m100 := n%10, n%100
+	switch {
+	case m10 == 1 && m100 != 11:
+		return "строка"
+	case m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20):
+		return "строки"
+	default:
+		return "строк"
+	}
+}
+
+// header — эмодзи + жирный заголовок отчёта, период и нарратив (если есть).
+func header(e *envelope.Envelope) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s <b>%s</b>\n", typeEmoji(e.Type), html.EscapeString(render.Title(e.Type)))
+	if e.Period.From != "" || e.Period.To != "" {
+		fmt.Fprintf(&b, "%s — %s\n", html.EscapeString(e.Period.From), html.EscapeString(e.Period.To))
+	}
+	b.WriteByte('\n')
+	if n := strings.TrimSpace(e.Narrative); n != "" {
+		b.WriteString(html.EscapeString(n) + "\n\n")
+	}
+	return b.String()
+}
+
+// rowsBlock рендерит строки отчёта вертикально.
+// Две колонки → строка-список «значение — значение»; больше → карточка на строку:
+// первая колонка жирным как заголовок карточки, остальные «Подпись: значение».
+func rowsBlock(e *envelope.Envelope) string {
+	cols := render.VisibleColumns(*e)
+	if len(cols) == 0 {
+		return ""
 	}
 
-	// Вычисляем ширину каждой колонки по максимуму заголовка и значений.
-	widths := make([]int, len(cols))
-	for i, col := range cols {
-		widths[i] = utf8.RuneCountInString(col.Label)
-	}
-	for _, row := range e.Rows {
-		for i, col := range cols {
-			v := fmt.Sprintf("%v", row[col.Key])
-			if n := utf8.RuneCountInString(v); n > widths[i] {
-				widths[i] = n
+	var b strings.Builder
+	if len(cols) <= 2 {
+		for _, row := range e.Rows {
+			b.WriteString(html.EscapeString(render.Cell(row[cols[0].Key], cols[0].Unit, e.Currency)))
+			if len(cols) == 2 {
+				b.WriteString(" — " + html.EscapeString(render.Cell(row[cols[1].Key], cols[1].Unit, e.Currency)))
 			}
+			b.WriteByte('\n')
 		}
+		return b.String()
 	}
 
-	var buf bytes.Buffer
-
-	// Заголовок.
-	for i, col := range cols {
+	for i, row := range e.Rows {
 		if i > 0 {
-			buf.WriteString("  ")
+			b.WriteByte('\n')
 		}
-		buf.WriteString(padRight(col.Label, widths[i]))
-	}
-	buf.WriteByte('\n')
-
-	// Разделитель.
-	for i, w := range widths {
-		if i > 0 {
-			buf.WriteString("  ")
-		}
-		buf.WriteString(strings.Repeat("-", w))
-	}
-	buf.WriteByte('\n')
-
-	// Строки.
-	for _, row := range e.Rows {
-		for i, col := range cols {
-			if i > 0 {
-				buf.WriteString("  ")
+		head := cols[0].Label + ": " + render.Cell(row[cols[0].Key], cols[0].Unit, e.Currency)
+		b.WriteString("<b>" + html.EscapeString(head) + "</b>\n")
+		for _, c := range cols[1:] {
+			v := render.Cell(row[c.Key], c.Unit, e.Currency)
+			if v == "" {
+				continue
 			}
-			v := fmt.Sprintf("%v", row[col.Key])
-			buf.WriteString(padRight(v, widths[i]))
+			b.WriteString(html.EscapeString(c.Label+": "+v) + "\n")
 		}
-		buf.WriteByte('\n')
 	}
-
-	return buf.String()
+	return b.String()
 }
 
-// summaryBlock строит текстовую сводку (итого/макс/мин) из envelope.Summary и Rows.
-// Используется вместо полной таблицы при крупных/широких отчётах.
-func summaryBlock(e *envelope.Envelope) string {
-	var parts []string
-
-	// Итого из Summary.
-	if total, ok := summaryTotal(e); ok {
-		parts = append(parts, "Итого: "+total)
-	}
-
-	// Максимум и минимум по первой числовой колонке из Rows.
-	if maxRow, minRow, col, ok := maxMinRows(e); ok {
-		dateKey := dateColumn(e)
-		if dateKey != "" {
-			parts = append(parts,
-				fmt.Sprintf("Макс: %v — %v", maxRow[dateKey], maxRow[col]),
-				fmt.Sprintf("Мин: %v — %v", minRow[dateKey], minRow[col]),
-			)
+// totalsBlock — блок «Итого» из envelope.Summary по видимым колонкам.
+// Пустой, если ключи Summary не совпадают с колонками (contribution и пр. —
+// их сводка уже в нарративе).
+func totalsBlock(e *envelope.Envelope) string {
+	var b strings.Builder
+	for _, c := range render.VisibleColumns(*e) {
+		if v, ok := e.Summary[c.Key]; ok {
+			b.WriteString(html.EscapeString(c.Label+": "+render.Number(v, c.Unit, e.Currency)) + "\n")
 		}
 	}
-
-	return strings.Join(parts, " · ")
+	if b.Len() == 0 {
+		return ""
+	}
+	return "<b>Итого</b>\n" + b.String()
 }
 
-// summaryTotal возвращает строку суммарного итога из первой числовой колонки Summary.
-func summaryTotal(e *envelope.Envelope) (string, bool) {
-	for _, col := range e.Columns {
-		if v, ok := e.Summary[col.Key]; ok && v != 0 {
-			return fmt.Sprintf("%.0f %s", v, e.Currency), true
-		}
+// maxMinBlock — строки максимума и минимума по первой числовой колонке (для
+// сводки крупного отчёта, когда есть колонка-дата для подписи).
+func maxMinBlock(e *envelope.Envelope) string {
+	maxRow, minRow, col, ok := maxMinRows(e)
+	if !ok {
+		return ""
 	}
-	return "", false
+	dateKey := dateColumn(e)
+	if dateKey == "" {
+		return ""
+	}
+	return fmt.Sprintf("Макс: %s — %s\nМин: %s — %s\n",
+		html.EscapeString(fmt.Sprintf("%v", maxRow[dateKey])),
+		html.EscapeString(render.Number(toF(maxRow[col.Key]), col.Unit, e.Currency)),
+		html.EscapeString(fmt.Sprintf("%v", minRow[dateKey])),
+		html.EscapeString(render.Number(toF(minRow[col.Key]), col.Unit, e.Currency)))
 }
 
 // maxMinRows находит строки с максимальным и минимальным значением первой числовой колонки.
-func maxMinRows(e *envelope.Envelope) (maxRow, minRow map[string]any, colKey string, ok bool) {
+func maxMinRows(e *envelope.Envelope) (maxRow, minRow map[string]any, col envelope.Column, ok bool) {
 	// Ищем первую числовую (не date/string) колонку.
-	for _, col := range e.Columns {
-		if col.Unit == "date" || col.Unit == "string" || col.Unit == "" {
+	for _, c := range e.Columns {
+		if c.Unit == "date" || c.Unit == "string" || c.Unit == "" {
 			continue
 		}
-		colKey = col.Key
+		col = c
 		break
 	}
-	if colKey == "" || len(e.Rows) == 0 {
-		return nil, nil, "", false
+	if col.Key == "" || len(e.Rows) == 0 {
+		return nil, nil, envelope.Column{}, false
 	}
 
 	maxRow, minRow = e.Rows[0], e.Rows[0]
-	maxVal, minVal := toF(e.Rows[0][colKey]), toF(e.Rows[0][colKey])
+	maxVal, minVal := toF(e.Rows[0][col.Key]), toF(e.Rows[0][col.Key])
 	for _, row := range e.Rows[1:] {
-		v := toF(row[colKey])
+		v := toF(row[col.Key])
 		if v > maxVal {
 			maxVal, maxRow = v, row
 		}
@@ -182,7 +211,7 @@ func maxMinRows(e *envelope.Envelope) (maxRow, minRow map[string]any, colKey str
 			minVal, minRow = v, row
 		}
 	}
-	return maxRow, minRow, colKey, true
+	return maxRow, minRow, col, true
 }
 
 // dateColumn возвращает ключ первой колонки типа "date" (для сводки макс/мин).
@@ -193,6 +222,27 @@ func dateColumn(e *envelope.Envelope) string {
 		}
 	}
 	return ""
+}
+
+// typeEmoji — визуальный маркер типа отчёта в заголовке сообщения.
+func typeEmoji(t string) string {
+	t = strings.TrimSuffix(strings.TrimSuffix(t, "_compare"), "_contribution")
+	switch t {
+	case "payment":
+		return "💰"
+	case "products":
+		return "📦"
+	case "paycheck":
+		return "🧾"
+	case "personnel":
+		return "👥"
+	case "orders":
+		return "📋"
+	case "forecast":
+		return "📈"
+	default:
+		return "📊"
+	}
 }
 
 func toF(v any) float64 {
@@ -207,12 +257,4 @@ func toF(v any) float64 {
 		return float64(n)
 	}
 	return 0
-}
-
-func padRight(s string, width int) string {
-	n := utf8.RuneCountInString(s)
-	if n >= width {
-		return s
-	}
-	return s + strings.Repeat(" ", width-n)
 }

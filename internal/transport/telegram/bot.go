@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"html"
 	"log/slog"
 	"strings"
 	"sync"
@@ -189,9 +190,13 @@ func (b *Bot) ask(ctx context.Context, chatID int64, text string) {
 	}
 }
 
-// sendWithFeedback отправляет текст с инлайн-кнопками 👍/👎 (если id непустой).
+// sendWithFeedback отправляет HTML-текст ответа с инлайн-кнопками 👍/👎 (если id непустой).
+// Текст приходит из Render — уже экранированный, с разметкой <b>. Если Telegram
+// отверг HTML (битая разметка), повторяем отправку обычным текстом без тегов —
+// пользователь получит ответ в любом случае.
 func (b *Bot) sendWithFeedback(chatID int64, text, answerID string) {
 	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ParseMode = tgbotapi.ModeHTML
 	if answerID != "" {
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -201,8 +206,20 @@ func (b *Bot) sendWithFeedback(chatID int64, text, answerID string) {
 		)
 	}
 	if _, err := b.api.Send(msg); err != nil {
-		slog.Error("telegram send error", "chat_id", chatID, "err", err)
+		slog.Error("telegram send error (html), retrying plain", "chat_id", chatID, "err", err)
+		plain := tgbotapi.NewMessage(chatID, stripHTML(text))
+		plain.ReplyMarkup = msg.ReplyMarkup
+		if _, err := b.api.Send(plain); err != nil {
+			slog.Error("telegram send error", "chat_id", chatID, "err", err)
+		}
 	}
+}
+
+// stripHTML снимает нашу минимальную разметку (<b>) и HTML-экранирование
+// для plain-фолбэка.
+func stripHTML(s string) string {
+	s = strings.NewReplacer("<b>", "", "</b>", "").Replace(s)
+	return html.UnescapeString(s)
 }
 
 // handleCallback handles a tap on the 👍/👎 inline button.

@@ -16,7 +16,7 @@ const maxRows = 30
 func Text(e envelope.Envelope) string {
 	var b strings.Builder
 
-	title := reportTitle(e.Type)
+	title := Title(e.Type)
 	fmt.Fprintf(&b, "%s — период %s … %s (%s)\n", title, e.Period.From, e.Period.To, e.Period.TZ)
 
 	if e.Narrative != "" {
@@ -30,18 +30,7 @@ func Text(e envelope.Envelope) string {
 		return b.String()
 	}
 
-	// При пустом предыдущем периоде колонка «Доля изменения» бессмыслена —
-	// убираем её, чтобы таблица не противоречила нарративу.
-	cols := e.Columns
-	if e.Meta["empty_prev"] == true {
-		filtered := make([]envelope.Column, 0, len(cols))
-		for _, c := range cols {
-			if c.Key != "share" {
-				filtered = append(filtered, c)
-			}
-		}
-		cols = filtered
-	}
+	cols := VisibleColumns(e)
 
 	// Заголовки и ширины колонок.
 	headers := make([]string, len(cols))
@@ -60,7 +49,7 @@ func Text(e envelope.Envelope) string {
 	for _, r := range shown {
 		row := make([]string, len(cols))
 		for i, c := range cols {
-			s := formatCell(r[c.Key], c.Unit, e.Currency)
+			s := Cell(r[c.Key], c.Unit, e.Currency)
 			row[i] = s
 			if w := utf8.RuneCountInString(s); w > widths[i] {
 				widths[i] = w
@@ -85,7 +74,7 @@ func Text(e envelope.Envelope) string {
 	var totals strings.Builder
 	for _, c := range cols {
 		if v, ok := e.Summary[c.Key]; ok {
-			fmt.Fprintf(&totals, "  %s: %s\n", c.Label, formatNumber(v, c.Unit, e.Currency))
+			fmt.Fprintf(&totals, "  %s: %s\n", c.Label, Number(v, c.Unit, e.Currency))
 		}
 	}
 	if totals.Len() > 0 {
@@ -119,14 +108,31 @@ func pad(s string, w int) string {
 	return s + strings.Repeat(" ", d)
 }
 
-func formatCell(v any, unit, currency string) string {
+// VisibleColumns возвращает колонки для показа: при пустом предыдущем периоде
+// колонка «Доля изменения» бессмыслена — убирается, чтобы таблица не
+// противоречила нарративу.
+func VisibleColumns(e envelope.Envelope) []envelope.Column {
+	if e.Meta["empty_prev"] != true {
+		return e.Columns
+	}
+	filtered := make([]envelope.Column, 0, len(e.Columns))
+	for _, c := range e.Columns {
+		if c.Key != "share" {
+			filtered = append(filtered, c)
+		}
+	}
+	return filtered
+}
+
+// Cell форматирует значение ячейки по типу колонки. Экспортируется для транспортов.
+func Cell(v any, unit, currency string) string {
 	switch x := v.(type) {
 	case nil:
 		return ""
 	case string:
 		return x
 	case float64:
-		return formatNumber(x, unit, currency)
+		return Number(x, unit, currency)
 	default:
 		return fmt.Sprintf("%v", x)
 	}
@@ -140,7 +146,9 @@ func Money(v float64, currency string) string {
 // Pct форматирует процент (RU-стиль).
 func Pct(v float64) string { return groupThousands(v, 2) + " %" }
 
-func formatNumber(v float64, unit, currency string) string {
+// Number форматирует число по единице измерения колонки (RU-стиль).
+// Экспортируется для транспортов (Telegram-сводки и т.п.).
+func Number(v float64, unit, currency string) string {
 	switch unit {
 	case "RUB":
 		return groupThousands(v, 2) + " " + currencySymbol(currency)
@@ -195,7 +203,8 @@ func currencySymbol(code string) string {
 	}
 }
 
-func reportTitle(t string) string {
+// Title возвращает человекочитаемый заголовок отчёта по типу envelope.
+func Title(t string) string {
 	t = strings.TrimSuffix(strings.TrimSuffix(t, "_compare"), "_contribution")
 	switch t {
 	case "payment":

@@ -41,8 +41,8 @@ func TestFormatNumberByUnit(t *testing.T) {
 		{3.14, "", "3,14"},
 	}
 	for _, tc := range cases {
-		if got := formatNumber(tc.v, tc.unit, "RUB"); got != tc.want {
-			t.Errorf("formatNumber(%v,%q) = %q, want %q", tc.v, tc.unit, got, tc.want)
+		if got := Number(tc.v, tc.unit, "RUB"); got != tc.want {
+			t.Errorf("Number(%v,%q) = %q, want %q", tc.v, tc.unit, got, tc.want)
 		}
 	}
 }
@@ -72,8 +72,8 @@ func TestReportTitleKnownTypes(t *testing.T) {
 		"products_contribution": "Товары",
 	}
 	for typ, want := range cases {
-		if got := reportTitle(typ); got != want {
-			t.Errorf("reportTitle(%q) = %q, want %q", typ, got, want)
+		if got := Title(typ); got != want {
+			t.Errorf("Title(%q) = %q, want %q", typ, got, want)
 		}
 	}
 }
