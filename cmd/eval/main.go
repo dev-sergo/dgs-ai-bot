@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"dgsbot/internal/catalog"
@@ -29,14 +30,23 @@ func main() {
 	cli := llm.New(cfg.LLM)
 	pl := planner.NewLLM(cli, cfg.LLM.Model, cfg.LLM.ForceJSON)
 
+	// EVAL_CONCURRENCY — сколько запросов к модели держать «в полёте» разом (default 1 =
+	// последовательно, чистые замеры latency; >1 использует батчинг vLLM и режет wall-time).
+	concurrency := 1
+	if v := os.Getenv("EVAL_CONCURRENCY"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			concurrency = n
+		}
+	}
+
 	total := len(cases)
-	fmt.Printf("eval: %d cases, model=%s, endpoint=%s\n\n", total, cfg.LLM.Model, cfg.LLM.BaseURL)
+	fmt.Printf("eval: %d cases, model=%s, endpoint=%s, concurrency=%d\n\n", total, cfg.LLM.Model, cfg.LLM.BaseURL, concurrency)
 
 	// Без глобального потолка на весь прогон: таймаут — на каждый запрос внутри Run
 	// (иначе длинный набор упирается в общий дедлайн и хвост падает в context deadline).
-	// Печатаем КАЖДЫЙ кейс по мере готовности (callback) — живой прогресс [i/N], а не
-	// тишина до конца прогона. Между запросами модель считается ~секунды.
-	results := eval.Run(context.Background(), pl, catalog.Default(), cases, func(i int, r eval.Result) {
+	// Печатаем КАЖДЫЙ кейс по мере готовности (callback) — живой прогресс [i/N]. При
+	// concurrency>1 строки идут вперемешку (кейсы финишируют не по порядку) — это норм.
+	results := eval.Run(context.Background(), pl, catalog.Default(), cases, concurrency, func(i int, r eval.Result) {
 		printResult(i+1, total, r)
 	})
 

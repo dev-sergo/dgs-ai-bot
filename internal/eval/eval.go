@@ -9,6 +9,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"dgsbot/internal/catalog"
@@ -137,37 +138,59 @@ const (
 	retryBackoff   = 2 * time.Second
 )
 
-// Run прогоняет все кейсы через планировщик и валидатор. onResult (если не nil)
-// вызывается по мере готовности КАЖДОГО кейса (i — 0-based индекс, r — результат) —
-// это даёт живой прогресс на долгом прогоне вместо «тишины до конца».
-func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case, onResult func(i int, r Result)) []Result {
-	out := make([]Result, 0, len(cases))
-	for i, c := range cases {
-		start := time.Now()
-		p, err := planWithRetry(ctx, pl, c.Query)
-		lat := time.Since(start).Milliseconds()
-
-		r := Result{Query: c.Query, Plan: p, LatencyMS: lat, Err: err}
-		if err == nil {
-			// Та же пост-обработка, что в проде (app.go), — бенчмарк меряет итоговый
-			// план, а не сырой ответ модели.
-			planner.Refine(c.Query, &p)
-			engine.NormalizeMethod(&p)
-			r.Plan = p
-			if p.IsReport() {
-				val := plan.Validate(&p, cat)
-				r.Valid = val.OK || val.NeedClarify
-			} else {
-				r.Valid = true // help/smalltalk/off_topic — валидны как разговорный ответ
-			}
-			r.Mismatch = Check(p, c.Expect)
-		}
-		out = append(out, r)
-		if onResult != nil {
-			onResult(i, r)
-		}
+// Run прогоняет все кейсы через планировщик и валидатор. concurrency — сколько запросов
+// к модели держать «в полёте» одновременно (1 = последовательно, как раньше; >1 использует
+// батчинг vLLM и режет wall-time). onResult (если не nil) вызывается по мере готовности
+// КАЖДОГО кейса (i — 0-based индекс, r — результат) — живой прогресс. Порядок out — по
+// индексу кейса; при concurrency>1 onResult приходит вперемешку (кейсы финишируют не по
+// порядку). onResult сериализован мьютексом — колбэк может быть не goroutine-safe (напр. fmt).
+func Run(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, cases []Case, concurrency int, onResult func(i int, r Result)) []Result {
+	if concurrency < 1 {
+		concurrency = 1
 	}
+	out := make([]Result, len(cases))
+	sem := make(chan struct{}, concurrency)
+	var wg sync.WaitGroup
+	var mu sync.Mutex // сериализует onResult
+	for i := range cases {
+		wg.Add(1)
+		sem <- struct{}{} // backpressure: не спавним больше concurrency активных горутин
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			r := runOne(ctx, pl, cat, cases[i])
+			out[i] = r
+			if onResult != nil {
+				mu.Lock()
+				onResult(i, r)
+				mu.Unlock()
+			}
+		}(i)
+	}
+	wg.Wait()
 	return out
+}
+
+// runOne прогоняет один кейс: план с ретраями + та же пост-обработка, что в проде (app.go),
+// — бенчмарк меряет итоговый план, а не сырой ответ модели.
+func runOne(ctx context.Context, pl planner.Planner, cat *catalog.Catalog, c Case) Result {
+	start := time.Now()
+	p, err := planWithRetry(ctx, pl, c.Query)
+	r := Result{Query: c.Query, Plan: p, LatencyMS: time.Since(start).Milliseconds(), Err: err}
+	if err != nil {
+		return r
+	}
+	planner.Refine(c.Query, &p)
+	engine.NormalizeMethod(&p)
+	r.Plan = p
+	if p.IsReport() {
+		val := plan.Validate(&p, cat)
+		r.Valid = val.OK || val.NeedClarify
+	} else {
+		r.Valid = true // help/smalltalk/off_topic — валидны как разговорный ответ
+	}
+	r.Mismatch = Check(p, c.Expect)
+	return r
 }
 
 // planWithRetry дёргает планировщик с таймаутом на запрос и ретраями на ошибку

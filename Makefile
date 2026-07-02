@@ -79,6 +79,7 @@ eval-host:   ## eval-бенчмарк планировщика против ри
 	LLM_MODEL=$${LLM_MODEL:-qwen2-5-32b-instruct-q4-k-m-ctx-16k-q8-0-kv-t07} \
 	LLM_API_KEY=$${LLM_API_KEY:-} \
 	EVAL_PROMPTS=$${EVAL_PROMPTS:-test/eval/prompts.jsonl} \
+	EVAL_CONCURRENCY=$${EVAL_CONCURRENCY:-1} \
 	./bin/eval-host 2>&1 | tee "$$out"; \
 	bash bench/summarize.sh "$$out" > "$${out%.log}.json"; \
 	echo "bench: $$out"
