@@ -163,6 +163,43 @@ docker compose logs bots | grep -i "log отключён" || echo "LOGS OK"   # 
 
 ---
 
+## Troubleshooting: Telegram недоступен (`i/o timeout`)
+
+**Симптом:** боты крешлупят, в логах `telegram: … /getMe: … i/o timeout`, `docker compose ps`
+показывает `Up` в секундах (перезапуск). Бот не может достучаться до `api.telegram.org`.
+
+**Причина (наблюдалась на боевом РФ-сервере):** DNS отдаёт для `api.telegram.org` IPv6 и/или
+A-запись, заблокированные на этом канале → таймаут. Открыт лишь один IP Bot API (DC5) —
+`149.154.167.220`.
+
+**Диагностика** (на сервере):
+```bash
+# прямой путь заблокирован?
+curl -sS -m 10 -o /dev/null -w "%{http_code}\n" https://api.telegram.org/           # 000/timeout = закрыт
+# рабочий IP DC5 доступен?
+curl -sS -m 6 -o /dev/null -w "%{http_code}\n" \
+  --resolve api.telegram.org:443:149.154.167.220 https://api.telegram.org/           # 302 = путь есть
+```
+
+**Фикс (уже в `docker-compose.yml`):** пин имени к рабочему IP — Go-резолвер читает `/etc/hosts`
+контейнера раньше DNS, бот идёт по открытому пути. **Прокси/VPN не нужны.**
+```yaml
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220"
+```
+Это **воркэраунд под сетевую блокировку**, а не «правильное» решение. Если Telegram сменит IP Bot
+API — обнови строку (проверка: `curl --resolve api.telegram.org:443:<новый_ip> https://api.telegram.org/`
+→ ждём 302). Более чистые альтернативы, если понадобится: хостер открывает egress к
+`149.154.160.0/20`+`91.108.4.0/22` (Telegram в РФ легален), VPN/route на сервере или SOCKS5-прокси.
+
+**Не путать с другими причинами молчания бота:**
+- `Unauthorized` в логе → битый `BOT_TOKEN` (не сеть).
+- `Conflict`/`409` → тот же токен слушает второй поллер (старый контейнер / webhook): `docker compose
+  down --remove-orphans`; сбросить webhook — `curl .../bot<token>/deleteWebhook`.
+- Бот отвечает «Доступ закрыт» → чат не в `ALLOWLIST` (это уже реакция, сеть в порядке).
+
+---
+
 ## Проверка перед демо (smoke)
 
 1. `docker compose logs` — каждый бот стартовал (строка `telegram bot started` с username и
