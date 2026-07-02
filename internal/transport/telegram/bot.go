@@ -205,9 +205,14 @@ func (b *Bot) sendWithFeedback(chatID int64, text, answerID string) {
 	}
 }
 
-// handleCallback обрабатывает тап по инлайн-кнопке 👍/👎.
-// Формат callback data: "fb:<rating>:<answerID>".
+// handleCallback handles a tap on the 👍/👎 inline button.
+// Callback data: "fb:<rating>:<answerID>"; "fbnoop" = the locked confirmation button.
 func (b *Bot) handleCallback(cb *tgbotapi.CallbackQuery) {
+	// Tap on the already-locked confirmation button — no-op, just ack to clear the spinner.
+	if cb.Data == "fbnoop" {
+		_, _ = b.api.Request(tgbotapi.NewCallback(cb.ID, ""))
+		return
+	}
 	parts := strings.SplitN(cb.Data, ":", 3)
 	if len(parts) != 3 || parts[0] != "fb" {
 		return
@@ -219,9 +224,23 @@ func (b *Bot) handleCallback(cb *tgbotapi.CallbackQuery) {
 	ts := time.Now().UTC().Format(time.RFC3339)
 	b.app.RecordFeedback(ts, answerID, rating, "telegram")
 
-	// Подтверждение тапа — всплывашка над клавиатурой.
-	ack := tgbotapi.NewCallback(cb.ID, "Спасибо!")
-	_, _ = b.api.Request(ack)
+	// Lock the choice: replace the buttons with a static confirmation so the user can't
+	// re-vote (otherwise contradictory up/down land in the dataset for one answer id).
+	if cb.Message != nil {
+		emoji := "👍"
+		if rating == "down" {
+			emoji = "👎"
+		}
+		locked := tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("✅ оценка учтена: "+emoji, "fbnoop"),
+			),
+		)
+		_, _ = b.api.Request(tgbotapi.NewEditMessageReplyMarkup(cb.Message.Chat.ID, cb.Message.MessageID, locked))
+	}
+
+	// Popup acknowledgement above the keyboard.
+	_, _ = b.api.Request(tgbotapi.NewCallback(cb.ID, "Спасибо!"))
 }
 
 // send отправляет текстовое сообщение. Ошибку логирует, не паникует.
