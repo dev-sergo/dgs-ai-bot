@@ -43,8 +43,8 @@ func newIsoApp() (*App, *tagClient, *tagClient) {
 	a.Now = func() time.Time { return time.Date(2026, 6, 24, 10, 0, 0, 0, time.UTC) }
 	ca := &tagClient{tag: "A"}
 	cb := &tagClient{tag: "B"}
-	a.Register("tenant-A", ca, &resolver.Store{})
-	a.Register("tenant-B", cb, &resolver.Store{})
+	a.Register("tenant-A", "uuid-A", ca, &resolver.Store{})
+	a.Register("tenant-B", "uuid-B", cb, &resolver.Store{})
 	return a, ca, cb
 }
 

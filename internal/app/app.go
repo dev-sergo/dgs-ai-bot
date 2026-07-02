@@ -66,6 +66,7 @@ type Answer struct {
 type tenantSet struct {
 	client   dooglys.Client
 	resolver *resolver.Store
+	uuid     string // Dooglys tenant_id (TENANT_<k>_ID); logged as tenant_id. Empty if unset.
 }
 
 // App — собранный пайплайн. Ядро (planner/narrator/advisor/sessions/tenants/catalog)
@@ -123,14 +124,23 @@ func NewMulti(pl planner.Planner, tenants *tenantctx.Store, nar narrator.Narrato
 	}
 }
 
-// Register привязывает источник данных (client) и резолвер к tenantID. Вызывается
-// bootstrap'ом в цикле по тенантам. Перезапись существующего tenantID допустима
-// (последняя регистрация побеждает).
-func (a *App) Register(tenantID string, client dooglys.Client, res *resolver.Store) {
+// Register binds a data source (client) and resolver to a routing tenantID, plus its
+// Dooglys tenant_id UUID (tenantUUID; logged as tenant_id, may be empty). Called by
+// bootstrap per tenant. Re-registering an existing tenantID is allowed (last wins).
+func (a *App) Register(tenantID, tenantUUID string, client dooglys.Client, res *resolver.Store) {
 	if a.sets == nil {
 		a.sets = map[string]*tenantSet{}
 	}
-	a.sets[tenantID] = &tenantSet{client: client, resolver: res}
+	a.sets[tenantID] = &tenantSet{client: client, resolver: res, uuid: tenantUUID}
+}
+
+// tenantUUID returns the Dooglys tenant_id UUID for a routing tenantID (empty if the
+// tenant isn't registered or has no UUID set).
+func (a *App) tenantUUID(tenantID string) string {
+	if set := a.sets[tenantID]; set != nil {
+		return set.uuid
+	}
+	return ""
 }
 
 // setFor возвращает набор данных тенанта. Строгая изоляция: сначала точная регистрация,
@@ -653,6 +663,7 @@ func (a *App) recordQuery(tenantID, sessionID, text string, ans Answer, err erro
 		TS:        a.Now().UTC().Format(time.RFC3339),
 		ID:        ans.ID,
 		Tenant:    tenantID,
+		TenantID:  a.tenantUUID(tenantID),
 		Session:   sessionID,
 		Text:      text,
 		Intent:    ans.Plan.EffectiveIntent(),

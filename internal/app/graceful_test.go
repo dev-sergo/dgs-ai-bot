@@ -24,7 +24,7 @@ func (c *errClient) Fetch(_ context.Context, _ dooglys.Query) (dooglys.Result, e
 func TestGraceful_FetchErrorSoftAnswer(t *testing.T) {
 	a := NewMulti(nil, &tenantctx.Store{}, nil, nil, nil)
 	a.Now = func() time.Time { return time.Date(2026, 7, 1, 10, 0, 0, 0, time.UTC) }
-	a.Register("tenant-A", &errClient{err: errors.New("dial tcp: connection refused")}, &resolver.Store{})
+	a.Register("tenant-A", "", &errClient{err: errors.New("dial tcp: connection refused")}, &resolver.Store{})
 
 	ans, err := a.executeReport(context.Background(), "tenant-A", "s1", "выручка за июнь", paymentPlan())
 	if err != nil {

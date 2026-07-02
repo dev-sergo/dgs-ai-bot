@@ -180,7 +180,7 @@ func App(cfg config.Config) (*app.App, func(), error) {
 	// реальным данным возникает в api-режиме, где у каждого свои домен/токен.
 	for _, tc := range cfg.Tenants {
 		client, res := tenantData(cfg, tc)
-		a.Register(tc.ID, client, res)
+		a.Register(tc.ID, tc.TenantID, client, res)
 	}
 
 	// Датасет вопросов/ответов (JSONL) — для продуктовой аналитики и дообучения.

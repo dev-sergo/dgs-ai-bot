@@ -23,8 +23,9 @@ import (
 type Record struct {
 	TS        string            `json:"ts"`      // RFC3339, момент завершения обработки
 	ID        string            `json:"id"`      // уникальный id ответа; совпадает с id в feedback.jsonl
-	Tenant    string            `json:"tenant"`  // арендатор (X-Tenant-ID)
-	Session   string            `json:"session"` // ключ диалоговой сессии
+	Tenant    string            `json:"tenant"`              // routing key (human-readable tenant key)
+	TenantID  string            `json:"tenant_id,omitempty"` // Dooglys tenant_id UUID (TENANT_<k>_ID); empty if unset
+	Session   string            `json:"session"`             // dialogue session key
 	Text      string            `json:"text"`    // исходный вопрос пользователя — как ввёл
 	Intent    string            `json:"intent"`  // report|advice|help|smalltalk|off_topic
 	Outcome   string            `json:"outcome"` // answer|clarify|empty|out_of_scope|error|…

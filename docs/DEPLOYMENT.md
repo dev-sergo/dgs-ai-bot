@@ -94,8 +94,8 @@ curl -sS  https://litellm.site.avtosushi.net/v1/models -H "Authorization: Bearer
 |---|---|---|
 | `TENANT_<k>_BOT_TOKEN` | **да** | 🔒 токен @BotFather. Нет токена → fail-fast. |
 | `TENANT_<k>_ALLOWLIST` | **да (prod)** | Смешанный whitelist (см. ниже). Пустой в `prod` → fail-fast. |
-| `TENANT_<k>_ID` | опц. | `tenant_id` (default = ключ). Должен совпадать с записью в `tenants.example.json`. |
-| `TENANT_<k>_DOMAIN` | опц. | `tenant-domain` Report-API (default = ID). |
+| `TENANT_<k>_ID` | опц. | Dooglys `tenant_id` UUID — пишется в лог как `tenant_id`, идёт в x-context. Метаданные, routing НЕ меняет (routing = ключ). |
+| `TENANT_<k>_DOMAIN` | опц. | `tenant-domain` Report-API (default = ключ). |
 | `TENANT_<k>_ACCESS_TOKEN` | **да** | 🔒 свой `access-token` тенанта (у каждого свой; общий `DGS_ACCESS_TOKEN` не используем). |
 
 Пишешь только то, что реально отличается (ID/DOMAIN дефолтятся от ключа, токен может быть
@@ -224,5 +224,6 @@ API — обнови строку (проверка: `curl --resolve api.telegra
   сеть к Dooglys не нужна.
 
 Конфиг тенантов (таймзона/валюта/точки) — `docs/contracts/fixtures/tenants.example.json`,
-ключуется по `tenant_id`. Для боевых тенантов значения `TENANT_<k>_ID` должны совпадать с
-ключами в этом файле (иначе тенант получит дефолты).
+резолвится по **routing-ключу тенанта** (запись в `TENANTS`) или его `TENANT_<k>_DOMAIN`.
+Для боевых тенантов ключ/домен должны совпадать с записью в этом файле (иначе тенант получит
+дефолты таймзоны/валюты).

@@ -72,20 +72,21 @@ type Telegram struct {
 	DefaultTenant string   // TELEGRAM_TENANT; tenant по умолчанию для всех чатов
 }
 
-// TenantConfig — один тенант мультитенантного развёртывания: свой Telegram-бот,
-// свой whitelist и свои креды доступа к данным (Report-API/JSON API).
+// TenantConfig — one tenant of a multi-tenant deployment: its own Telegram bot, its own
+// whitelist and its own data-access credentials (Report-API/JSON API).
 //
-// Шов «3 бота → 1 бот на все тенанты»: топология (какой чат → какой тенант) живёт
-// в транспорте (resolveTenant), а НЕ здесь. Здесь — только описание тенанта.
-// Секреты (BotToken, AccessToken, XContext) НЕ печатаются в Summary и НЕ уходят в LLM.
+// Seam "N bots → 1 bot for all tenants": the chat→tenant topology lives in the transport
+// (resolveTenant), NOT here. Here — only the tenant description. Secrets (BotToken,
+// AccessToken, XContext) are NOT printed in Summary and NOT passed to the LLM.
 type TenantConfig struct {
-	ID          string   // tenant_id/domain для tenantctx и реестра (TENANT_<k>_ID; default = ключ)
-	BotToken    string   // токен Telegram-бота этого тенанта (TENANT_<k>_BOT_TOKEN); секрет
-	Allowlist   []int64  // whitelist по числовому chat_id (TENANT_<k>_ALLOWLIST); пусто → открыт всем
-	AllowUsers  []string // whitelist по @username (тот же TENANT_<k>_ALLOWLIST); нормализованы: без '@', lower
-	Domain      string   // tenant-domain Report-API (TENANT_<k>_DOMAIN; default = ID)
-	AccessToken string   // access-token Report-API (TENANT_<k>_ACCESS_TOKEN); пусто → общий DGS_ACCESS_TOKEN; секрет
-	XContext    string   // x-context Report-API (TENANT_<k>_XCONTEXT); секрет
+	ID          string   // routing key (TENANTS entry): registry, session, log `tenant`
+	TenantID    string   // Dooglys tenant_id UUID (TENANT_<k>_ID); logged as tenant_id, used for x-context
+	BotToken    string   // this tenant's Telegram bot token (TENANT_<k>_BOT_TOKEN); secret
+	Allowlist   []int64  // whitelist by numeric chat_id (TENANT_<k>_ALLOWLIST); empty → open to all
+	AllowUsers  []string // whitelist by @username (same TENANT_<k>_ALLOWLIST); normalized: no '@', lower
+	Domain      string   // Report-API tenant-domain (TENANT_<k>_DOMAIN; default = key)
+	AccessToken string   // Report-API access-token (TENANT_<k>_ACCESS_TOKEN); empty → shared DGS_ACCESS_TOKEN; secret
+	XContext    string   // Report-API x-context (TENANT_<k>_XCONTEXT); secret
 }
 
 // Config — корневая конфигурация.
@@ -155,10 +156,10 @@ func Load() Config {
 // Формат (индексированный, чтобы секреты не пихать одной JSON-строкой в ENV):
 //
 //	TENANTS=a,b,c
-//	TENANT_a_ID=rukagreka           # опц., default = ключ; это tenant_id/domain для tenantctx
+//	TENANT_a_ID=<uuid>              # опц. Dooglys tenant_id (лог tenant_id / x-context); routing = ключ "a"
 //	TENANT_a_BOT_TOKEN=123:ABC      # токен @BotFather
 //	TENANT_a_ALLOWLIST=@ivan,111    # csv @username и/или chat_id (пусто → бот открыт всем)
-//	TENANT_a_DOMAIN=rukagreka       # опц., default = ID; tenant-domain для Report-API
+//	TENANT_a_DOMAIN=rukagreka       # опц., default = ключ; tenant-domain для Report-API
 //	TENANT_a_ACCESS_TOKEN=xxx       # опц.; пусто → общий DGS_ACCESS_TOKEN
 //	TENANT_a_XCONTEXT={...}         # опц. (внутренний xcontext-режим)
 func loadTenants(c Config) []TenantConfig {
@@ -178,14 +179,14 @@ func loadTenants(c Config) []TenantConfig {
 	out := make([]TenantConfig, 0, len(keys))
 	for _, k := range keys {
 		p := "TENANT_" + k + "_"
-		id := env(p+"ID", k)
 		ids, users := envAllowlist(p + "ALLOWLIST")
 		out = append(out, TenantConfig{
-			ID:          id,
+			ID:          k,                   // routing key = TENANTS entry (human-readable)
+			TenantID:    os.Getenv(p + "ID"), // Dooglys tenant_id UUID (metadata / x-context)
 			BotToken:    os.Getenv(p + "BOT_TOKEN"),
 			Allowlist:   ids,
 			AllowUsers:  users,
-			Domain:      env(p+"DOMAIN", id),
+			Domain:      env(p+"DOMAIN", k),
 			AccessToken: os.Getenv(p + "ACCESS_TOKEN"),
 			XContext:    os.Getenv(p + "XCONTEXT"),
 		})

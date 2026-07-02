@@ -161,12 +161,12 @@ func TestLoadTenantsIndexed(t *testing.T) {
 		t.Fatalf("Tenants = %d, want 2", len(c.Tenants))
 	}
 	a := c.Tenants[0]
-	if a.ID != "rukagreka" || a.Domain != "rukagreka" || a.BotToken != "tok-a" || a.AccessToken != "acc-a" {
-		t.Errorf("tenant a = %+v", a)
+	if a.ID != "a" || a.TenantID != "rukagreka" || a.Domain != "a" || a.BotToken != "tok-a" || a.AccessToken != "acc-a" {
+		t.Errorf("tenant a = %+v (ID=key, TenantID=TENANT_a_ID, Domain default=key)", a)
 	}
 	b := c.Tenants[1]
-	if b.ID != "b" || b.Domain != "second" || b.BotToken != "tok-b" {
-		t.Errorf("tenant b = %+v (ID default=key, Domain override)", b)
+	if b.ID != "b" || b.TenantID != "" || b.Domain != "second" || b.BotToken != "tok-b" {
+		t.Errorf("tenant b = %+v", b)
 	}
 }
 
